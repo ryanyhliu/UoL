@@ -263,9 +263,6 @@ int main(void){
 	
 	
 
-	
-
-
 	// char outputFileName[] = "output.txt";
 	// writeTourToFile(tour, tourLength, outputFileName);
 
