@@ -226,7 +226,7 @@ int main(void){
 	int j = 0;
 	
 	// 读取文件中数组
-	char fileName[] = "16_coords.coord";
+	char fileName[] = "4096_coords.coord";
 	int numOfCoords = readNumOfCoords(fileName);
 	double **inputs = readCoords(fileName, numOfCoords); // 得到二维数组
 	// print2DArray(inputs, numOfCoords, 2);
