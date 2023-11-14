@@ -268,8 +268,8 @@ int main(void){
 
 	int validLenOfSeq = 2;
 	int max = numOfCoords + 1;
-	#pragma omp parallel while // 并行化外层循环
-	while (validLenOfSeq < max)
+	#pragma omp parallel for // 并行化外层循环
+	for (validLenOfSeq < max)
 	{
 		validLenOfSeq = getCheapestPoint(resultSeq, dist, numOfCoords);
 		// printf("\n---DEBUG---: validLenOfSeq = %d", validLenOfSeq);
