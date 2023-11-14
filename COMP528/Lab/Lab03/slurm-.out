@@ -1,0 +1,256 @@
+Node list                    : node060
+Number of nodes allocated    : 1 or 1
+Number of threads or processes          : 
+Number of processes per node : 1
+Requested tasks per node     : 
+Requested CPUs per task      : 2
+Scheduling priority          : 0
+compiling schedule.c to schedule.exe
+
+------------------------------------
+using 2 OpenMP threads
+
+
+Multiple execution..
+
+
+Static default
+Thread 0: i: 0, j: 0, res[i][j]: 18
+Thread 0: i: 1, j: 0, res[i][j]: 42
+Thread 0: i: 1, j: 1, res[i][j]: 15
+Thread 1: i: 3, j: 0, res[i][j]: 6
+Thread 1: i: 3, j: 1, res[i][j]: 6
+Thread 1: i: 3, j: 2, res[i][j]: 63
+Thread 1: i: 3, j: 3, res[i][j]: 0
+Thread 1: i: 4, j: 0, res[i][j]: 18
+Thread 1: i: 4, j: 1, res[i][j]: 18
+Thread 1: i: 4, j: 2, res[i][j]: 0
+Thread 1: i: 4, j: 3, res[i][j]: 54
+Thread 1: i: 4, j: 4, res[i][j]: 12
+Thread 0: i: 2, j: 0, res[i][j]: 30
+Thread 0: i: 2, j: 1, res[i][j]: 18
+Thread 0: i: 2, j: 2, res[i][j]: 18
+Static 2 chunks
+Thread 0: i: 0, j: 0, res[i][j]: 36
+Thread 1: i: 3, j: 0, res[i][j]: 12
+Thread 0: i: 1, j: 0, res[i][j]: 84
+Thread 1: i: 3, j: 1, res[i][j]: 12
+Thread 0: i: 1, j: 1, res[i][j]: 30
+Thread 0: i: 2, j: 0, res[i][j]: 60
+Thread 0: i: 2, j: 1, res[i][j]: 36
+Thread 0: i: 2, j: 2, res[i][j]: 36
+Thread 1: i: 3, j: 2, res[i][j]: 126
+Thread 1: i: 3, j: 3, res[i][j]: 0
+Thread 1: i: 4, j: 0, res[i][j]: 36
+Thread 1: i: 4, j: 1, res[i][j]: 36
+Thread 1: i: 4, j: 2, res[i][j]: 0
+Thread 1: i: 4, j: 3, res[i][j]: 108
+Thread 1: i: 4, j: 4, res[i][j]: 24
+Static 4 chunks
+Thread 1: i: 3, j: 0, res[i][j]: 18
+Thread 1: i: 3, j: 1, res[i][j]: 18
+Thread 1: i: 3, j: 2, res[i][j]: 189
+Thread 1: i: 3, j: 3, res[i][j]: 0
+Thread 1: i: 4, j: 0, res[i][j]: 54
+Thread 0: i: 0, j: 0, res[i][j]: 54
+Thread 1: i: 4, j: 1, res[i][j]: 54
+Thread 0: i: 1, j: 0, res[i][j]: 126
+Thread 0: i: 1, j: 1, res[i][j]: 45
+Thread 0: i: 2, j: 0, res[i][j]: 90
+Thread 0: i: 2, j: 1, res[i][j]: 54
+Thread 1: i: 4, j: 2, res[i][j]: 0
+Thread 0: i: 2, j: 2, res[i][j]: 54
+Thread 1: i: 4, j: 3, res[i][j]: 162
+Thread 1: i: 4, j: 4, res[i][j]: 36
+Static default
+Thread 0: i: 0, j: 0, res[i][j]: 18
+Thread 0: i: 1, j: 0, res[i][j]: 42
+Thread 0: i: 1, j: 1, res[i][j]: 15
+Thread 0: i: 2, j: 0, res[i][j]: 30
+Thread 0: i: 2, j: 1, res[i][j]: 18
+Thread 0: i: 2, j: 2, res[i][j]: 18
+Thread 1: i: 3, j: 0, res[i][j]: 6
+Thread 1: i: 3, j: 1, res[i][j]: 6
+Thread 1: i: 3, j: 2, res[i][j]: 63
+Thread 1: i: 3, j: 3, res[i][j]: 0
+Thread 1: i: 4, j: 0, res[i][j]: 18
+Thread 1: i: 4, j: 1, res[i][j]: 18
+Thread 1: i: 4, j: 2, res[i][j]: 0
+Thread 1: i: 4, j: 3, res[i][j]: 54
+Thread 1: i: 4, j: 4, res[i][j]: 12
+Thread 1: i: 3, j: 0, res[i][j]: 12
+Thread 1: i: 3, j: 1, res[i][j]: 12
+Thread 1: i: 3, j: 2, res[i][j]: 126
+Thread 1: i: 3, j: 3, res[i][j]: 0
+Thread 1: i: 4, j: 0, res[i][j]: 36
+Thread 1: i: 4, j: 1, res[i][j]: 36
+Static 2 chunks
+Thread 1: i: 4, j: 2, res[i][j]: 0
+Thread 1: i: 4, j: 3, res[i][j]: 108
+Thread 1: i: 4, j: 4, res[i][j]: 24
+Thread 0: i: 0, j: 0, res[i][j]: 36
+Thread 0: i: 1, j: 0, res[i][j]: 84
+Thread 0: i: 1, j: 1, res[i][j]: 30
+Thread 0: i: 2, j: 0, res[i][j]: 60
+Thread 0: i: 2, j: 1, res[i][j]: 36
+Thread 0: i: 2, j: 2, res[i][j]: 36
+Static 4 chunks
+Thread 0: i: 0, j: 0, res[i][j]: 54
+Thread 1: i: 3, j: 0, res[i][j]: 18
+Thread 0: i: 1, j: 0, res[i][j]: 126
+Thread 1: i: 3, j: 1, res[i][j]: 18
+Thread 0: i: 1, j: 1, res[i][j]: 45
+Thread 0: i: 2, j: 0, res[i][j]: 90
+Thread 0: i: 2, j: 1, res[i][j]: 54
+Thread 0: i: 2, j: 2, res[i][j]: 54
+Thread 1: i: 3, j: 2, res[i][j]: 189
+Thread 1: i: 3, j: 3, res[i][j]: 0
+Thread 1: i: 4, j: 0, res[i][j]: 54
+Thread 1: i: 4, j: 1, res[i][j]: 54
+Thread 1: i: 4, j: 2, res[i][j]: 0
+Thread 1: i: 4, j: 3, res[i][j]: 162
+Thread 1: i: 4, j: 4, res[i][j]: 36
+Static default
+Thread 0: i: 0, j: 0, res[i][j]: 18
+Thread 0: i: 1, j: 0, res[i][j]: 42
+Thread 0: i: 1, j: 1, res[i][j]: 15
+Thread 0: i: 2, j: 0, res[i][j]: 30
+Thread 0: i: 2, j: 1, res[i][j]: 18
+Thread 0: i: 2, j: 2, res[i][j]: 18
+Thread 1: i: 3, j: 0, res[i][j]: 6
+Thread 1: i: 3, j: 1, res[i][j]: 6
+Thread 1: i: 3, j: 2, res[i][j]: 63
+Thread 1: i: 3, j: 3, res[i][j]: 0
+Thread 1: i: 4, j: 0, res[i][j]: 18
+Thread 1: i: 4, j: 1, res[i][j]: 18
+Thread 1: i: 4, j: 2, res[i][j]: 0
+Thread 1: i: 4, j: 3, res[i][j]: 54
+Thread 1: i: 4, j: 4, res[i][j]: 12
+Static 2 chunks
+Thread 0: i: 0, j: 0, res[i][j]: 36
+Thread 0: i: 1, j: 0, res[i][j]: 84
+Thread 0: i: 1, j: 1, res[i][j]: 30
+Thread 0: i: 2, j: 0, res[i][j]: 60
+Thread 1: i: 3, j: 0, res[i][j]: 12
+Thread 0: i: 2, j: 1, res[i][j]: 36
+Thread 1: i: 3, j: 1, res[i][j]: 12
+Thread 1: i: 3, j: 2, res[i][j]: 126
+Thread 0: i: 2, j: 2, res[i][j]: 36
+Thread 1: i: 3, j: 3, res[i][j]: 0
+Thread 1: i: 4, j: 0, res[i][j]: 36
+Thread 1: i: 4, j: 1, res[i][j]: 36
+Thread 1: i: 4, j: 2, res[i][j]: 0
+Thread 1: i: 4, j: 3, res[i][j]: 108
+Thread 1: i: 4, j: 4, res[i][j]: 24
+Static 4 chunks
+Thread 1: i: 3, j: 0, res[i][j]: 18
+Thread 1: i: 3, j: 1, res[i][j]: 18
+Thread 1: i: 3, j: 2, res[i][j]: 189
+Thread 0: i: 0, j: 0, res[i][j]: 54
+Thread 0: i: 1, j: 0, res[i][j]: 126
+Thread 0: i: 1, j: 1, res[i][j]: 45
+Thread 0: i: 2, j: 0, res[i][j]: 90
+Thread 0: i: 2, j: 1, res[i][j]: 54
+Thread 0: i: 2, j: 2, res[i][j]: 54
+Thread 1: i: 3, j: 3, res[i][j]: 0
+Thread 1: i: 4, j: 0, res[i][j]: 54
+Thread 1: i: 4, j: 1, res[i][j]: 54
+Thread 1: i: 4, j: 2, res[i][j]: 0
+Thread 1: i: 4, j: 3, res[i][j]: 162
+Thread 1: i: 4, j: 4, res[i][j]: 36
+Static default
+Thread 0: i: 0, j: 0, res[i][j]: 18
+Thread 0: i: 1, j: 0, res[i][j]: 42
+Thread 0: i: 1, j: 1, res[i][j]: 15
+Thread 0: i: 2, j: 0, res[i][j]: 30
+Thread 0: i: 2, j: 1, res[i][j]: 18
+Thread 0: i: 2, j: 2, res[i][j]: 18
+Thread 1: i: 3, j: 0, res[i][j]: 6
+Thread 1: i: 3, j: 1, res[i][j]: 6
+Thread 1: i: 3, j: 2, res[i][j]: 63
+Thread 1: i: 3, j: 3, res[i][j]: 0
+Thread 1: i: 4, j: 0, res[i][j]: 18
+Thread 1: i: 4, j: 1, res[i][j]: 18
+Thread 1: i: 4, j: 2, res[i][j]: 0
+Thread 1: i: 4, j: 3, res[i][j]: 54
+Thread 1: i: 4, j: 4, res[i][j]: 12
+Static 2 chunks
+Thread 1: i: 3, j: 0, res[i][j]: 12
+Thread 1: i: 3, j: 1, res[i][j]: 12
+Thread 1: i: 3, j: 2, res[i][j]: 126
+Thread 1: i: 3, j: 3, res[i][j]: 0
+Thread 1: i: 4, j: 0, res[i][j]: 36
+Thread 1: i: 4, j: 1, res[i][j]: 36
+Thread 1: i: 4, j: 2, res[i][j]: 0
+Thread 1: i: 4, j: 3, res[i][j]: 108
+Thread 1: i: 4, j: 4, res[i][j]: 24
+Thread 0: i: 0, j: 0, res[i][j]: 36
+Thread 0: i: 1, j: 0, res[i][j]: 84
+Thread 0: i: 1, j: 1, res[i][j]: 30
+Thread 0: i: 2, j: 0, res[i][j]: 60
+Thread 0: i: 2, j: 1, res[i][j]: 36
+Thread 0: i: 2, j: 2, res[i][j]: 36
+Static 4 chunks
+Thread 0: i: 0, j: 0, res[i][j]: 54
+Thread 0: i: 1, j: 0, res[i][j]: 126
+Thread 1: i: 3, j: 0, res[i][j]: 18
+Thread 0: i: 1, j: 1, res[i][j]: 45
+Thread 0: i: 2, j: 0, res[i][j]: 90
+Thread 0: i: 2, j: 1, res[i][j]: 54
+Thread 1: i: 3, j: 1, res[i][j]: 18
+Thread 0: i: 2, j: 2, res[i][j]: 54
+Thread 1: i: 3, j: 2, res[i][j]: 189
+Thread 1: i: 3, j: 3, res[i][j]: 0
+Thread 1: i: 4, j: 0, res[i][j]: 54
+Thread 1: i: 4, j: 1, res[i][j]: 54
+Thread 1: i: 4, j: 2, res[i][j]: 0
+Thread 1: i: 4, j: 3, res[i][j]: 162
+Thread 1: i: 4, j: 4, res[i][j]: 36
+Static default
+Thread 0: i: 0, j: 0, res[i][j]: 18
+Thread 0: i: 1, j: 0, res[i][j]: 42
+Thread 0: i: 1, j: 1, res[i][j]: 15
+Thread 0: i: 2, j: 0, res[i][j]: 30
+Thread 0: i: 2, j: 1, res[i][j]: 18
+Thread 0: i: 2, j: 2, res[i][j]: 18
+Thread 1: i: 3, j: 0, res[i][j]: 6
+Thread 1: i: 3, j: 1, res[i][j]: 6
+Thread 1: i: 3, j: 2, res[i][j]: 63
+Thread 1: i: 3, j: 3, res[i][j]: 0
+Thread 1: i: 4, j: 0, res[i][j]: 18
+Thread 1: i: 4, j: 1, res[i][j]: 18
+Thread 1: i: 4, j: 2, res[i][j]: 0
+Thread 1: i: 4, j: 3, res[i][j]: 54
+Thread 1: i: 4, j: 4, res[i][j]: 12
+Static 2 chunks
+Thread 0: i: 0, j: 0, res[i][j]: 36
+Thread 0: i: 1, j: 0, res[i][j]: 84
+Thread 0: i: 1, j: 1, res[i][j]: 30
+Thread 0: i: 2, j: 0, res[i][j]: 60
+Thread 1: i: 3, j: 0, res[i][j]: 12
+Thread 1: i: 3, j: 1, res[i][j]: 12
+Thread 1: i: 3, j: 2, res[i][j]: 126
+Thread 0: i: 2, j: 1, res[i][j]: 36
+Thread 0: i: 2, j: 2, res[i][j]: 36
+Thread 1: i: 3, j: 3, res[i][j]: 0
+Thread 1: i: 4, j: 0, res[i][j]: 36
+Thread 1: i: 4, j: 1, res[i][j]: 36
+Thread 1: i: 4, j: 2, res[i][j]: 0
+Thread 1: i: 4, j: 3, res[i][j]: 108
+Thread 1: i: 4, j: 4, res[i][j]: 24
+Static 4 chunks
+Thread 1: i: 3, j: 0, res[i][j]: 18
+Thread 0: i: 0, j: 0, res[i][j]: 54
+Thread 1: i: 3, j: 1, res[i][j]: 18
+Thread 0: i: 1, j: 0, res[i][j]: 126
+Thread 0: i: 1, j: 1, res[i][j]: 45
+Thread 1: i: 3, j: 2, res[i][j]: 189
+Thread 0: i: 2, j: 0, res[i][j]: 90
+Thread 0: i: 2, j: 1, res[i][j]: 54
+Thread 1: i: 3, j: 3, res[i][j]: 0
+Thread 0: i: 2, j: 2, res[i][j]: 54
+Thread 1: i: 4, j: 0, res[i][j]: 54
+Thread 1: i: 4, j: 1, res[i][j]: 54
+Thread 1: i: 4, j: 2, res[i][j]: 0
+Thread 1: i: 4, j: 3, res[i][j]: 162
+Thread 1: i: 4, j: 4, res[i][j]: 36
