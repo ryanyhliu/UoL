@@ -121,7 +121,7 @@ void calculateDist(double **inputs, double** dist, int rows, int columns){
 	for (i = 0; i < rows; i++)
 	{
 		// 打印一下行title
-		printf("%11d, ", i);
+		// printf("%11d, ", i);
 
 		dist[i][i] = 0.0;
 		#pragma omp parallel for // 并行化内层循环
@@ -181,13 +181,14 @@ int getCheapestPoint(int *seq,  double **dist, int numOfCoords){
 	int tempPoint = -1;
 
 	#pragma omp parallel for // 并行化外层循环
-	for (i = 0; i < seqValidLen - 1; i++){ // 一共要判断 路径 = 当前节点数(有效长度) - 1
+	int max_i = seqValidLen - 1; // 优化
+	for (i = 0; i < max_i; i++){ // 一共要判断 路径 = 当前节点数(有效长度) - 1
 		j = i + 1;
 		tempCurrentPathCheapest = 99999.99999;
 		#pragma omp parallel for // 并行化内层循环
 		for (tempPoint = 0; tempPoint < numOfCoords; tempPoint++){
 			if (setSeq[tempPoint] == -1){ // Unused
-				printf("\n---DEBUG---: (%d -> %d -> %d) = %011.5f", seq[i], tempPoint, seq[j], dist[seq[i]][tempPoint] + dist[tempPoint][seq[j]] - dist[i][j]);
+				// printf("\n---DEBUG---: (%d -> %d -> %d) = %011.5f", seq[i], tempPoint, seq[j], dist[seq[i]][tempPoint] + dist[tempPoint][seq[j]] - dist[i][j]);
 				
 				if (tempCurrentPathCheapest > dist[seq[i]][tempPoint] + dist[tempPoint][seq[j]] - dist[seq[i]][seq[j]]){
 					tempCurrentPathCheapest = (dist[seq[i]][tempPoint] + dist[tempPoint][seq[j]] - dist[seq[i]][seq[j]]);
@@ -195,8 +196,8 @@ int getCheapestPoint(int *seq,  double **dist, int numOfCoords){
 				}
 			}
 		}
-		printf("\n---DEBUG---: currentPathCheapest = %011.5f", tempCurrentPathCheapest);
-		printf("\n---DEBUG---: allPathCheapest = %011.5f", tempAllPathCheapest);
+		// printf("\n---DEBUG---: currentPathCheapest = %011.5f", tempCurrentPathCheapest);
+		// printf("\n---DEBUG---: allPathCheapest = %011.5f", tempAllPathCheapest);
 
 		// Record current path: Insert index & value
 		if (tempAllPathCheapest > tempCurrentPathCheapest){
@@ -212,7 +213,7 @@ int getCheapestPoint(int *seq,  double **dist, int numOfCoords){
 		seq[i + 1] = seq[i];
 	}
 	seq[tempInsertIndex] = tempAllPathCheapestPoint;
-	printf("\n---DEBUG---: Seq[%d] = %d", tempInsertIndex, tempAllPathCheapestPoint);
+	// printf("\n---DEBUG---: Seq[%d] = %d", tempInsertIndex, tempAllPathCheapestPoint);
 	
 
 	return seqValidLen + 1;
@@ -221,7 +222,6 @@ int getCheapestPoint(int *seq,  double **dist, int numOfCoords){
 
 	
 int main(void){
-	printf("YHCode\n");
 	int i = 0;
 	int j = 0;
 	
@@ -229,7 +229,7 @@ int main(void){
 	char fileName[] = "16_coords.coord";
 	int numOfCoords = readNumOfCoords(fileName);
 	double **inputs = readCoords(fileName, numOfCoords); // 得到二维数组
-	print2DArray(inputs, numOfCoords, 2);
+	// print2DArray(inputs, numOfCoords, 2);
 
 	// 距离矩阵
 	// 初始化行长度, 不然直接赋值dist[i][j]会出错
@@ -240,13 +240,14 @@ int main(void){
     }
 	
 	calculateDist(inputs, dist, numOfCoords, numOfCoords);
-	print2DArray(dist, numOfCoords, numOfCoords);
+	// print2DArray(dist, numOfCoords, numOfCoords);
 	
 
 	// 最终序列 (路径)
 	int *resultSeq = (int *)malloc((numOfCoords + 1) * sizeof(int)); // 路径 0 -> 1 -> 2 -> 0, 长度比坐标+1
 	// 初始化 -1
-	for (i = 0; i < numOfCoords + 1; i++){
+	int max_i = numOfCoords + 1;
+	for (i = 0; i < max_i; i++){
 		resultSeq[i] = -1;
 	}
 
@@ -260,12 +261,15 @@ int main(void){
 	// }
 
 	int validLenOfSeq = 2;
-	while (validLenOfSeq < numOfCoords + 1)
+	int max = numOfCoords + 1;
+	while (validLenOfSeq < max)
 	{
 		validLenOfSeq = getCheapestPoint(resultSeq, dist, numOfCoords);
-		printf("\n---DEBUG---: validLenOfSeq = %d", validLenOfSeq);
+		// printf("\n---DEBUG---: validLenOfSeq = %d", validLenOfSeq);
 	}
 	
+
+	// TODO 输出到文件
 	printf("\nResult: ");
 	for (i = 0; i < numOfCoords + 1; i++){
 		printf("%d ", resultSeq[i]);
