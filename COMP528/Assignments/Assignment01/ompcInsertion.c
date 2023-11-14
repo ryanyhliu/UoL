@@ -150,6 +150,7 @@ int getCheapestPoint(int *seq,  double **dist, int numOfCoords){
 
 
 	// 实际长度 (!= -1 元素个数)
+	#pragma omp parallel for // 并行化外层循环
 	for (i = 0; i < seqTotalLen; i++)
 	{
 		if (seq[i] != -1)
@@ -161,10 +162,12 @@ int getCheapestPoint(int *seq,  double **dist, int numOfCoords){
 	// Implement a Set -> Exclude used coordinate
 	// Initialize Set
 	int *setSeq = (int *)malloc(seqTotalLen * sizeof(int));
+	#pragma omp parallel for // 并行化外层循环
 	for (i = 0; i < seqTotalLen; i++){
 		setSeq[i] = -1; // Unused
 	}
 	// Insert Set from seq
+	#pragma omp parallel for // 并行化外层循环
 	for (i = 0; i < seqTotalLen; i++){
 		if (seq[i] != -1)
 		{
@@ -209,6 +212,7 @@ int getCheapestPoint(int *seq,  double **dist, int numOfCoords){
 	}
 
 	// Insertion
+	#pragma omp parallel for // 并行化外层循环
 	for (i = seqValidLen - 1; i >= tempInsertIndex; i--){
 		seq[i + 1] = seq[i];
 	}
@@ -235,6 +239,7 @@ int main(void){
 	// 初始化行长度, 不然直接赋值dist[i][j]会出错
 	double **dist = (double **)malloc(numOfCoords * sizeof(double *));
 	// 初始化列长度
+	#pragma omp parallel for // 并行化外层循环
 	for (i = 0; i < numOfCoords; i++) {
         dist[i] = (double *)malloc(numOfCoords * sizeof(double));
     }
@@ -247,6 +252,7 @@ int main(void){
 	int *resultSeq = (int *)malloc((numOfCoords + 1) * sizeof(int)); // 路径 0 -> 1 -> 2 -> 0, 长度比坐标+1
 	// 初始化 -1
 	int max_i = numOfCoords + 1;
+	#pragma omp parallel for // 并行化外层循环
 	for (i = 0; i < max_i; i++){
 		resultSeq[i] = -1;
 	}
@@ -262,6 +268,7 @@ int main(void){
 
 	int validLenOfSeq = 2;
 	int max = numOfCoords + 1;
+	#pragma omp parallel while // 并行化外层循环
 	while (validLenOfSeq < max)
 	{
 		validLenOfSeq = getCheapestPoint(resultSeq, dist, numOfCoords);
@@ -271,6 +278,7 @@ int main(void){
 
 	// TODO 输出到文件
 	printf("\nResult: ");
+	#pragma omp parallel for // 并行化外层循环
 	for (i = 0; i < numOfCoords + 1; i++){
 		printf("%d ", resultSeq[i]);
 	}
