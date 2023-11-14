@@ -117,7 +117,7 @@ void calculateDist(double **inputs, double** dist, int rows, int columns){
 	int j = 0;
 
 	// 计算距离
-	#pragma omp parallel for private(j) // 并行化外层循环
+	#pragma omp parallel for // 并行化外层循环
 	for (i = 0; i < rows; i++)
 	{
 		// 打印一下行title
@@ -180,8 +180,8 @@ int getCheapestPoint(int *seq,  double **dist, int numOfCoords){
 	int tempInsertIndex = -1;
 	int tempPoint = -1;
 
-	#pragma omp parallel for // 并行化外层循环
 	int max_i = seqValidLen - 1; // 优化
+	#pragma omp parallel for // 并行化外层循环
 	for (i = 0; i < max_i; i++){ // 一共要判断 路径 = 当前节点数(有效长度) - 1
 		j = i + 1;
 		tempCurrentPathCheapest = 99999.99999;
