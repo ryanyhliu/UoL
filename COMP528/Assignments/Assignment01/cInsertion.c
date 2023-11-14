@@ -120,7 +120,7 @@ void calculateDist(double **inputs, double** dist, int rows, int columns){
 	for (i = 0; i < rows; i++)
 	{
 		// 打印一下行title
-		printf("%11d, ", i);
+		// printf("%11d, ", i);
 
 		dist[i][i] = 0.0;
 		for (j = i + 1; j < rows; j++)
@@ -182,7 +182,7 @@ int getCheapestPoint(int *seq,  double **dist, int numOfCoords){
 		tempCurrentPathCheapest = 99999.99999;
 		for (tempPoint = 0; tempPoint < numOfCoords; tempPoint++){
 			if (setSeq[tempPoint] == -1){ // Unused
-				printf("\n---DEBUG---: (%d -> %d -> %d) = %011.5f", seq[i], tempPoint, seq[j], dist[seq[i]][tempPoint] + dist[tempPoint][seq[j]] - dist[i][j]);
+				// printf("\n---DEBUG---: (%d -> %d -> %d) = %011.5f", seq[i], tempPoint, seq[j], dist[seq[i]][tempPoint] + dist[tempPoint][seq[j]] - dist[i][j]);
 				
 				if (tempCurrentPathCheapest > dist[seq[i]][tempPoint] + dist[tempPoint][seq[j]] - dist[seq[i]][seq[j]]){
 					tempCurrentPathCheapest = (dist[seq[i]][tempPoint] + dist[tempPoint][seq[j]] - dist[seq[i]][seq[j]]);
@@ -190,8 +190,8 @@ int getCheapestPoint(int *seq,  double **dist, int numOfCoords){
 				}
 			}
 		}
-		printf("\n---DEBUG---: currentPathCheapest = %011.5f", tempCurrentPathCheapest);
-		printf("\n---DEBUG---: allPathCheapest = %011.5f", tempAllPathCheapest);
+		// printf("\n---DEBUG---: currentPathCheapest = %011.5f", tempCurrentPathCheapest);
+		// printf("\n---DEBUG---: allPathCheapest = %011.5f", tempAllPathCheapest);
 
 		// Record current path: Insert index & value
 		if (tempAllPathCheapest > tempCurrentPathCheapest){
@@ -207,7 +207,7 @@ int getCheapestPoint(int *seq,  double **dist, int numOfCoords){
 		seq[i + 1] = seq[i];
 	}
 	seq[tempInsertIndex] = tempAllPathCheapestPoint;
-	printf("\n---DEBUG---: Seq[%d] = %d", tempInsertIndex, tempAllPathCheapestPoint);
+	// printf("\n---DEBUG---: Seq[%d] = %d", tempInsertIndex, tempAllPathCheapestPoint);
 	
 
 	return seqValidLen + 1;
@@ -216,15 +216,15 @@ int getCheapestPoint(int *seq,  double **dist, int numOfCoords){
 
 	
 int main(void){
-	printf("YHCode\n");
+	// printf("YHCode\n");
 	int i = 0;
 	int j = 0;
 	
 	// 读取文件中数组
-	char fileName[] = "16_coords.coord";
+	char fileName[] = "4096_coords.coord";
 	int numOfCoords = readNumOfCoords(fileName);
 	double **inputs = readCoords(fileName, numOfCoords); // 得到二维数组
-	print2DArray(inputs, numOfCoords, 2);
+	// print2DArray(inputs, numOfCoords, 2);
 
 	// 距离矩阵
 	// 初始化行长度, 不然直接赋值dist[i][j]会出错
@@ -235,7 +235,7 @@ int main(void){
     }
 	
 	calculateDist(inputs, dist, numOfCoords, numOfCoords);
-	print2DArray(dist, numOfCoords, numOfCoords);
+	// print2DArray(dist, numOfCoords, numOfCoords);
 	
 
 	// 最终序列 (路径)
@@ -258,7 +258,7 @@ int main(void){
 	while (validLenOfSeq < numOfCoords + 1)
 	{
 		validLenOfSeq = getCheapestPoint(resultSeq, dist, numOfCoords);
-		printf("\n---DEBUG---: validLenOfSeq = %d", validLenOfSeq);
+		// printf("\n---DEBUG---: validLenOfSeq = %d", validLenOfSeq);
 	}
 	
 	printf("\nResult: ");
