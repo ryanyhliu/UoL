@@ -49,6 +49,7 @@ double **readCoords(char *filename, int numOfCoords){
 
 	double **coords = (double **)malloc(numOfCoords * sizeof(double *));
 
+	#pragma omp parallel for
 	for(i = 0; i < numOfCoords; i++){
 		coords[i] = (double *) malloc(2 * sizeof(int));
 		if (coords[i] == NULL){
