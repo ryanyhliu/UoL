@@ -3,6 +3,7 @@
 #include<math.h>
 #include<string.h>
 #include<stdbool.h>
+#include<mpi.h>
 
 /*This code is for reading and writing to files for the 2023-24 COMP528 CA1*/
 
