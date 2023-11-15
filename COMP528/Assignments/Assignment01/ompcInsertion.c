@@ -90,21 +90,21 @@ void *writeTourToFile(int *tour, int tourLength, char *filename){
 
 ////////////////// YH's Code Begin
 
-void print2DArray(double **arr, int rows, int columns){
-	// int rowLength = sizeof(arr) / sizeof(arr[0]);
-	// int colLength = sizeof(arr[0]) / sizeof(arr[0][0]);
-	printf("\n---Array Value---\n");
-	int i = 0;
-	int j = 0;
-	for (i = 0; i < rows; i++)
-	{
-		for (j = 0; j < columns; j++)
-		{
-			printf("%011.5f, ", arr[i][j]);
-		}
-		printf("\n");		
-	}
-}
+// void print2DArray(double **arr, int rows, int columns){
+// 	// int rowLength = sizeof(arr) / sizeof(arr[0]);
+// 	// int colLength = sizeof(arr[0]) / sizeof(arr[0][0]);
+// 	printf("\n---Array Value---\n");
+// 	int i = 0;
+// 	int j = 0;
+// 	for (i = 0; i < rows; i++)
+// 	{
+// 		for (j = 0; j < columns; j++)
+// 		{
+// 			printf("%011.5f, ", arr[i][j]);
+// 		}
+// 		printf("\n");		
+// 	}
+// }
 
 double euclideanDistance(double *a, double *b){
 	// double temp = sqrt(pow(a[0] - b[0], 2) + pow(a[1] - b[1], 2));
@@ -220,6 +220,7 @@ int getCheapestPoint(int *seq,  double **dist, int numOfCoords){
 	// printf("\n---DEBUG---: Seq[%d] = %d", tempInsertIndex, tempAllPathCheapestPoint);
 	
 
+	free(setSeq);
 	return seqValidLen + 1;
 }
 
@@ -245,6 +246,7 @@ int main(void){
     }
 	
 	calculateDist(inputs, dist, numOfCoords, numOfCoords);
+	free(inputs);
 	// print2DArray(dist, numOfCoords, numOfCoords);
 	
 
