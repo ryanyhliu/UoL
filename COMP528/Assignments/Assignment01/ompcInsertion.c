@@ -284,11 +284,17 @@ int main(void){
 
 	int validLenOfSeq = 2;
 	int max = numOfCoords + 1;
-	while (validLenOfSeq < max)
+	#pragma omp parallel
 	{
-		validLenOfSeq = getCheapestPoint(resultSeq, dist, numOfCoords);
-		printf("\n---DEBUG---: validLenOfSeq = %d", validLenOfSeq);
+		while (validLenOfSeq < max)
+		{
+			#pragma omp critical{
+				validLenOfSeq = getCheapestPoint(resultSeq, dist, numOfCoords);
+				printf("\n---DEBUG---: validLenOfSeq = %d", validLenOfSeq);
+			}
+		}
 	}
+	
 
 	printf("\n---TEST---: Final queue over");
 
