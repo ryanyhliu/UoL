@@ -315,7 +315,7 @@ int main(void){
 	{
 		while (validLenOfSeq < max)
 		{
-			#pragma omp critical(c09)
+			// #pragma omp critical(c09)
 			{
 				validLenOfSeq = getCheapestPoint(resultSeq, dist, numOfCoords);
 				printf("\n---DEBUG---: validLenOfSeq = %d", validLenOfSeq);
