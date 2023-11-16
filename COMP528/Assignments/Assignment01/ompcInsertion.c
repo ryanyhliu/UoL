@@ -157,10 +157,10 @@ int getCheapestPoint(int *seq,  double **dist, int numOfCoords){
 
 
 	// 实际长度 (!= -1 元素个数)
-	// #pragma omp parallel for // 并行化外层循环
+	#pragma omp parallel for // 并行化外层循环
 	for (i = 0; i < seqTotalLen; i++)
 	{
-		// #pragma omp critical(c01)
+		#pragma omp critical(c01)
 		{
 			if (seq[i] != -1)
 			{
@@ -172,19 +172,19 @@ int getCheapestPoint(int *seq,  double **dist, int numOfCoords){
 	// Implement a Set -> Exclude used coordinate
 	// Initialize Set
 	int *setSeq = (int *)malloc(seqTotalLen * sizeof(int));
-	// #pragma omp parallel for // 并行化外层循环
+	#pragma omp parallel for // 并行化外层循环
 	for (i = 0; i < seqTotalLen; i++){
-		// #pragma omp critical(c02)
+		#pragma omp critical(c02)
 		{
 			setSeq[i] = -1; // Unused
 		}
 	}
 	// Insert Set from seq
-	// #pragma omp parallel for // 并行化外层循环
+	#pragma omp parallel for // 并行化外层循环
 	for (i = 0; i < seqTotalLen; i++){
 		if (seq[i] != -1)
 		{
-			// #pragma omp critical(c03)
+			#pragma omp critical(c03)
 			{
 				setSeq[seq[i]] = 0; // Used
 			}
@@ -202,15 +202,15 @@ int getCheapestPoint(int *seq,  double **dist, int numOfCoords){
 	int tempPoint = -1;
 
 	int max_i = seqValidLen - 1; // 优化
-	// #pragma omp parallel for // 并行化外层循环
+	#pragma omp parallel for // 并行化外层循环
 	for (i = 0; i < max_i; i++){ // 一共要判断 路径 = 当前节点数(有效长度) - 1
-		// #pragma omp critical(c04)
+		#pragma omp critical(c04)
 		{
 			j = i + 1;
 			tempCurrentPathCheapest = 99999.99999;
-			// #pragma omp parallel for // 并行化内层循环
+			#pragma omp parallel for // 并行化内层循环
 			for (tempPoint = 0; tempPoint < numOfCoords; tempPoint++){
-				// #pragma omp critical(c05)
+				#pragma omp critical(c05)
 				{
 					if (setSeq[tempPoint] == -1){ // Unused
 						// printf("\n---DEBUG---: (%d -> %d -> %d) = %011.5f", seq[i], tempPoint, seq[j], dist[seq[i]][tempPoint] + dist[tempPoint][seq[j]] - dist[i][j]);
@@ -236,9 +236,9 @@ int getCheapestPoint(int *seq,  double **dist, int numOfCoords){
 	}
 
 	// Insertion
-	// #pragma omp parallel for // 并行化外层循环
+	#pragma omp parallel for // 并行化外层循环
 	for (i = seqValidLen - 1; i >= tempInsertIndex; i--){
-		// #pragma omp critical(c06)
+		#pragma omp critical(c06)
 		{
 			seq[i + 1] = seq[i];
 		}
@@ -311,17 +311,45 @@ int main(void){
 
 	int validLenOfSeq = 2;
 	int max = numOfCoords + 1;
+	// #pragma omp parallel shared(validLenOfSeq)
+	// {
+	// 	while (validLenOfSeq < max)
+	// 	{
+	// 		// #pragma omp critical(c09)
+	// 		{
+	// 			validLenOfSeq = getCheapestPoint(resultSeq, dist, numOfCoords);
+	// 			printf("\n---DEBUG---: validLenOfSeq = %d", validLenOfSeq);
+	// 		}
+	// 	}
+	// }
+
+	// 在 while 循环中
 	#pragma omp parallel shared(validLenOfSeq)
 	{
-		while (validLenOfSeq < max)
+		int localValidLenOfSeq;
+		#pragma omp critical
 		{
-			// #pragma omp critical(c09)
+			localValidLenOfSeq = validLenOfSeq;
+		}
+
+		#pragma omp critical
+		{
+			while (localValidLenOfSeq < max)
 			{
-				validLenOfSeq = getCheapestPoint(resultSeq, dist, numOfCoords);
-				printf("\n---DEBUG---: validLenOfSeq = %d", validLenOfSeq);
+				int newValidLenOfSeq = getCheapestPoint(resultSeq, dist, numOfCoords);
+
+				
+				// 只有当 localValidLenOfSeq 仍然是当前的 validLenOfSeq 时，才更新它
+				if (localValidLenOfSeq == validLenOfSeq) {
+					validLenOfSeq = newValidLenOfSeq;
+				}
+				localValidLenOfSeq = validLenOfSeq;
 			}
 		}
 	}
+
+
+
 	
 
 	printf("\n---TEST---: Final queue over");
