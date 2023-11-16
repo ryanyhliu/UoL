@@ -143,6 +143,8 @@ void calculateDist(double **inputs, double** dist, int rows, int columns){
  * @return 下一个坐标 (要加入到序列里)
 */
 int getCheapestPoint(int *seq,  double **dist, int numOfCoords){
+	printf("\n---TEST---: Begin cInsertion");
+
 	int i = 0;
 	int j = 0;
 	// 输出序列总长度 (总步数)
@@ -176,6 +178,8 @@ int getCheapestPoint(int *seq,  double **dist, int numOfCoords){
 			setSeq[seq[i]] = 0; // Used
 		}
 	}
+
+	printf("\n---TEST---: Init Set over");
 
 
 	double tempAllPathCheapest = 99999.99999;
@@ -221,6 +225,8 @@ int getCheapestPoint(int *seq,  double **dist, int numOfCoords){
 	seq[tempInsertIndex] = tempAllPathCheapestPoint;
 	// printf("\n---DEBUG---: Seq[%d] = %d", tempInsertIndex, tempAllPathCheapestPoint);
 	
+	printf("\n---TEST---: Add point to queue over");
+
 
 	free(setSeq);
 	return seqValidLen + 1;
@@ -238,6 +244,9 @@ int main(void){
 	double **inputs = readCoords(fileName, numOfCoords); // 得到二维数组
 	// print2DArray(inputs, numOfCoords, 2);
 
+	printf("\n---TEST---: Read file over");
+
+
 	// 距离矩阵
 	// 初始化行长度, 不然直接赋值dist[i][j]会出错
 	double **dist = (double **)malloc(numOfCoords * sizeof(double *));
@@ -250,6 +259,9 @@ int main(void){
 	calculateDist(inputs, dist, numOfCoords, numOfCoords);
 	free(inputs);
 	// print2DArray(dist, numOfCoords, numOfCoords);
+
+	printf("\n---TEST---: Calculate dist array over");
+
 	
 
 	// 最终序列 (路径)
@@ -277,6 +289,9 @@ int main(void){
 		validLenOfSeq = getCheapestPoint(resultSeq, dist, numOfCoords);
 		// printf("\n---DEBUG---: validLenOfSeq = %d", validLenOfSeq);
 	}
+
+	printf("\n---TEST---: Final queue over");
+
 	
 
 	// TODO 输出到文件
