@@ -292,9 +292,9 @@ int main(void){
 	int *resultSeq = (int *)malloc((numOfCoords + 1) * sizeof(int)); // 路径 0 -> 1 -> 2 -> 0, 长度比坐标+1
 	// 初始化 -1
 	int max_i = numOfCoords + 1;
-	// #pragma omp parallel for // 并行化外层循环
+	#pragma omp parallel for // 并行化外层循环
 	for (i = 0; i < max_i; i++){
-		// #pragma omp critical(c08)
+		#pragma omp critical(c08)
 		{
 			resultSeq[i] = -1;
 		}
@@ -311,11 +311,11 @@ int main(void){
 
 	int validLenOfSeq = 2;
 	int max = numOfCoords + 1;
-	// #pragma omp parallel
+	#pragma omp parallel shared(validLenOfSeq)
 	{
 		while (validLenOfSeq < max)
 		{
-			// #pragma omp critical(c09)
+			#pragma omp critical(c09)
 			{
 				validLenOfSeq = getCheapestPoint(resultSeq, dist, numOfCoords);
 				printf("\n---DEBUG---: validLenOfSeq = %d", validLenOfSeq);
@@ -330,7 +330,7 @@ int main(void){
 
 	// TODO 输出到文件
 	printf("\nResult: ");
-	// #pragma omp parallel for // 并行化外层循环
+	#pragma omp parallel for // 并行化外层循环
 	for (i = 0; i < numOfCoords + 1; i++){
 		printf("%d ", resultSeq[i]);
 	}
