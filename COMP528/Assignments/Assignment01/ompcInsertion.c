@@ -239,7 +239,7 @@ int main(void){
 	int j = 0;
 	
 	// 读取文件中数组
-	char fileName[] = "4096_coords.coord";
+	char fileName[] = "16_coords.coord";
 	int numOfCoords = readNumOfCoords(fileName);
 	double **inputs = readCoords(fileName, numOfCoords); // 得到二维数组
 	// print2DArray(inputs, numOfCoords, 2);
@@ -287,7 +287,7 @@ int main(void){
 	while (validLenOfSeq < max)
 	{
 		validLenOfSeq = getCheapestPoint(resultSeq, dist, numOfCoords);
-		// printf("\n---DEBUG---: validLenOfSeq = %d", validLenOfSeq);
+		printf("\n---DEBUG---: validLenOfSeq = %d", validLenOfSeq);
 	}
 
 	printf("\n---TEST---: Final queue over");
