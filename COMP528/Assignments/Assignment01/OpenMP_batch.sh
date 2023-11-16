@@ -1,7 +1,7 @@
 #!/bin/bash -l
 
 # Specific course queue and max wallclock time
-#SBATCH -p course -t 2
+SBATCH -p course -t 10
 
 # Defaults on Barkla (but set to be safe)
 ## Specify the current working directory as the location for executables/files
