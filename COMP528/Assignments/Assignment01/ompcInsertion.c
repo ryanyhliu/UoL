@@ -160,7 +160,7 @@ int getCheapestPoint(int *seq,  double **dist, int numOfCoords){
 	#pragma omp parallel for // 并行化外层循环
 	for (i = 0; i < seqTotalLen; i++)
 	{
-		#pragma omp critical c01
+		#pragma omp critical(c01)
 		{
 			if (seq[i] != -1)
 			{
@@ -174,7 +174,7 @@ int getCheapestPoint(int *seq,  double **dist, int numOfCoords){
 	int *setSeq = (int *)malloc(seqTotalLen * sizeof(int));
 	#pragma omp parallel for // 并行化外层循环
 	for (i = 0; i < seqTotalLen; i++){
-		#pragma omp critical c02
+		#pragma omp critical(c02)
 		{
 			setSeq[i] = -1; // Unused
 		}
@@ -184,7 +184,7 @@ int getCheapestPoint(int *seq,  double **dist, int numOfCoords){
 	for (i = 0; i < seqTotalLen; i++){
 		if (seq[i] != -1)
 		{
-			#pragma omp critical c03
+			#pragma omp critical(c03)
 			{
 				setSeq[seq[i]] = 0; // Used
 			}
@@ -204,13 +204,13 @@ int getCheapestPoint(int *seq,  double **dist, int numOfCoords){
 	int max_i = seqValidLen - 1; // 优化
 	#pragma omp parallel for // 并行化外层循环
 	for (i = 0; i < max_i; i++){ // 一共要判断 路径 = 当前节点数(有效长度) - 1
-		#pragma omp critical c04
+		#pragma omp critical(c04)
 		{
 			j = i + 1;
 			tempCurrentPathCheapest = 99999.99999;
 			#pragma omp parallel for // 并行化内层循环
 			for (tempPoint = 0; tempPoint < numOfCoords; tempPoint++){
-				#pragma omp critical c05
+				#pragma omp critical(c05)
 				{
 					if (setSeq[tempPoint] == -1){ // Unused
 						// printf("\n---DEBUG---: (%d -> %d -> %d) = %011.5f", seq[i], tempPoint, seq[j], dist[seq[i]][tempPoint] + dist[tempPoint][seq[j]] - dist[i][j]);
@@ -238,7 +238,7 @@ int getCheapestPoint(int *seq,  double **dist, int numOfCoords){
 	// Insertion
 	#pragma omp parallel for // 并行化外层循环
 	for (i = seqValidLen - 1; i >= tempInsertIndex; i--){
-		#pragma omp critical c06
+		#pragma omp critical(c06)
 		{
 			seq[i + 1] = seq[i];
 		}
@@ -274,7 +274,7 @@ int main(void){
 	// 初始化列长度
 	#pragma omp parallel for // 并行化外层循环
 	for (i = 0; i < numOfCoords; i++) {
-		#pragma omp critical c07
+		#pragma omp critical(c07)
 		{
         	dist[i] = (double *)malloc(numOfCoords * sizeof(double));
 		}
@@ -294,7 +294,7 @@ int main(void){
 	int max_i = numOfCoords + 1;
 	#pragma omp parallel for // 并行化外层循环
 	for (i = 0; i < max_i; i++){
-		#pragma omp critical c08
+		#pragma omp critical(c08)
 		{
 			resultSeq[i] = -1;
 		}
@@ -315,7 +315,7 @@ int main(void){
 	{
 		while (validLenOfSeq < max)
 		{
-			#pragma omp critical c09
+			#pragma omp critical(c09)
 			{
 				validLenOfSeq = getCheapestPoint(resultSeq, dist, numOfCoords);
 				printf("\n---DEBUG---: validLenOfSeq = %d", validLenOfSeq);
