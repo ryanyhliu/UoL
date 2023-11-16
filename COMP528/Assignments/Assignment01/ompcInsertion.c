@@ -311,42 +311,42 @@ int main(void){
 
 	int validLenOfSeq = 2;
 	int max = numOfCoords + 1;
-	// #pragma omp parallel shared(validLenOfSeq)
-	// {
-	// 	while (validLenOfSeq < max)
-	// 	{
-	// 		// #pragma omp critical(c09)
-	// 		{
-	// 			validLenOfSeq = getCheapestPoint(resultSeq, dist, numOfCoords);
-	// 			printf("\n---DEBUG---: validLenOfSeq = %d", validLenOfSeq);
-	// 		}
-	// 	}
-	// }
-
-	// 在 while 循环中
 	#pragma omp parallel shared(validLenOfSeq)
 	{
-		int localValidLenOfSeq;
-		#pragma omp critical
+		#pragma omp critical(c09)
 		{
-			localValidLenOfSeq = validLenOfSeq;
-		}
-
-		#pragma omp critical
-		{
-			while (localValidLenOfSeq < max)
+			while (validLenOfSeq < max)
 			{
-				int newValidLenOfSeq = getCheapestPoint(resultSeq, dist, numOfCoords);
-
-				
-				// 只有当 localValidLenOfSeq 仍然是当前的 validLenOfSeq 时，才更新它
-				if (localValidLenOfSeq == validLenOfSeq) {
-					validLenOfSeq = newValidLenOfSeq;
-				}
-				localValidLenOfSeq = validLenOfSeq;
+				validLenOfSeq = getCheapestPoint(resultSeq, dist, numOfCoords);
+				printf("\n---DEBUG---: validLenOfSeq = %d", validLenOfSeq);
 			}
 		}
 	}
+
+	// 在 while 循环中
+	// #pragma omp parallel shared(validLenOfSeq)
+	// {
+	// 	int localValidLenOfSeq;
+	// 	#pragma omp critical
+	// 	{
+	// 		localValidLenOfSeq = validLenOfSeq;
+	// 	}
+
+	// 	#pragma omp critical
+	// 	{
+	// 		while (localValidLenOfSeq < max)
+	// 		{
+	// 			int newValidLenOfSeq = getCheapestPoint(resultSeq, dist, numOfCoords);
+
+				
+	// 			// 只有当 localValidLenOfSeq 仍然是当前的 validLenOfSeq 时，才更新它
+	// 			if (localValidLenOfSeq == validLenOfSeq) {
+	// 				validLenOfSeq = newValidLenOfSeq;
+	// 			}
+	// 			localValidLenOfSeq = validLenOfSeq;
+	// 		}
+	// 	}
+	// }
 
 
 
