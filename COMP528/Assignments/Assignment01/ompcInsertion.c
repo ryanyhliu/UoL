@@ -337,31 +337,6 @@ int main(void){
 		}
 	}
 
-	// 在 while 循环中
-	// #pragma omp parallel shared(validLenOfSeq)
-	// {
-	// 	int localValidLenOfSeq;
-	// 	#pragma omp critical
-	// 	{
-	// 		localValidLenOfSeq = validLenOfSeq;
-	// 	}
-
-	// 	#pragma omp critical
-	// 	{
-	// 		while (localValidLenOfSeq < max)
-	// 		{
-	// 			int newValidLenOfSeq = getCheapestPoint(resultSeq, dist, numOfCoords);
-
-				
-	// 			// 只有当 localValidLenOfSeq 仍然是当前的 validLenOfSeq 时，才更新它
-	// 			if (localValidLenOfSeq == validLenOfSeq) {
-	// 				validLenOfSeq = newValidLenOfSeq;
-	// 			}
-	// 			localValidLenOfSeq = validLenOfSeq;
-	// 		}
-	// 	}
-	// }
-
 
 
 	
