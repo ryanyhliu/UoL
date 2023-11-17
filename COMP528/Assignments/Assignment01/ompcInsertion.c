@@ -354,12 +354,13 @@ int main(void){
 	printf("\n---TEST---: Final queue over");
 
 	
-
-	// TODO 输出到文件
-	printf("\nResult: ");
-	
-	for (i = 0; i < numOfCoords + 1; i++){
-		printf("%d ", resultSeq[i]);
+	#pragma omp single
+	{
+		// TODO 输出到文件
+		printf("\nResult: ");
+		for (i = 0; i < numOfCoords + 1; i++){
+			printf("%d ", resultSeq[i]);
+		}
 	}
 
 	
