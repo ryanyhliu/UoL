@@ -234,16 +234,31 @@ int getCheapestPoint(int *seq,  double **dist, int numOfCoords){
 		}
 	}
 
-	// Insertion
-	#pragma omp parallel for // 并行化外层循环
-	for (i = seqValidLen - 1; i >= tempInsertIndex; i--){
-		#pragma omp critical(c06)
-		{
-			seq[i + 1] = seq[i];
-		}
-	}
-	seq[tempInsertIndex] = tempAllPathCheapestPoint;
+	// // Insertion
+	// #pragma omp parallel for // 并行化外层循环
+	// for (i = seqValidLen - 1; i >= tempInsertIndex; i--){
+	// 	#pragma omp critical(c06)
+	// 	{
+	// 		seq[i + 1] = seq[i];
+	// 	}
+	// }
+	// seq[tempInsertIndex] = tempAllPathCheapestPoint;
 	// printf("\n---DEBUG---: Seq[%d] = %d", tempInsertIndex, tempAllPathCheapestPoint);
+
+	// 使用额外的数组进行并行处理
+	int *newSeq = (int *)malloc((seqTotalLen + 1) * sizeof(int));
+	memcpy(newSeq, seq, seqTotalLen * sizeof(int)); // 复制原始数组
+
+	#pragma omp parallel for
+	for (i = seqValidLen - 1; i >= tempInsertIndex; i--) {
+		newSeq[i + 1] = seq[i];
+	}
+	newSeq[tempInsertIndex] = tempAllPathCheapestPoint;
+
+	// 将新数组复制回原数组
+	memcpy(seq, newSeq, (seqTotalLen + 1) * sizeof(int));
+	free(newSeq);
+
 	
 	printf("\n---TEST---: Add point to queue over");
 
