@@ -118,14 +118,14 @@ void calculateDist(double **inputs, double** dist, int rows, int columns){
 	int j = 0;
 
 	// 计算距离
-	// #pragma omp parallel for // 并行化外层循环
+	#pragma omp parallel for // 并行化外层循环
 	for (i = 0; i < rows; i++)
 	{
 		// 打印一下行title
 		// printf("%11d, ", i);
 
 		dist[i][i] = 0.0;
-		// #pragma omp parallel for // 并行化内层循环
+		#pragma omp parallel for // 并行化内层循环
 		for (j = i + 1; j < rows; j++)
 		{
 			// #pragma omp critical
@@ -145,7 +145,7 @@ void calculateDist(double **inputs, double** dist, int rows, int columns){
  * @return 下一个坐标 (要加入到序列里)
 */
 int getCheapestPoint(int *seq,  double **dist, int numOfCoords){
-	printf("\n---TEST---: Begin cInsertion");
+	// printf("\n---TEST---: Begin cInsertion");
 
 	int i = 0;
 	int j = 0;
@@ -190,7 +190,7 @@ int getCheapestPoint(int *seq,  double **dist, int numOfCoords){
 		}
 	}
 
-	printf("\n---TEST---: Init Set over");
+	// printf("\n---TEST---: Init Set over");
 
 
 	double tempAllPathCheapest = 99999.99999;
@@ -260,7 +260,7 @@ int getCheapestPoint(int *seq,  double **dist, int numOfCoords){
 	free(newSeq);
 
 	
-	printf("\n---TEST---: Add point to queue over");
+	// printf("\n---TEST---: Add point to queue over");
 
 
 	free(setSeq);
@@ -279,7 +279,7 @@ int main(void){
 	double **inputs = readCoords(fileName, numOfCoords); // 得到二维数组
 	// print2DArray(inputs, numOfCoords, 2);
 
-	printf("\n---TEST---: Read file over");
+	// printf("\n---TEST---: Read file over");
 
 
 	// 距离矩阵
@@ -298,7 +298,7 @@ int main(void){
 	free(inputs);
 	// print2DArray(dist, numOfCoords, numOfCoords);
 
-	printf("\n---TEST---: Calculate dist array over");
+	// printf("\n---TEST---: Calculate dist array over");
 
 	
 
