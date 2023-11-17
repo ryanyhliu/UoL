@@ -308,7 +308,7 @@ int main(void){
 	int max_i = numOfCoords + 1;
 	#pragma omp parallel for // 并行化外层循环
 	for (i = 0; i < max_i; i++){
-		#pragma omp critical(c08)
+		// #pragma omp critical(c08)
 		{
 			resultSeq[i] = -1;
 		}
