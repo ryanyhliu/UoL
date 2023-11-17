@@ -159,7 +159,7 @@ int getCheapestPoint(int *seq,  double **dist, int numOfCoords){
 	#pragma omp parallel for // 并行化外层循环
 	for (i = 0; i < seqTotalLen; i++)
 	{
-		#pragma omp critical(c01)
+		// #pragma omp critical(c01)
 		{
 			if (seq[i] != -1)
 			{
@@ -173,7 +173,7 @@ int getCheapestPoint(int *seq,  double **dist, int numOfCoords){
 	int *setSeq = (int *)malloc(seqTotalLen * sizeof(int));
 	#pragma omp parallel for // 并行化外层循环
 	for (i = 0; i < seqTotalLen; i++){
-		#pragma omp critical(c02)
+		// #pragma omp critical(c02)
 		{
 			setSeq[i] = -1; // Unused
 		}
@@ -183,7 +183,7 @@ int getCheapestPoint(int *seq,  double **dist, int numOfCoords){
 	for (i = 0; i < seqTotalLen; i++){
 		if (seq[i] != -1)
 		{
-			#pragma omp critical(c03)
+			// #pragma omp critical(c03)
 			{
 				setSeq[seq[i]] = 0; // Used
 			}
