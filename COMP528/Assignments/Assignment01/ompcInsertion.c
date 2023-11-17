@@ -203,13 +203,13 @@ int getCheapestPoint(int *seq,  double **dist, int numOfCoords){
 	int max_i = seqValidLen - 1; // 优化
 	#pragma omp parallel for // 并行化外层循环
 	for (i = 0; i < max_i; i++){ // 一共要判断 路径 = 当前节点数(有效长度) - 1
-		#pragma omp critical(c04)
+		// #pragma omp critical(c04)
 		{
 			j = i + 1;
 			tempCurrentPathCheapest = 99999.99999;
 			#pragma omp parallel for // 并行化内层循环
 			for (tempPoint = 0; tempPoint < numOfCoords; tempPoint++){
-				#pragma omp critical(c05)
+				// #pragma omp critical(c05)
 				{
 					if (setSeq[tempPoint] == -1){ // Unused
 						// printf("\n---DEBUG---: (%d -> %d -> %d) = %011.5f", seq[i], tempPoint, seq[j], dist[seq[i]][tempPoint] + dist[tempPoint][seq[j]] - dist[i][j]);
