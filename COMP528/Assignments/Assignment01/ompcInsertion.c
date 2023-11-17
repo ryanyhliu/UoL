@@ -288,7 +288,7 @@ int main(void){
 	// 初始化列长度
 	#pragma omp parallel for // 并行化外层循环
 	for (i = 0; i < numOfCoords; i++) {
-		#pragma omp critical(c07)
+		// #pragma omp critical(c07)
 		{
         	dist[i] = (double *)malloc(numOfCoords * sizeof(double));
 		}
