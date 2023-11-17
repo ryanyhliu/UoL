@@ -50,7 +50,6 @@ double **readCoords(char *filename, int numOfCoords){
 
 	double **coords = (double **)malloc(numOfCoords * sizeof(double *));
 
-	// #pragma omp parallel for
 	for(i = 0; i < numOfCoords; i++){
 		coords[i] = (double *) malloc(2 * sizeof(int));
 		if (coords[i] == NULL){
@@ -358,7 +357,7 @@ int main(void){
 
 	// TODO 输出到文件
 	printf("\nResult: ");
-	#pragma omp parallel for // 并行化外层循环
+	
 	for (i = 0; i < numOfCoords + 1; i++){
 		printf("%d ", resultSeq[i]);
 	}
