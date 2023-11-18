@@ -16,7 +16,7 @@
 
 /*If there are any issues with this code, please contact: h.j.forbes@liverpool.ac.uk*/
 
-int readNumOfCoords(char *fileName);
+int readNumOfCoords(char *inputFileName);
 double **readCoords(char *filename, int numOfCoords);
 
 /*Gets the number of the coordinates in the file. Returns as a single integer*/
@@ -109,8 +109,6 @@ void *writeTourToFile(int *tour, int tourLength, char *filename){
 // }
 
 double euclideanDistance(double *a, double *b){
-	// double temp = sqrt(pow(a[0] - b[0], 2) + pow(a[1] - b[1], 2));
-	// printf("\n___DEBUG___: temp = %f\n", temp);
 	return sqrt(pow(a[0] - b[0], 2) + pow(a[1] - b[1], 2));
 }
 
@@ -122,9 +120,6 @@ void calculateDist(double **inputs, double** dist, int rows, int columns){
 	#pragma omp parallel for // 并行化外层循环
 	for (i = 0; i < rows; i++)
 	{
-		// 打印一下行title
-		// printf("%11d, ", i);
-
 		dist[i][i] = 0.0;
 		#pragma omp parallel for // 并行化内层循环
 		for (j = i + 1; j < rows; j++)
@@ -143,7 +138,7 @@ void calculateDist(double **inputs, double** dist, int rows, int columns){
  * @param seq 当前序列, 寻找下一个点之前, 要排除已有的坐标
  * @param dist
  * @param numOfCoords 总坐标个数
- * @return 下一个坐标 (要加入到序列里)
+ * @return 当前长度
 */
 int getCheapestPoint(int *seq,  double **dist, int numOfCoords){
 	// printf("\n---TEST---: Begin cInsertion");
@@ -270,24 +265,25 @@ int getCheapestPoint(int *seq,  double **dist, int numOfCoords){
 
 
 	
-int main(void){
-	clock_t startTime = clock();
-
-	int i = 0;
-	int j = 0;
+int main(int argc, char *argv[]){
+	clock_t startTime = clock(); // 计算运行时间
+	int i = 0; // 循环用
+	int j = 0; // 循环用
 	
-	// 读取文件中数组
-	char fileName[] = "16_coords.coord";
-	int numOfCoords = readNumOfCoords(fileName);
-	double **inputs = readCoords(fileName, numOfCoords); // 得到二维数组
+	char *inputFileName = "16_coords.coord"; // 输入文件名
+	char *outputFileName = "myout.dat";
+	// char *inputFileName  = argv[1];  // 输入文件名
+	// char *outputFileName = argv[2];  // 输出文件名
+	int numOfCoords = readNumOfCoords(inputFileName); // 坐标个数
+	double **inputs = readCoords(inputFileName, numOfCoords); // 坐标
 	// print2DArray(inputs, numOfCoords, 2);
 
 	// printf("\n---TEST---: Read file over");
 
 
-	// 距离矩阵
-	// 初始化行长度, 不然直接赋值dist[i][j]会出错
-	double **dist = (double **)malloc(numOfCoords * sizeof(double *));
+	
+	// 初始化行长度
+	double **dist = (double **)malloc(numOfCoords * sizeof(double *)); // 距离矩阵
 	// 初始化列长度
 	#pragma omp parallel for // 并行化外层循环
 	for (i = 0; i < numOfCoords; i++) {
@@ -304,9 +300,8 @@ int main(void){
 	// printf("\n---TEST---: Calculate dist array over");
 
 	
-
-	// 最终序列 (路径)
-	int *resultSeq = (int *)malloc((numOfCoords + 1) * sizeof(int)); // 路径 0 -> 1 -> 2 -> 0, 长度比坐标+1
+	// 路径 0 -> 1 -> 2 -> 0, 长度比坐标+1
+	int *resultSeq = (int *)malloc((numOfCoords + 1) * sizeof(int)); // 最终序列 (路径)
 	// 初始化 -1
 	int max_i = numOfCoords + 1;
 	#pragma omp parallel for // 并行化外层循环
@@ -317,50 +312,36 @@ int main(void){
 		}
 	}
 
-	// 0 -> 0
+	// 插入开头和结尾 0 -> 0
 	resultSeq[0] = 0;
 	resultSeq[1] = 0; 
-	
-	// for (i = 1; i < numOfCoords + 1; i++){
-	// 	resultSeq[i] = getCheapestPoint(resultSeq, dist, numOfCoords);
-	// 	printf(" | resultSeq[%d] = (%d)",i , resultSeq[i]);
-	// }
+	int currentSteps = 2; // 当前步数
 
-	int validLenOfSeq = 2;
-	int max = numOfCoords + 1;
+	int totalSteps = numOfCoords + 1; // 总步数 (坐标数 + 1)
 	#pragma omp parallel shared(validLenOfSeq)
 	{
 		#pragma omp critical(c09)
 		{
-			while (validLenOfSeq < max)
+			while (currentSteps < totalSteps)
 			{
-				validLenOfSeq = getCheapestPoint(resultSeq, dist, numOfCoords);
-				printf("\n---DEBUG---: validLenOfSeq = %d", validLenOfSeq);
+				currentSteps = getCheapestPoint(resultSeq, dist, numOfCoords);
+				printf("\n---DEBUG---: currentSteps = %d", currentSteps);
 			}
 		}
 	}
 
-
-
-	
-
-	printf("\n---TEST---: Final queue over");
-
-	
 	#pragma omp single
 	{
-		// TODO 输出到文件
 		printf("\nResult: ");
 		for (i = 0; i < numOfCoords + 1; i++){
 			printf("%d ", resultSeq[i]);
 		}
 	}
 
-	
 
 
-	// char outputFileName[] = "output.txt";
-	// writeTourToFile(tour, tourLength, outputFileName);
+
+	writeTourToFile(resultSeq, totalSteps, outputFileName);
 
 	printf("\nTOTAL Seconds: %f ", ((double)clock() - startTime));
 	return 0;
