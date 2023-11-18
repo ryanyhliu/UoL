@@ -216,6 +216,8 @@ void calculateDist(double **inputs, double **dist, int numOfCoords)
 
 int main(int argc, char *argv[])
 {
+	clock_t startTime = clock();
+
 	// 初始化和读取输入数据
 	char *inputFileName = "16_coords.coord"; // 根据实际情况调整文件名
 	int numOfCoords = readNumOfCoords(inputFileName);
@@ -264,12 +266,11 @@ int main(int argc, char *argv[])
 	currentSeqLen++;
 
 	// 输出最终序列
-	printf("Final sequence: ");
+	printf("\nFinal sequence: ");
 	for (int i = 0; i < currentSeqLen; i++)
 	{
 		printf("%d ", resultSeq[i]);
 	}
-	printf("\n");
 
 	// 清理资源
 #pragma omp parallel for
@@ -280,6 +281,8 @@ int main(int argc, char *argv[])
 	free(dist);
 	free(inputs);
 	free(resultSeq);
+
+	printf("\nTIME: %f", ((double)(clock() - startTime)));
 
 	return 0;
 }
