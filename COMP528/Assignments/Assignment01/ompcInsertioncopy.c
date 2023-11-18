@@ -252,13 +252,16 @@ int main(int argc, char *argv[])
 			currentSeqLen++;
 		}
 
-		// 打印当前序列
-		printf("Current sequence length: %d\n", currentSeqLen);
-		for (int j = 0; j < currentSeqLen; j++)
-		{
-			printf("%d ", resultSeq[j]);
+		if (currentSeqLen % 100 == 0){
+			// 打印当前序列
+			printf("Current sequence length: %d\n", currentSeqLen);
+			for (int j = 0; j < currentSeqLen; j++)
+			{
+				printf("%d ", resultSeq[j]);
+			}
+			printf("\n");
 		}
-		printf("\n");
+		
 	}
 
 	// 添加结束点
