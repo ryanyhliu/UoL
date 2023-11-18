@@ -219,7 +219,7 @@ int main(int argc, char *argv[])
 	clock_t startTime = clock();
 
 	// 初始化和读取输入数据
-	char *inputFileName = "16_coords.coord"; // 根据实际情况调整文件名
+	char *inputFileName = "4096_coords.coord"; // 根据实际情况调整文件名
 	int numOfCoords = readNumOfCoords(inputFileName);
 	double **inputs = readCoords(inputFileName, numOfCoords);
 
@@ -254,12 +254,13 @@ int main(int argc, char *argv[])
 
 		if (currentSeqLen % 100 == 0){
 			// 打印当前序列
-			printf("Current sequence length: %d\n", currentSeqLen);
-			for (int j = 0; j < currentSeqLen; j++)
-			{
-				printf("%d ", resultSeq[j]);
-			}
-			printf("\n");
+			// printf("Current sequence length: %d\n", currentSeqLen);
+			// for (int j = 0; j < currentSeqLen; j++)
+			// {
+			// 	printf("%d ", resultSeq[j]);
+			// }
+			// printf("\n");
+			printf("\nTIME: length: %d, time: %f", currentSeqLen, ((double)(clock() - startTime)) / 1000);
 		}
 		
 	}
