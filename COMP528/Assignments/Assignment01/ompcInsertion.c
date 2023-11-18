@@ -4,6 +4,7 @@
 #include<string.h>
 #include<stdbool.h>
 #include<omp.h>
+#include<time.h>
 
 /*This code is for reading and writing to files for the 2023-24 COMP528 CA1*/
 
@@ -270,6 +271,8 @@ int getCheapestPoint(int *seq,  double **dist, int numOfCoords){
 
 	
 int main(void){
+	clock_t startTime = clock();
+
 	int i = 0;
 	int j = 0;
 	
@@ -359,6 +362,7 @@ int main(void){
 	// char outputFileName[] = "output.txt";
 	// writeTourToFile(tour, tourLength, outputFileName);
 
+	printf("\nTOTAL Seconds: %f ", ((double)clock() - startTime));
 	return 0;
 }
 
