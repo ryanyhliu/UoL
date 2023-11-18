@@ -318,7 +318,7 @@ int main(int argc, char *argv[]){
 	int currentSteps = 2; // 当前步数
 
 	int totalSteps = numOfCoords + 1; // 总步数 (坐标数 + 1)
-	#pragma omp parallel shared(validLenOfSeq)
+	#pragma omp parallel shared(currentSteps)
 	{
 		#pragma omp critical(c09)
 		{
