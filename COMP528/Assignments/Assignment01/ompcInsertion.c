@@ -224,7 +224,7 @@ void insertPoint(int *seq, int seqLen, InsertionTask task)
 
 	if (task.insertIndex < seqLen + 1)
 	{
-#pragma omp parallel for
+// #pragma omp parallel for
 		for (i = seqLen; i >= task.insertIndex; i--)
 		{
 			seq[i + 1] = seq[i];
