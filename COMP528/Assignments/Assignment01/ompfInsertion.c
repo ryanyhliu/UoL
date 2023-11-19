@@ -162,16 +162,29 @@ InsertionTask findFarthestInsertion(int *seq, double **dist, int numOfCoords, in
 
 	free(inSeq); // 释放集合内存
 
-	// 重新计算最佳插入位置
-	double tempClosest = DBL_MAX;
-	for (int i = 0; i < seqValidLen - 1; i++)
+	// 并行化重新计算最佳插入位置
+	InsertionTask bestTaskInThread;
+	#pragma omp parallel private(bestTaskInThread)
 	{
-		int j = i + 1;
-		double insertCost = dist[seq[i]][globalBestTask.insertPoint] + dist[globalBestTask.insertPoint][seq[j]] - dist[seq[i]][seq[j]];
-		if (insertCost < tempClosest)
+		bestTaskInThread.insertIndex = -1;
+		bestTaskInThread.insertPoint = globalBestTask.insertPoint;
+		bestTaskInThread.cost = DBL_MAX;
+
+		#pragma omp for nowait
+		for (int i = 0; i < seqValidLen - 1; i++) {
+			int j = i + 1;
+			double insertCost = dist[seq[i]][globalBestTask.insertPoint] + dist[globalBestTask.insertPoint][seq[j]] - dist[seq[i]][seq[j]];
+			if (insertCost < bestTaskInThread.cost) {
+				bestTaskInThread.cost = insertCost;
+				bestTaskInThread.insertIndex = i + 1;
+			}
+		}
+
+		#pragma omp critical
 		{
-			tempClosest = insertCost;
-			globalBestTask.insertIndex = i + 1;
+			if (bestTaskInThread.cost < globalBestTask.cost) {
+				globalBestTask = bestTaskInThread;
+			}
 		}
 	}
 
@@ -182,6 +195,7 @@ void insertPoint(int *seq, int seqLen, InsertionTask task)
 {
 	if (task.insertIndex < seqLen + 1)
 	{
+#pragma omp parallel for
 		for (int i = seqLen; i >= task.insertIndex; i--)
 		{
 			seq[i + 1] = seq[i];
@@ -229,6 +243,7 @@ int main(int argc, char *argv[])
 
 	// 初始化距离矩阵
 	double **dist = (double **)malloc(numOfCoords * sizeof(double *));
+#pragma omp parallel for
 	for (int i = 0; i < numOfCoords; i++)
 	{
 		dist[i] = (double *)malloc(numOfCoords * sizeof(double));
@@ -238,6 +253,7 @@ int main(int argc, char *argv[])
 	// 初始化序列，包括起始点
 	int *resultSeq = (int *)malloc((numOfCoords + 1) * sizeof(int));
 	resultSeq[0] = 0;
+#pragma omp parallel for
 	for (int i = 1; i <= numOfCoords; i++)
 	{
 		resultSeq[i] = -1;
@@ -276,6 +292,7 @@ int main(int argc, char *argv[])
 	writeTourToFile(resultSeq, numOfCoords + 1, outputFileName);
 
 	// 清理资源
+#pragma omp parallel for
 	for (int i = 0; i < numOfCoords; i++)
 	{
 		free(dist[i]);
