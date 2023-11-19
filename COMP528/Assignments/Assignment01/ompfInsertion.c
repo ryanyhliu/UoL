@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <time.h>
+#include <omp.h>
 
 int readNumOfCoords(char *fileName);
 double **readCoords(char *filename, int numOfCoords);
