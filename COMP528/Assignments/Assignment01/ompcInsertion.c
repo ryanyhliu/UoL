@@ -112,8 +112,6 @@ typedef struct
 
 double const DBL_MAX = 99999.99999;
 
-
-
 InsertionTask findCheapestInsertion(int *seq, double **dist, int numOfCoords, int seqValidLen)
 {
 	InsertionTask globalBestTask = {-1, -1, DBL_MAX};
@@ -221,7 +219,10 @@ int main(int argc, char *argv[])
 	clock_t startTime = clock();
 
 	// 初始化和读取输入数据
-	char *inputFileName = "9_coords.coord"; // 根据实际情况调整文件名
+	// char *inputFileName = argv[0];
+	// char *outputFileName = argv[1];
+	char *inputFileName = "16_coords.coord"; // 根据实际情况调整文件名
+	char *outputFileName = "out.txt";
 	int numOfCoords = readNumOfCoords(inputFileName);
 	double **inputs = readCoords(inputFileName, numOfCoords);
 
@@ -235,7 +236,7 @@ int main(int argc, char *argv[])
 	calculateDist(inputs, dist, numOfCoords);
 
 	// 初始化序列，假设起始点为0
-	int *resultSeq = (int *)malloc((numOfCoords + 2) * sizeof(int)); // +2 for start and end
+	int *resultSeq = (int *)malloc((numOfCoords + 1) * sizeof(int)); // +1 for start and end
 	resultSeq[0] = 0;												 // 起始点
 #pragma omp parallel for
 	for (int i = 1; i <= numOfCoords; i++)
@@ -243,9 +244,9 @@ int main(int argc, char *argv[])
 		resultSeq[i] = -1; // 初始化为-1
 	}
 
-	int currentSeqLen = 1;			// 当前序列长度，初始包含起始点
+	int currentSeqLen = 1; // 当前序列长度，初始包含起始点
 
-	for ( ; currentSeqLen < numOfCoords ; )
+	for (; currentSeqLen < numOfCoords;)
 	{
 		InsertionTask task = findCheapestInsertion(resultSeq, dist, numOfCoords, currentSeqLen);
 		if (task.insertPoint != -1)
@@ -254,29 +255,25 @@ int main(int argc, char *argv[])
 			currentSeqLen++;
 		}
 
-		if (currentSeqLen % 100 == 0){
-			// 打印当前序列
-			// printf("Current sequence length: %d\n", currentSeqLen);
-			// for (int j = 0; j < currentSeqLen; j++)
-			// {
-			// 	printf("%d ", resultSeq[j]);
-			// }
-			// printf("\n");
+		// 打印当前序列
+		if (currentSeqLen % 10 == 0)
+		{
 			printf("\nTIME: length: %d, time: %f", currentSeqLen, ((double)(clock() - startTime)) / 1000);
 		}
-		
 	}
 
 	// 添加结束点
-	resultSeq[currentSeqLen] = 0;
-	currentSeqLen++;
+	resultSeq[numOfCoords] = 0;
 
 	// 输出最终序列
 	printf("\nFinal sequence: ");
-	for (int i = 0; i < currentSeqLen; i++)
+	for (int i = 0; i < numOfCoords + 1; i++)
 	{
 		printf("%d ", resultSeq[i]);
 	}
+
+	// 写入文件
+	writeTourToFile(resultSeq, numOfCoords + 1, outputFileName);
 
 	// 清理资源
 #pragma omp parallel for
