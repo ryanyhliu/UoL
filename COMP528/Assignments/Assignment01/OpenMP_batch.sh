@@ -1,7 +1,7 @@
 #!/bin/bash -l
 
 # Specific course queue and max wallclock time
-#SBATCH -p course -t 2
+SBATCH -p course -t 15
 
 # Defaults on Barkla (but set to be safe)
 ## Specify the current working directory as the location for executables/files
@@ -10,7 +10,7 @@
 #SBATCH --export=ALL
 
 # load modules intel compiler
-module load compilers/intel/2019u5
+module load compilers/intel/2019u5 
 
 ## SLURM terms
 ## nodes            relates to number of nodes
@@ -34,21 +34,20 @@ echo
 echo ------------------------------------
 
 #this tests if the file $EXE is present and executable
-if test -x $EXE; then
+if test -x $EXE; then 
       # set number of threads
-
+      
       # if '-c' not used then default to 1. SLURM_CPUS_PER_TASK is given by -c
-      export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK:-1}
+      export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK:-1} 
       echo using ${OMP_NUM_THREADS} OpenMP threads
       echo
-      echo
+      echo 
       echo Multiple execution..
       echo
       echo
 
       # run multiple times. Because we have exported how many threads we're using, we just execute the file.
-      # for i in {1..5}; do ./${EXE}; done
-      for i in {1..5}; do ./${EXE} $COORD_FILE_NAME $OUTPUT_FILE_NAME; done
+      for i in {1..5}; do ./${EXE} $COORD_FILE_NAME $OUTPUT_FILE_NAME; done    
 else
-      echo $SRC did not built to $EXE
+     echo $SRC did not built to $EXE
 fi
