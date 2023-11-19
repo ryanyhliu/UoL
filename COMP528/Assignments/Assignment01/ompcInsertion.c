@@ -279,14 +279,12 @@ void calculateDist(double **inputs, double **dist, int numOfCoords)
 
 int main(int argc, char *argv[])
 {
-
-	printf("\nSTART\n");
 	clock_t startTime = clock();
 
 	// 初始化和读取输入数据
 	// char *inputFileName = argv[0];
 	// char *outputFileName = argv[1];
-	char *inputFileName = "16_coords.coord"; // 根据实际情况调整文件名
+	char *inputFileName = "4096_coords.coord"; // 根据实际情况调整文件名
 	char *outputFileName = "out.txt";
 	int numOfCoords = readNumOfCoords(inputFileName);
 	double **inputs = readCoords(inputFileName, numOfCoords);
