@@ -279,82 +279,81 @@ void calculateDist(double **inputs, double **dist, int numOfCoords)
 
 int main(int argc, char *argv[])
 {
-#pragma omp single
+
+	printf("\nSTART\n");
+	clock_t startTime = clock();
+
+	// 初始化和读取输入数据
+	// char *inputFileName = argv[0];
+	// char *outputFileName = argv[1];
+	char *inputFileName = "16_coords.coord"; // 根据实际情况调整文件名
+	char *outputFileName = "out.txt";
+	int numOfCoords = readNumOfCoords(inputFileName);
+	double **inputs = readCoords(inputFileName, numOfCoords);
+
+	int i;
+
+	// 初始化距离矩阵
+	double **dist = (double **)malloc(numOfCoords * sizeof(double *));
+#pragma omp parallel for
+	for (i = 0; i < numOfCoords; i++)
 	{
-		printf("\nSTART\n");
-		clock_t startTime = clock();
-
-		// 初始化和读取输入数据
-		// char *inputFileName = argv[0];
-		// char *outputFileName = argv[1];
-		char *inputFileName = "16_coords.coord"; // 根据实际情况调整文件名
-		char *outputFileName = "out.txt";
-		int numOfCoords = readNumOfCoords(inputFileName);
-		double **inputs = readCoords(inputFileName, numOfCoords);
-
-		int i;
-
-		// 初始化距离矩阵
-		double **dist = (double **)malloc(numOfCoords * sizeof(double *));
-#pragma omp parallel for
-		for (i = 0; i < numOfCoords; i++)
-		{
-			dist[i] = (double *)malloc(numOfCoords * sizeof(double));
-		}
-		calculateDist(inputs, dist, numOfCoords);
-
-		// 初始化序列，假设起始点为0
-		int *resultSeq = (int *)malloc((numOfCoords + 1) * sizeof(int)); // +1 for start and end
-		resultSeq[0] = 0;												 // 起始点
-#pragma omp parallel for
-		for (i = 1; i <= numOfCoords; i++)
-		{
-			resultSeq[i] = -1; // 初始化为-1
-		}
-
-		int currentSeqLen = 1; // 当前序列长度，初始包含起始点
-
-		for (; currentSeqLen < numOfCoords;)
-		{
-			InsertionTask task = findCheapestInsertion(resultSeq, dist, numOfCoords, currentSeqLen);
-			if (task.insertPoint != -1)
-			{
-				insertPoint(resultSeq, currentSeqLen, task);
-				currentSeqLen++;
-			}
-
-			// 打印当前序列
-			if (currentSeqLen % 100 == 0)
-			{
-				printf("CurrentTIME: length: %d, time: %f\n", currentSeqLen, ((double)(clock() - startTime)) / 1000);
-			}
-		}
-
-		// 添加结束点
-		resultSeq[numOfCoords] = 0;
-
-		// 输出最终序列
-		printf("Final sequence: ");
-		for (i = 0; i < numOfCoords + 1; i++)
-		{
-			printf("%d ", resultSeq[i]);
-		}
-		printf("\n");
-
-		// 写入文件
-		writeTourToFile(resultSeq, numOfCoords + 1, outputFileName);
-
-		// 清理资源
-#pragma omp parallel for
-		for (i = 0; i < numOfCoords; i++)
-		{
-			free(dist[i]);
-		}
-		free(dist);
-		free(inputs);
-		free(resultSeq);
-
-		printf("Total TIME: %f \n", ((double)(clock() - startTime)));
+		dist[i] = (double *)malloc(numOfCoords * sizeof(double));
 	}
+	calculateDist(inputs, dist, numOfCoords);
+
+	// 初始化序列，假设起始点为0
+	int *resultSeq = (int *)malloc((numOfCoords + 1) * sizeof(int)); // +1 for start and end
+	resultSeq[0] = 0;												 // 起始点
+#pragma omp parallel for
+	for (i = 1; i <= numOfCoords; i++)
+	{
+		resultSeq[i] = -1; // 初始化为-1
+	}
+
+	int currentSeqLen = 1; // 当前序列长度，初始包含起始点
+
+	for (; currentSeqLen < numOfCoords;)
+	{
+		InsertionTask task = findCheapestInsertion(resultSeq, dist, numOfCoords, currentSeqLen);
+		if (task.insertPoint != -1)
+		{
+			insertPoint(resultSeq, currentSeqLen, task);
+			currentSeqLen++;
+		}
+
+		// 打印当前序列
+		if (currentSeqLen % 100 == 0)
+		{
+			printf("CurrentTIME: length: %d, time: %f\n", currentSeqLen, ((double)(clock() - startTime)) / 1000);
+		}
+	}
+
+	// 添加结束点
+	resultSeq[numOfCoords] = 0;
+
+	// 输出最终序列
+	printf("Final sequence: ");
+	for (i = 0; i < numOfCoords + 1; i++)
+	{
+		printf("%d ", resultSeq[i]);
+	}
+	printf("\n");
+
+	// 写入文件
+	writeTourToFile(resultSeq, numOfCoords + 1, outputFileName);
+
+	// 清理资源
+#pragma omp parallel for
+	for (i = 0; i < numOfCoords; i++)
+	{
+		free(dist[i]);
+	}
+	free(dist);
+	free(inputs);
+	free(resultSeq);
+
+	printf("Total TIME: %f \n", ((double)(clock() - startTime)));
+
 	return 0;
 }
