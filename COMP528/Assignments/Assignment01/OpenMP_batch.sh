@@ -1,7 +1,7 @@
 #!/bin/bash -l
 
 # Specific course queue and max wallclock time
-SBATCH -p course -t 10
+SBATCH -p course -t 15
 
 # Defaults on Barkla (but set to be safe)
 ## Specify the current working directory as the location for executables/files
@@ -56,7 +56,7 @@ if test -x $EXE; then
       echo
 
       # run multiple times. Because we have exported how many threads we're using, we just execute the file.
-      for i in {1..1}; do ./${EXE}; done     
+      for i in {1..3}; do ./${EXE}; done     
 else
      echo $SRC did not built to $EXE
 fi
