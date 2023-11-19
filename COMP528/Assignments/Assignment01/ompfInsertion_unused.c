@@ -233,7 +233,7 @@ void calculateDist(double **inputs, double **dist, int numOfCoords)
 	}
 }
 
-int *findShortestTour(double **distanceMatrix, int numOfCoords)
+int *getShortestPath(double **distanceMatrix, int numOfCoords)
 {
     bool *visited = (bool *)calloc(numOfCoords, sizeof(bool));
     int *tour = (int *)malloc((numOfCoords + 1) * sizeof(int)); // +1 for the starting coordinate at the end
@@ -353,7 +353,7 @@ int main(int argc, char *argv[])
 // 	// 添加结束点
 // 	resultSeq[numOfCoords] = 0;
 
-	resultSeq = findShortestTour(dist, numOfCoords);
+	resultSeq = getShortestPath(dist, numOfCoords);
 
 	// 输出最终序列
 	printf("\nFinal sequence: ");
