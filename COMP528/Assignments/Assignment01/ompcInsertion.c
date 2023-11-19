@@ -14,7 +14,7 @@
 
 /*If there are any issues with this code, please contact: h.j.forbes@liverpool.ac.uk*/
 
-int readNumOfCoords(char *fileName);
+int readNumOfCoords(char *inputFileName);
 double **readCoords(char *filename, int numOfCoords);
 
 /*Gets the number of the coordinates in the file. Returns as a single integer*/
@@ -217,16 +217,20 @@ int *getShortestPath(double **dist, int numOfCoords)
 	return path;
 }
 
-int main(void)
+int main(int argc, char *argv[])
 {
 	printf("YHCode Start\n");
 	int i = 0;
 	int j = 0;
 
 	// 读取文件中数组
-	char fileName[] = "16_coords.coord";
-	int numOfCoords = readNumOfCoords(fileName);
-	double **inputs = readCoords(fileName, numOfCoords); // 得到二维数组
+	// char *inputFileName = argv[0];
+	// char *outputFileName = argv[1];
+	char *inputFileName = "16_coords.coord";
+	char *outputFileName = "cout";
+	int numOfCoords = readNumOfCoords(inputFileName);
+
+	double **inputs = readCoords(inputFileName, numOfCoords); // 得到二维数组
 	// print2DArray(inputs, numOfCoords, 2);
 
 	// 距离矩阵
@@ -264,6 +268,8 @@ int main(void)
 	{
 		printf("%d ", resultSeq[i]);
 	}
+
+	writeTourToFile(resultSeq, numOfCoords + 1, outputFileName);
 
 	// char outputFileName[] = "output.txt";
 	// writeTourToFile(path, tourLength, outputFileName);
