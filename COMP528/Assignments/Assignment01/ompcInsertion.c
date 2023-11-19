@@ -311,7 +311,7 @@ int main(int argc, char *argv[])
 
 	int currentSeqLen = 1; // 当前序列长度，初始包含起始点
 
-// #pragma omp parallel for
+#pragma omp parallel for
 	for (; currentSeqLen < numOfCoords;)
 	{
 		InsertionTask task = findCheapestInsertion(resultSeq, dist, numOfCoords, currentSeqLen);
