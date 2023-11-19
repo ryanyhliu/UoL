@@ -112,59 +112,118 @@ typedef struct
 
 double const DBL_MAX = 99999.99999;
 
-InsertionTask findCheapestInsertion(int *seq, double **dist, int numOfCoords, int seqValidLen)
-{
-	InsertionTask globalBestTask = {-1, -1, DBL_MAX};
+// InsertionTask findCheapestInsertion(int *seq, double **dist, int numOfCoords, int seqValidLen)
+// {
+// 	InsertionTask globalBestTask = {-1, -1, DBL_MAX};
 
-	InsertionTask localBestTask = {-1, -1, DBL_MAX};
+// 	InsertionTask localBestTask = {-1, -1, DBL_MAX};
 
-#pragma omp parallel for
-	for (int i = 0; i < seqValidLen; i++)
-	{
-#pragma omp parallel for
-		for (int tempPoint = 0; tempPoint < numOfCoords; tempPoint++)
-		{
-			bool alreadyInSeq = false;
-#pragma omp parallel for
-			for (int k = 0; k < seqValidLen; k++)
-			{
-				if (seq[k] == tempPoint)
-				{
-					alreadyInSeq = true;
-					break;
-				}
-			}
+// 	int i;
+// 	int tempPoint;
+// 	int k;
+// #pragma omp parallel for
+// 	for (i = 0; i < seqValidLen; i++)
+// 	{
+// #pragma omp parallel for
+// 		for (tempPoint = 0; tempPoint < numOfCoords; tempPoint++)
+// 		{
+// 			bool alreadyInSeq = false;
+// #pragma omp parallel for
+// 			for (k = 0; k < seqValidLen; k++)
+// 			{
+// 				if (seq[k] == tempPoint)
+// 				{
+// 					alreadyInSeq = true;
+// 					break;
+// 				}
+// 			}
 
-			if (!alreadyInSeq)
-			{
-				int nextIndex = (i + 1 < seqValidLen) ? seq[i + 1] : 0;
-				double currentCost = dist[seq[i]][tempPoint] + dist[tempPoint][nextIndex] - dist[seq[i]][nextIndex];
+// 			if (!alreadyInSeq)
+// 			{
+// 				int nextIndex = (i + 1 < seqValidLen) ? seq[i + 1] : 0;
+// 				double currentCost = dist[seq[i]][tempPoint] + dist[tempPoint][nextIndex] - dist[seq[i]][nextIndex];
 
-				if (currentCost < localBestTask.cost)
-				{
-					localBestTask = (InsertionTask){tempPoint, i + 1, currentCost};
-				}
-			}
-		}
-	}
+// 				if (currentCost < localBestTask.cost)
+// 				{
+// 					localBestTask = (InsertionTask){tempPoint, i + 1, currentCost};
+// 				}
+// 			}
+// 		}
+// 	}
 
-#pragma omp critical
-	{
-		if (localBestTask.cost < globalBestTask.cost)
-		{
-			globalBestTask = localBestTask;
-		}
-	}
+// #pragma omp critical
+// 	{
+// 		if (localBestTask.cost < globalBestTask.cost)
+// 		{
+// 			globalBestTask = localBestTask;
+// 		}
+// 	}
 
-	return globalBestTask;
+// 	return globalBestTask;
+// }
+
+
+
+
+InsertionTask findCheapestInsertion(int *seq, double **dist, int numOfCoords, int seqValidLen) {
+    InsertionTask globalBestTask = {-1, -1, DBL_MAX};
+
+	int i;
+	int tempPoint;
+	int k;
+	bool alreadyInSeq;
+	int nextIndex;
+	double currentCost;
+
+    #pragma omp parallel
+    {
+        InsertionTask localBestTask = {-1, -1, DBL_MAX};
+
+        #pragma omp for nowait
+        for (i = 0; i < seqValidLen; i++) {
+            for (tempPoint = 0; tempPoint < numOfCoords; tempPoint++) {
+                alreadyInSeq = false;
+
+                // 检查点是否已在序列中
+                for (k = 0; k < seqValidLen && !alreadyInSeq; k++) {
+                    if (seq[k] == tempPoint) {
+                        alreadyInSeq = true;
+                    }
+                }
+
+                if (!alreadyInSeq) {
+                    nextIndex = (i + 1 < seqValidLen) ? i + 1 : 0;
+                    currentCost = dist[seq[i]][tempPoint] + dist[tempPoint][seq[nextIndex]] - dist[seq[i]][seq[nextIndex]];
+
+                    if (currentCost < localBestTask.cost) {
+                        localBestTask = (InsertionTask){tempPoint, i + 1, currentCost};
+                    }
+                }
+            }
+        }
+
+        #pragma omp critical
+        {
+            if (localBestTask.cost < globalBestTask.cost) {
+                globalBestTask = localBestTask;
+            }
+        }
+    }
+
+    return globalBestTask;
 }
+
+
+
 
 void insertPoint(int *seq, int seqLen, InsertionTask task)
 {
+	int i;
+
 	if (task.insertIndex < seqLen + 1)
 	{
 #pragma omp parallel for
-		for (int i = seqLen; i >= task.insertIndex; i--)
+		for (i = seqLen; i >= task.insertIndex; i--)
 		{
 			seq[i + 1] = seq[i];
 		}
@@ -195,11 +254,14 @@ double euclideanDistance(double *a, double *b)
 
 void calculateDist(double **inputs, double **dist, int numOfCoords)
 {
+	int i;
+	int j;
+
 #pragma omp parallel for
-	for (int i = 0; i < numOfCoords; i++)
+	for (i = 0; i < numOfCoords; i++)
 	{
 #pragma omp parallel for
-		for (int j = 0; j < numOfCoords; j++)
+		for (j = 0; j < numOfCoords; j++)
 		{
 			if (i != j)
 			{
@@ -225,10 +287,13 @@ int main(int argc, char *argv[])
 	int numOfCoords = readNumOfCoords(inputFileName);
 	double **inputs = readCoords(inputFileName, numOfCoords);
 
+	int i;
+
+
 	// 初始化距离矩阵
 	double **dist = (double **)malloc(numOfCoords * sizeof(double *));
 #pragma omp parallel for
-	for (int i = 0; i < numOfCoords; i++)
+	for (i = 0; i < numOfCoords; i++)
 	{
 		dist[i] = (double *)malloc(numOfCoords * sizeof(double));
 	}
@@ -238,7 +303,7 @@ int main(int argc, char *argv[])
 	int *resultSeq = (int *)malloc((numOfCoords + 1) * sizeof(int)); // +1 for start and end
 	resultSeq[0] = 0;												 // 起始点
 #pragma omp parallel for
-	for (int i = 1; i <= numOfCoords; i++)
+	for (i = 1; i <= numOfCoords; i++)
 	{
 		resultSeq[i] = -1; // 初始化为-1
 	}
@@ -266,7 +331,7 @@ int main(int argc, char *argv[])
 
 	// 输出最终序列
 	printf("\nFinal sequence: ");
-	for (int i = 0; i < numOfCoords + 1; i++)
+	for (i = 0; i < numOfCoords + 1; i++)
 	{
 		printf("%d ", resultSeq[i]);
 	}
@@ -276,7 +341,7 @@ int main(int argc, char *argv[])
 
 	// 清理资源
 #pragma omp parallel for
-	for (int i = 0; i < numOfCoords; i++)
+	for (i = 0; i < numOfCoords; i++)
 	{
 		free(dist[i]);
 	}
