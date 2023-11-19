@@ -1,4 +1,5 @@
-CC = gcc -fopenmp
+CC = gcc -g
+CCOMP = gcc -fopenmp
 IC = icc -qopenmp
 CFLAGS = -std=c99 -lm
 
@@ -11,10 +12,10 @@ fi: fInsertion.c coordReader.c
 	$(CC) $(CFLAGS) -o fi.exe fInsertion.c coordReader.c
 
 comp: ompcInsertion.c coordReader.c
-	$(CC) $(CFLAGS) -o comp.exe ompcInsertion.c coordReader.c
+	$(CCOMP) $(CFLAGS) -o comp.exe ompcInsertion.c coordReader.c
 
 fomp: ompfInsertion.c coordReader.c
-	$(CC) $(CFLAGS) -o fomp.exe ompfInsertion.c coordReader.c
+	$(CCOMP) $(CFLAGS) -o fomp.exe ompfInsertion.c coordReader.c
 
 icomp: ompcInsertion.c coordReader.c
 	$(IC) $(CFLAGS) -o icomp.exe ompcInsertion.c coordReader.c
