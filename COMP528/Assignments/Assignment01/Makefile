@@ -1,6 +1,6 @@
 CC = gcc -fopenmp
 IC = icc -qopenmp
-CFLAGS = -O3 -std=c99 -lm
+CFLAGS = -std=c99 -lm
 
 default: ci fi comp fomp icomp ifomp
 
