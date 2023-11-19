@@ -218,7 +218,7 @@ int main(int argc, char *argv[]) {
     clock_t startTime = clock();
 
     // 初始化和读取输入数据
-    char *inputFileName = "16_coords.coord"; // 根据实际情况调整文件名
+    char *inputFileName = "9_coords.coord"; // 根据实际情况调整文件名
     int numOfCoords = readNumOfCoords(inputFileName);
     double **inputs = readCoords(inputFileName, numOfCoords);
 
@@ -238,8 +238,9 @@ int main(int argc, char *argv[]) {
 
     int currentSeqLen = 1;
 
-	for (int i = 0; i < numOfCoords; i++){
+	for ( ; currentSeqLen < numOfCoords ; ){
 		InsertionTask task = findFarthestInsertion(resultSeq, dist, numOfCoords, currentSeqLen);
+
 		if (task.insertPoint != -1){
 			insertPoint(resultSeq, currentSeqLen, task);
 			currentSeqLen++;
