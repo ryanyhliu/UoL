@@ -5,7 +5,6 @@
 #include <stdbool.h>
 #include <time.h>
 
-
 int readNumOfCoords(char *fileName);
 double **readCoords(char *filename, int numOfCoords);
 void *writeTourToFile(int *tour, int tourLength, char *filename);
@@ -52,8 +51,6 @@ void calculateDist(double **inputs, double **dist, int rows, int columns)
 	}
 }
 
-
-
 int *getCheapestPath(double **dist, int numOfCoords)
 {
 	int *path = (int *)malloc((numOfCoords + 1) * sizeof(int));
@@ -64,19 +61,17 @@ int *getCheapestPath(double **dist, int numOfCoords)
 	int *usedPoint = (int *)calloc(numOfCoords, sizeof(int));
 	usedPoint[0] = 1;
 
-
 	while (pathLen < numOfCoords)
 	{
-		int allMinIndex = -1; // 全局最小值的点
+		int allMinIndex = -1;		 // 全局最小值的点
 		double allMin = 99999.99999; // 全局最小值
-		int allInsertIndex = -1; // 全局最小值插入的地方
+		int allInsertIndex = -1;	 // 全局最小值插入的地方
 
 #pragma omp parallel
 		{
-			int currentMinIndex = -1; // 当前最小值的点
+			int currentMinIndex = -1;		 // 当前最小值的点
 			double currentMin = 99999.99999; // 当前找到的最小的值
-			int currentInsertIndex = -1; // 当前点插入点的地方
-
+			int currentInsertIndex = -1;	 // 当前点插入点的地方
 
 #pragma omp for nowait
 			for (int i = 0; i < numOfCoords; i++)
@@ -88,14 +83,12 @@ int *getCheapestPath(double **dist, int numOfCoords)
 						int tempPoint = (j + 1) % pathLen;
 
 						double currentDist = dist[path[j]][i] + dist[i][path[tempPoint]] - dist[path[j]][path[tempPoint]];
-							if (currentDist < currentMin)
-							{
-								currentMinIndex = i;
-								currentMin = currentDist;
-								currentInsertIndex = j + 1;
-							}
-						
-						
+						if (currentDist < currentMin)
+						{
+							currentMinIndex = i;
+							currentMin = currentDist;
+							currentInsertIndex = j + 1;
+						}
 					}
 				}
 			}
@@ -131,7 +124,6 @@ int *getCheapestPath(double **dist, int numOfCoords)
 
 int main(int argc, char *argv[])
 {
-	double startTime = clock();
 
 	int i = 0;
 	int j = 0;
@@ -145,6 +137,8 @@ int main(int argc, char *argv[])
 
 	double **inputs = readCoords(inputFileName, numOfCoords); // 得到二维数组
 	// print2DArray(inputs, numOfCoords, 2);
+
+	double startTime = omp_get_wtime();
 
 	// 距离矩阵
 	// 初始化行长度, 不然直接赋值dist[i][j]会出错
@@ -161,7 +155,6 @@ int main(int argc, char *argv[])
 	// 最终序列 (路径)
 	int *resultSeq = (int *)malloc((numOfCoords + 1) * sizeof(int)); // 路径 0 -> 1 -> 2 -> 0, 长度比坐标+1
 
-
 	// // 初始化 -1
 	// for (i = 0; i < numOfCoords + 1; i++)
 	// {
@@ -172,11 +165,10 @@ int main(int argc, char *argv[])
 	// resultSeq[1] = 0;
 	// resultSeq = getFarthestPoint(resultSeq, dist, numOfCoords);
 
-
-
 	resultSeq = getCheapestPath(dist, numOfCoords);
 
-	printf("Total TIME: %f \n", clock() - startTime);
+	// printf("Total TIME: %f \n", clock() - startTime);
+	printf("Time spent: %f seconds\n", omp_get_wtime() - startTime);
 
 	printf("Result: ");
 	for (i = 0; i < numOfCoords + 1; i++)
@@ -186,8 +178,6 @@ int main(int argc, char *argv[])
 	printf("\n");
 
 	writeTourToFile(resultSeq, numOfCoords + 1, outputFileName);
-
-
 
 	return 0;
 }

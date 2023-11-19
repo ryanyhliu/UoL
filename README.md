@@ -5,4 +5,4 @@ https://github.com/ryanyhliu/UoL.git
 
 
 
-sbatch -c 32 OpenMP_batch.sh comp.exe 4096_coords.coord 4096cout.dat
+sbatch -c 1 OpenMP_batch.sh comp.exe 4096_coords.coord comp_4096_1.dat
