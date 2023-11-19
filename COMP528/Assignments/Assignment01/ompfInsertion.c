@@ -119,44 +119,45 @@ InsertionTask findFarthestInsertion(int *seq, double **dist, int numOfCoords, in
 
 	// 初始化已在序列中的点的集合
 	bool *inSeq = (bool *)malloc(numOfCoords * sizeof(bool));
+#pragma omp parallel for
 	for (int i = 0; i < numOfCoords; i++)
 	{
 		inSeq[i] = false;
 	}
+#pragma omp parallel for
 	for (int i = 0; i < seqValidLen; i++)
 	{
 		inSeq[seq[i]] = true;
 	}
 
 	// 寻找最远点
-#pragma omp parallel
-	{
-		InsertionTask localBestTask = {-1, -1, -1.0};
 
-#pragma omp for nowait
-		for (int i = 0; i < seqValidLen; i++)
+	InsertionTask localBestTask = {-1, -1, -1.0};
+
+#pragma omp parallel for
+	for (int i = 0; i < seqValidLen; i++)
+	{
+#pragma omp parallel for
+		for (int j = 0; j < numOfCoords; j++)
 		{
-			for (int j = 0; j < numOfCoords; j++)
+			if (!inSeq[j])
 			{
-				if (!inSeq[j])
+				double currentDist = dist[seq[i]][j];
+				if (currentDist > localBestTask.cost)
 				{
-					double currentDist = dist[seq[i]][j];
-					if (currentDist > localBestTask.cost)
-					{
-						localBestTask.insertPoint = j;
-						localBestTask.cost = currentDist;
-						localBestTask.insertIndex = i + 1; // 这里预设一个插入位置
-					}
+					localBestTask.insertPoint = j;
+					localBestTask.cost = currentDist;
+					localBestTask.insertIndex = i + 1; // 这里预设一个插入位置
 				}
 			}
 		}
+	}
 
 #pragma omp critical
+	{
+		if (localBestTask.cost > globalBestTask.cost)
 		{
-			if (localBestTask.cost > globalBestTask.cost)
-			{
-				globalBestTask = localBestTask;
-			}
+			globalBestTask = localBestTask;
 		}
 	}
 
@@ -164,25 +165,28 @@ InsertionTask findFarthestInsertion(int *seq, double **dist, int numOfCoords, in
 
 	// 并行化重新计算最佳插入位置
 	InsertionTask bestTaskInThread;
-	#pragma omp parallel private(bestTaskInThread)
+#pragma omp parallel private(bestTaskInThread)
 	{
 		bestTaskInThread.insertIndex = -1;
 		bestTaskInThread.insertPoint = globalBestTask.insertPoint;
 		bestTaskInThread.cost = DBL_MAX;
 
-		#pragma omp for nowait
-		for (int i = 0; i < seqValidLen - 1; i++) {
+#pragma omp parallel for nowait
+		for (int i = 0; i < seqValidLen - 1; i++)
+		{
 			int j = i + 1;
 			double insertCost = dist[seq[i]][globalBestTask.insertPoint] + dist[globalBestTask.insertPoint][seq[j]] - dist[seq[i]][seq[j]];
-			if (insertCost < bestTaskInThread.cost) {
+			if (insertCost < bestTaskInThread.cost)
+			{
 				bestTaskInThread.cost = insertCost;
 				bestTaskInThread.insertIndex = i + 1;
 			}
 		}
 
-		#pragma omp critical
+#pragma omp critical
 		{
-			if (bestTaskInThread.cost < globalBestTask.cost) {
+			if (bestTaskInThread.cost < globalBestTask.cost)
+			{
 				globalBestTask = bestTaskInThread;
 			}
 		}

@@ -116,44 +116,43 @@ InsertionTask findCheapestInsertion(int *seq, double **dist, int numOfCoords, in
 {
 	InsertionTask globalBestTask = {-1, -1, DBL_MAX};
 
-#pragma omp parallel
+	InsertionTask localBestTask = {-1, -1, DBL_MAX};
+
+#pragma omp parallel for
+	for (int i = 0; i < seqValidLen; i++)
 	{
-		InsertionTask localBestTask = {-1, -1, DBL_MAX};
-
-#pragma omp for nowait
-		for (int i = 0; i < seqValidLen; i++)
+#pragma omp parallel for
+		for (int tempPoint = 0; tempPoint < numOfCoords; tempPoint++)
 		{
-			for (int tempPoint = 0; tempPoint < numOfCoords; tempPoint++)
+			bool alreadyInSeq = false;
+#pragma omp parallel for
+			for (int k = 0; k < seqValidLen; k++)
 			{
-				bool alreadyInSeq = false;
-				for (int k = 0; k < seqValidLen; k++)
+				if (seq[k] == tempPoint)
 				{
-					if (seq[k] == tempPoint)
-					{
-						alreadyInSeq = true;
-						break;
-					}
+					alreadyInSeq = true;
+					break;
 				}
+			}
 
-				if (!alreadyInSeq)
+			if (!alreadyInSeq)
+			{
+				int nextIndex = (i + 1 < seqValidLen) ? seq[i + 1] : 0;
+				double currentCost = dist[seq[i]][tempPoint] + dist[tempPoint][nextIndex] - dist[seq[i]][nextIndex];
+
+				if (currentCost < localBestTask.cost)
 				{
-					int nextIndex = (i + 1 < seqValidLen) ? seq[i + 1] : 0;
-					double currentCost = dist[seq[i]][tempPoint] + dist[tempPoint][nextIndex] - dist[seq[i]][nextIndex];
-
-					if (currentCost < localBestTask.cost)
-					{
-						localBestTask = (InsertionTask){tempPoint, i + 1, currentCost};
-					}
+					localBestTask = (InsertionTask){tempPoint, i + 1, currentCost};
 				}
 			}
 		}
+	}
 
 #pragma omp critical
+	{
+		if (localBestTask.cost < globalBestTask.cost)
 		{
-			if (localBestTask.cost < globalBestTask.cost)
-			{
-				globalBestTask = localBestTask;
-			}
+			globalBestTask = localBestTask;
 		}
 	}
 
