@@ -3,6 +3,7 @@
 #include <math.h>
 #include <string.h>
 #include <stdbool.h>
+#include <time.h>
 
 /*This code is for reading and writing to files for the 2023-24 COMP528 CA1*/
 
@@ -143,7 +144,7 @@ void calculateDist(double **inputs, double **dist, int rows, int columns)
 
 
 
-int *getShortestPath(double **dist, int numOfCoords)
+int *getCheapestPath(double **dist, int numOfCoords)
 {
 	int *path = (int *)malloc((numOfCoords + 1) * sizeof(int));
 	path[0] = 0;
@@ -220,6 +221,8 @@ int *getShortestPath(double **dist, int numOfCoords)
 int main(int argc, char *argv[])
 {
 	printf("YHCode Start\n");
+	double startTime = clock();
+
 	int i = 0;
 	int j = 0;
 
@@ -261,7 +264,7 @@ int main(int argc, char *argv[])
 
 
 
-	resultSeq = getShortestPath(dist, numOfCoords);
+	resultSeq = getCheapestPath(dist, numOfCoords);
 
 	printf("\nResult: ");
 	for (i = 0; i < numOfCoords + 1; i++)
@@ -271,8 +274,8 @@ int main(int argc, char *argv[])
 
 	writeTourToFile(resultSeq, numOfCoords + 1, outputFileName);
 
-	// char outputFileName[] = "output.txt";
-	// writeTourToFile(path, tourLength, outputFileName);
+
+    printf("Total TIME: %f \n", clock() - startTime);
 
 	return 0;
 }
