@@ -94,71 +94,70 @@ void *writeTourToFile(int *tour, int tourLength, char *filename){
 
 
 
+typedef struct
+{
+	int insertPoint; // 要插入的点
+	int insertIndex; // 插入的位置
+	double cost;	 // 插入的成本
+} InsertionTask;
 
-typedef struct {
-    int farthestPoint;  // 最远点
-    int insertIndex;    // 插入位置
-    double distance;    // 到最远点的距离
-} FarthestInsertionTask;
-
+double const DBL_MIN = 0.0;
 double const DBL_MAX = 99999.99999;
 
 
 
-FarthestInsertionTask findFarthestInsertion(int *seq, double **dist, int numOfCoords, int seqValidLen) {
-    FarthestInsertionTask globalBestTask = {-1, -1, 0.0};
+InsertionTask findFarthestInsertion(int *seq, double **dist, int numOfCoords, int seqValidLen) {
+    InsertionTask globalBestTask = {-1, -1, -1.0};
 
-    #pragma omp parallel
+    // 初始化已在序列中的点的集合
+    bool *inSeq = (bool *)malloc(numOfCoords * sizeof(bool));
+    for (int i = 0; i < numOfCoords; i++) {
+        inSeq[i] = false;
+    }
+    for (int i = 0; i < seqValidLen; i++) {
+        inSeq[seq[i]] = true;
+    }
+
+    // 寻找最远点
+#pragma omp parallel
     {
-        FarthestInsertionTask localBestTask = {-1, -1, 0.0};
+        InsertionTask localBestTask = {-1, -1, -1.0};
 
-        #pragma omp for nowait
-        for (int j = 0; j < numOfCoords; j++) {
-            bool alreadyInSeq = false;
-            for (int k = 0; k < seqValidLen; k++) {
-                if (seq[k] == j) {
-                    alreadyInSeq = true;
-                    break;
-                }
-            }
-
-            if (!alreadyInSeq) {
-                double currentMaxDist = 0.0;
-                int currentInsertIndex = -1;
-                for (int i = 0; i < seqValidLen; i++) {
-                    if (seq[i] != -1 && dist[seq[i]][j] > currentMaxDist) {
-                        currentMaxDist = dist[seq[i]][j];
-                        currentInsertIndex = i;
+#pragma omp for nowait
+        for (int i = 0; i < seqValidLen; i++) {
+            for (int j = 0; j < numOfCoords; j++) {
+                if (!inSeq[j]) {
+                    double currentDist = dist[seq[i]][j];
+                    if (currentDist > localBestTask.cost) {
+                        localBestTask.insertPoint = j;
+                        localBestTask.cost = currentDist;
+                        localBestTask.insertIndex = i + 1; // 这里预设一个插入位置
                     }
-                }
-
-                if (currentMaxDist > localBestTask.distance) {
-                    localBestTask = (FarthestInsertionTask){j, currentInsertIndex, currentMaxDist};
                 }
             }
         }
 
-        #pragma omp critical
+#pragma omp critical
         {
-            if (localBestTask.distance > globalBestTask.distance) {
+            if (localBestTask.cost > globalBestTask.cost) {
                 globalBestTask = localBestTask;
             }
         }
     }
 
-    // 确定插入位置
-    double minInsertionCost = DBL_MAX;
-    int bestInsertIndex = globalBestTask.insertIndex;
+    free(inSeq); // 释放集合内存
+
+    // 重新计算最佳插入位置
+    double tempClosest = DBL_MAX;
     for (int i = 0; i < seqValidLen - 1; i++) {
-        int nextIndex = (i + 1 < seqValidLen) ? seq[i + 1] : 0;
-        double insertionCost = dist[seq[i]][globalBestTask.farthestPoint] + dist[globalBestTask.farthestPoint][nextIndex] - dist[seq[i]][nextIndex];
-        if (insertionCost < minInsertionCost) {
-            minInsertionCost = insertionCost;
-            bestInsertIndex = i + 1;
+        int j = i + 1;
+        double insertCost = dist[seq[i]][globalBestTask.insertPoint] + dist[globalBestTask.insertPoint][seq[j]] - dist[seq[i]][seq[j]];
+        if (insertCost < tempClosest) {
+            tempClosest = insertCost;
+            globalBestTask.insertIndex = i + 1;
         }
     }
 
-    globalBestTask.insertIndex = bestInsertIndex;
     return globalBestTask;
 }
 
@@ -170,12 +169,14 @@ FarthestInsertionTask findFarthestInsertion(int *seq, double **dist, int numOfCo
 
 
 
-void insertPoint(int *seq, int seqLen, FarthestInsertionTask task) {
+
+
+void insertPoint(int *seq, int seqLen, InsertionTask task) {
     if (task.insertIndex < seqLen + 1) {
         for (int i = seqLen; i >= task.insertIndex; i--) {
             seq[i + 1] = seq[i];
         }
-        seq[task.insertIndex] = task.farthestPoint;
+        seq[task.insertIndex] = task.insertPoint;
     }
 }
 
@@ -236,29 +237,27 @@ int main(int argc, char *argv[]) {
     }
 
     int currentSeqLen = 1;
-    while (currentSeqLen < numOfCoords + 1) {
-        FarthestInsertionTask task = findFarthestInsertion(resultSeq, dist, numOfCoords, currentSeqLen);
-        printf("Task: farthestPoint = %d, insertIndex = %d, distance = %f\n", task.farthestPoint, task.insertIndex, task.distance);
 
-        if (task.farthestPoint != -1) {
-            insertPoint(resultSeq, currentSeqLen, task);
-            currentSeqLen++;
-        }
+	for (int i = 0; i < numOfCoords; i++){
+		InsertionTask task = findFarthestInsertion(resultSeq, dist, numOfCoords, currentSeqLen);
+		if (task.insertPoint != -1){
+			insertPoint(resultSeq, currentSeqLen, task);
+			currentSeqLen++;
+		}
 
-        printf("Current sequence: ");
+		printf("Current sequence: ");
         for (int j = 0; j < currentSeqLen; j++) {
             printf("%d ", resultSeq[j]);
         }
         printf("\n");
-    }
+	}
 
-    // 添加结束点
-    resultSeq[currentSeqLen] = 0;
-    currentSeqLen++;
+	// 添加结束点
+	resultSeq[numOfCoords] = 0;
 
     // 输出最终序列
     printf("\nFinal sequence: ");
-    for (int i = 0; i < currentSeqLen; i++) {
+    for (int i = 0; i < numOfCoords + 1; i++) {
         printf("%d ", resultSeq[i]);
     }
 

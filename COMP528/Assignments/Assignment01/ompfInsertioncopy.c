@@ -219,7 +219,7 @@ int main(int argc, char *argv[])
 	clock_t startTime = clock();
 
 	// 初始化和读取输入数据
-	char *inputFileName = "4096_coords.coord"; // 根据实际情况调整文件名
+	char *inputFileName = "16_coords.coord"; // 根据实际情况调整文件名
 	int numOfCoords = readNumOfCoords(inputFileName);
 	double **inputs = readCoords(inputFileName, numOfCoords);
 
