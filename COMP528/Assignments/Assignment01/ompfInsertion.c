@@ -233,6 +233,74 @@ void calculateDist(double **inputs, double **dist, int numOfCoords)
 	}
 }
 
+int *findShortestTour(double **distanceMatrix, int numOfCoords)
+{
+    bool *visited = (bool *)calloc(numOfCoords, sizeof(bool));
+    int *tour = (int *)malloc((numOfCoords + 1) * sizeof(int)); // +1 for the starting coordinate at the end
+    int tourSize = 1;                                           // Start with the first coordinate
+    visited[0] = true;                                          // Start coordinate is visited
+    tour[0] = 0;                                                // Start at the first coordinate
+
+    while (tourSize < numOfCoords)
+    {
+        double globalMinCost = INFINITY;
+        int globalMinIndex = -1;
+        int globalInsertPosition = -1;
+
+#pragma omp parallel
+        {
+            double localMinCost = INFINITY;
+            int localMinIndex = -1;
+            int localInsertPosition = -1;
+
+// Parallel loop, each thread calculates its own minimum cost and related index
+#pragma omp for nowait
+            for (int i = 0; i < numOfCoords; i++)
+            {
+                if (!visited[i])
+                {
+                    for (int j = 0; j < tourSize; j++)
+                    {
+                        int k = (j + 1) % tourSize;
+                        double cost = distanceMatrix[tour[j]][i] + distanceMatrix[i][tour[k]] - distanceMatrix[tour[j]][tour[k]];
+                        if (cost < localMinCost)
+                        {
+                            localMinCost = cost;
+                            localMinIndex = i;
+                            localInsertPosition = j + 1;
+                        }
+                    }
+                }
+            }
+
+// Single thread to update minimum values
+#pragma omp critical
+            {
+                if (localMinCost < globalMinCost)
+                {
+                    globalMinCost = localMinCost;
+                    globalMinIndex = localMinIndex;
+                    globalInsertPosition = localInsertPosition;
+                }
+            }
+        }
+
+        // Use global minimum value to update tour
+        for (int i = tourSize; i >= globalInsertPosition; i--)
+        {
+            tour[i] = tour[i - 1];
+        }
+        tour[globalInsertPosition] = globalMinIndex;
+        visited[globalMinIndex] = true;
+        tourSize++;
+    }
+
+    tour[numOfCoords] = tour[0];
+
+    free(visited);
+    return tour;
+}
+
 int main(int argc, char *argv[])
 {
 	clock_t startTime = clock();
@@ -256,34 +324,36 @@ int main(int argc, char *argv[])
 
 	// 初始化序列，包括起始点
 	int *resultSeq = (int *)malloc((numOfCoords + 1) * sizeof(int));
-	resultSeq[0] = 0;
-#pragma omp parallel for
-	for (int i = 1; i <= numOfCoords; i++)
-	{
-		resultSeq[i] = -1;
-	}
+// 	resultSeq[0] = 0;
+// #pragma omp parallel for
+// 	for (int i = 1; i <= numOfCoords; i++)
+// 	{
+// 		resultSeq[i] = -1;
+// 	}
 
-	int currentSeqLen = 1;
+// 	int currentSeqLen = 1;
 
-	for (; currentSeqLen < numOfCoords;)
-	{
-		InsertionTask task = findFarthestInsertion(resultSeq, dist, numOfCoords, currentSeqLen);
+// 	for (; currentSeqLen < numOfCoords;)
+// 	{
+// 		InsertionTask task = findFarthestInsertion(resultSeq, dist, numOfCoords, currentSeqLen);
 
-		if (task.insertPoint != -1)
-		{
-			insertPoint(resultSeq, currentSeqLen, task);
-			currentSeqLen++;
-		}
+// 		if (task.insertPoint != -1)
+// 		{
+// 			insertPoint(resultSeq, currentSeqLen, task);
+// 			currentSeqLen++;
+// 		}
 
-		// 打印当前序列
-		if (currentSeqLen % 10 == 0)
-		{
-			printf("\nTIME: length: %d, time: %f", currentSeqLen, ((double)(clock() - startTime)) / 1000);
-		}
-	}
+// 		// 打印当前序列
+// 		if (currentSeqLen % 10 == 0)
+// 		{
+// 			printf("\nTIME: length: %d, time: %f", currentSeqLen, ((double)(clock() - startTime)) / 1000);
+// 		}
+// 	}
 
-	// 添加结束点
-	resultSeq[numOfCoords] = 0;
+// 	// 添加结束点
+// 	resultSeq[numOfCoords] = 0;
+
+	resultSeq = findShortestTour(dist, numOfCoords);
 
 	// 输出最终序列
 	printf("\nFinal sequence: ");
