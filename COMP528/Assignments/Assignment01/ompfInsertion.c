@@ -171,7 +171,7 @@ InsertionTask findFarthestInsertion(int *seq, double **dist, int numOfCoords, in
 		bestTaskInThread.insertPoint = globalBestTask.insertPoint;
 		bestTaskInThread.cost = DBL_MAX;
 
-#pragma omp parallel for nowait
+#pragma omp for nowait
 		for (int i = 0; i < seqValidLen - 1; i++)
 		{
 			int j = i + 1;
