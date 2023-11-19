@@ -173,11 +173,11 @@ InsertionTask findCheapestInsertion(int *seq, double **dist, int numOfCoords, in
 	int nextIndex;
 	double currentCost;
 
-#pragma omp parallel
-	{
+// #pragma omp parallel
+// 	{
 		InsertionTask localBestTask = {-1, -1, DBL_MAX};
 
-#pragma omp for nowait
+#pragma omp for
 		for (i = 0; i < seqValidLen; i++)
 		{
 			for (tempPoint = 0; tempPoint < numOfCoords; tempPoint++)
@@ -213,7 +213,7 @@ InsertionTask findCheapestInsertion(int *seq, double **dist, int numOfCoords, in
 				globalBestTask = localBestTask;
 			}
 		}
-	}
+	// }
 
 	return globalBestTask;
 }
