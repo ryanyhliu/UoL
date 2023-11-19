@@ -312,7 +312,8 @@ int main(int argc, char *argv[])
 
 	int currentSeqLen = 1; // 当前序列长度，初始包含起始点
 
-// #pragma omp parallel for
+#pragma omp parallel
+{
 	for (; currentSeqLen < numOfCoords;)
 	{
 		InsertionTask task = findCheapestInsertion(resultSeq, dist, numOfCoords, currentSeqLen);
@@ -328,6 +329,8 @@ int main(int argc, char *argv[])
 			printf("CurrentTIME: length: %d, time: %f\n", currentSeqLen, ((double)(clock() - startTime)) / 1000);
 		}
 	}
+}
+	
 
 	// 添加结束点
 	resultSeq[numOfCoords] = 0;
