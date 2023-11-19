@@ -153,8 +153,8 @@ int main(int argc, char *argv[])
 	// 读取文件中数组
 	// char *inputFileName = "16_coords.coord";
 	// char *outputFileName = "cout";
-	char *inputFileName = argv[0];
-	char *outputFileName = argv[1];
+	char *inputFileName = argv[1];
+	char *outputFileName = argv[2];
 	int numOfCoords = readNumOfCoords(inputFileName);
 	double **inputs = readCoords(inputFileName, numOfCoords); // 得到二维数组
 	// print2DArray(inputs, numOfCoords, 2);
