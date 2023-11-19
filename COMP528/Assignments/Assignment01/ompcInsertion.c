@@ -137,10 +137,10 @@ int main(int argc, char *argv[])
 	int j = 0;
 
 	// 读取文件中数组
-	char *inputFileName = "16_coords.coord";
-	char *outputFileName = "cout";
-	// char *inputFileName = argv[0];
-	// char *outputFileName = argv[1];
+	// char *inputFileName = "16_coords.coord";
+	// char *outputFileName = "cout";
+	char *inputFileName = argv[0];
+	char *outputFileName = argv[1];
 	int numOfCoords = readNumOfCoords(inputFileName);
 
 	double **inputs = readCoords(inputFileName, numOfCoords); // 得到二维数组

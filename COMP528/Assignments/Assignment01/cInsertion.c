@@ -1,15 +1,17 @@
-#include<stdio.h>
-#include<stdlib.h>
-#include<math.h>
-#include<string.h>
-#include<stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <string.h>
+#include <stdbool.h>
+#include <time.h>
 
 int readNumOfCoords(char *fileName);
 double **readCoords(char *filename, int numOfCoords);
 void *writeTourToFile(int *tour, int tourLength, char *filename);
 ////////////////// YH's Code Begin
 
-void print2DArray(double **arr, int rows, int columns){
+void print2DArray(double **arr, int rows, int columns)
+{
 	// int rowLength = sizeof(arr) / sizeof(arr[0]);
 	// int colLength = sizeof(arr[0]) / sizeof(arr[0][0]);
 	printf("\n---Array Value---\n");
@@ -21,17 +23,19 @@ void print2DArray(double **arr, int rows, int columns){
 		{
 			printf("%011.5f, ", arr[i][j]);
 		}
-		printf("\n");		
+		printf("\n");
 	}
 }
 
-double euclideanDistance(double *a, double *b){
+double euclideanDistance(double *a, double *b)
+{
 	// double temp = sqrt(pow(a[0] - b[0], 2) + pow(a[1] - b[1], 2));
 	// printf("\n___DEBUG___: temp = %f\n", temp);
 	return sqrt(pow(a[0] - b[0], 2) + pow(a[1] - b[1], 2));
 }
 
-void calculateDist(double **inputs, double** dist, int rows, int columns){
+void calculateDist(double **inputs, double **dist, int rows, int columns)
+{
 	int i = 0;
 	int j = 0;
 
@@ -56,15 +60,15 @@ void calculateDist(double **inputs, double** dist, int rows, int columns){
  * @param dist
  * @param numOfCoords 总坐标个数
  * @return 下一个坐标 (要加入到序列里)
-*/
-int getCheapestPoint(int *seq,  double **dist, int numOfCoords){
+ */
+int getCheapestPoint(int *seq, double **dist, int numOfCoords)
+{
 	int i = 0;
 	int j = 0;
 	// 输出序列总长度 (总步数)
 	int seqTotalLen = numOfCoords + 1;
 	// 当前序列长度 (当前步数)
 	int seqValidLen = 0;
-
 
 	// 实际长度 (!= -1 元素个数)
 	for (i = 0; i < seqTotalLen; i++)
@@ -74,21 +78,22 @@ int getCheapestPoint(int *seq,  double **dist, int numOfCoords){
 			seqValidLen += 1;
 		}
 	}
-	
+
 	// Implement a Set -> Exclude used coordinate
 	// Initialize Set
 	int *setSeq = (int *)malloc(seqTotalLen * sizeof(int));
-	for (i = 0; i < seqTotalLen; i++){
+	for (i = 0; i < seqTotalLen; i++)
+	{
 		setSeq[i] = -1; // Unused
 	}
 	// Insert Set from seq
-	for (i = 0; i < seqTotalLen; i++){
+	for (i = 0; i < seqTotalLen; i++)
+	{
 		if (seq[i] != -1)
 		{
 			setSeq[seq[i]] = 0; // Used
 		}
 	}
-
 
 	double tempAllPathCheapest = 99999.99999;
 	double tempCurrentPathCheapest = 99999.99999;
@@ -96,14 +101,18 @@ int getCheapestPoint(int *seq,  double **dist, int numOfCoords){
 	int tempCurrentPathCheapestPoint = -1;
 	int tempInsertIndex = -1;
 	int tempPoint = -1;
-	for (i = 0; i < seqValidLen - 1; i++){ // 一共要判断 路径 = 当前节点数(有效长度) - 1
+	for (i = 0; i < seqValidLen - 1; i++)
+	{ // 一共要判断 路径 = 当前节点数(有效长度) - 1
 		j = i + 1;
 		tempCurrentPathCheapest = 99999.99999;
-		for (tempPoint = 0; tempPoint < numOfCoords; tempPoint++){
-			if (setSeq[tempPoint] == -1){ // Unused
+		for (tempPoint = 0; tempPoint < numOfCoords; tempPoint++)
+		{
+			if (setSeq[tempPoint] == -1)
+			{ // Unused
 				// printf("\n---DEBUG---: (%d -> %d -> %d) = %011.5f", seq[i], tempPoint, seq[j], dist[seq[i]][tempPoint] + dist[tempPoint][seq[j]] - dist[i][j]);
-				
-				if (tempCurrentPathCheapest > dist[seq[i]][tempPoint] + dist[tempPoint][seq[j]] - dist[seq[i]][seq[j]]){
+
+				if (tempCurrentPathCheapest > dist[seq[i]][tempPoint] + dist[tempPoint][seq[j]] - dist[seq[i]][seq[j]])
+				{
 					tempCurrentPathCheapest = (dist[seq[i]][tempPoint] + dist[tempPoint][seq[j]] - dist[seq[i]][seq[j]]);
 					tempCurrentPathCheapestPoint = tempPoint;
 				}
@@ -113,61 +122,65 @@ int getCheapestPoint(int *seq,  double **dist, int numOfCoords){
 		// printf("\n---DEBUG---: allPathCheapest = %011.5f", tempAllPathCheapest);
 
 		// Record current path: Insert index & value
-		if (tempAllPathCheapest > tempCurrentPathCheapest){
+		if (tempAllPathCheapest > tempCurrentPathCheapest)
+		{
 			tempAllPathCheapest = tempCurrentPathCheapest;
 			tempAllPathCheapestPoint = tempCurrentPathCheapestPoint;
 			tempInsertIndex = i + 1; // 把 Point 插入到 tempInsertIndex + 1 的位置, 后边的往后挪
-			
 		}
 	}
 
 	// Insertion
-	for (i = seqValidLen - 1; i >= tempInsertIndex; i--){
+	for (i = seqValidLen - 1; i >= tempInsertIndex; i--)
+	{
 		seq[i + 1] = seq[i];
 	}
 	seq[tempInsertIndex] = tempAllPathCheapestPoint;
 	// printf("\n---DEBUG---: Seq[%d] = %d", tempInsertIndex, tempAllPathCheapestPoint);
-	
 
 	return seqValidLen + 1;
 }
 
+int main(int argc, char *argv[])
+{
+	double startTime = clock();
 
-	
-int main(void){
-	// printf("YHCode\n");
 	int i = 0;
 	int j = 0;
-	
+
 	// 读取文件中数组
-	char fileName[] = "16_coords.coord";
-	int numOfCoords = readNumOfCoords(fileName);
-	double **inputs = readCoords(fileName, numOfCoords); // 得到二维数组
+	char *inputFileName = "16_coords.coord";
+	char *outputFileName = "cout";
+	// char *inputFileName = argv[0];
+	// char *outputFileName = argv[1];
+	int numOfCoords = readNumOfCoords(inputFileName);
+	double **inputs = readCoords(inputFileName, numOfCoords); // 得到二维数组
 	// print2DArray(inputs, numOfCoords, 2);
 
 	// 距离矩阵
 	// 初始化行长度, 不然直接赋值dist[i][j]会出错
 	double **dist = (double **)malloc(numOfCoords * sizeof(double *));
 	// 初始化列长度
-	for (i = 0; i < numOfCoords; i++) {
-        dist[i] = (double *)malloc(numOfCoords * sizeof(double));
-    }
-	
+	for (i = 0; i < numOfCoords; i++)
+	{
+		dist[i] = (double *)malloc(numOfCoords * sizeof(double));
+	}
+
 	calculateDist(inputs, dist, numOfCoords, numOfCoords);
 	// print2DArray(dist, numOfCoords, numOfCoords);
-	
 
 	// 最终序列 (路径)
 	int *resultSeq = (int *)malloc((numOfCoords + 1) * sizeof(int)); // 路径 0 -> 1 -> 2 -> 0, 长度比坐标+1
 	// 初始化 -1
-	for (i = 0; i < numOfCoords + 1; i++){
+	for (i = 0; i < numOfCoords + 1; i++)
+	{
 		resultSeq[i] = -1;
 	}
 
 	// 0 -> 0
 	resultSeq[0] = 0;
-	resultSeq[1] = 0; 
-	
+	resultSeq[1] = 0;
+
 	// for (i = 1; i < numOfCoords + 1; i++){
 	// 	resultSeq[i] = getCheapestPoint(resultSeq, dist, numOfCoords);
 	// 	printf(" | resultSeq[%d] = (%d)",i , resultSeq[i]);
@@ -179,18 +192,17 @@ int main(void){
 		validLenOfSeq = getCheapestPoint(resultSeq, dist, numOfCoords);
 		// printf("\n---DEBUG---: validLenOfSeq = %d", validLenOfSeq);
 	}
-	
-	printf("\nResult: ");
-	for (i = 0; i < numOfCoords + 1; i++){
+
+	printf("Total TIME: %f \n", clock() - startTime);
+
+	printf("Result: ");
+	for (i = 0; i < numOfCoords + 1; i++)
+	{
 		printf("%d ", resultSeq[i]);
 	}
+	printf("\n");
 
-	
-
-
-	// char outputFileName[] = "output.txt";
-	// writeTourToFile(tour, tourLength, outputFileName);
+	writeTourToFile(resultSeq, numOfCoords + 1, outputFileName);
 
 	return 0;
 }
-
