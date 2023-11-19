@@ -277,6 +277,7 @@ void calculateDist(double **inputs, double **dist, int numOfCoords)
 
 int main(int argc, char *argv[])
 {
+	printf("\nSTART\n");
 	clock_t startTime = clock();
 
 	// 初始化和读取输入数据
@@ -320,9 +321,9 @@ int main(int argc, char *argv[])
 		}
 
 		// 打印当前序列
-		if (currentSeqLen % 10 == 0)
+		if (currentSeqLen % 100 == 0)
 		{
-			printf("\nTIME: length: %d, time: %f", currentSeqLen, ((double)(clock() - startTime)) / 1000);
+			printf("CurrentTIME: length: %d, time: %f\n", currentSeqLen, ((double)(clock() - startTime)) / 1000);
 		}
 	}
 
@@ -330,11 +331,12 @@ int main(int argc, char *argv[])
 	resultSeq[numOfCoords] = 0;
 
 	// 输出最终序列
-	printf("\nFinal sequence: ");
+	printf("Final sequence: ");
 	for (i = 0; i < numOfCoords + 1; i++)
 	{
 		printf("%d ", resultSeq[i]);
 	}
+	printf("\n");
 
 	// 写入文件
 	writeTourToFile(resultSeq, numOfCoords + 1, outputFileName);
@@ -349,7 +351,7 @@ int main(int argc, char *argv[])
 	free(inputs);
 	free(resultSeq);
 
-	printf("\nTIME: %f", ((double)(clock() - startTime)));
+	printf("Total TIME: %f \n", ((double)(clock() - startTime)));
 
 	return 0;
 }
