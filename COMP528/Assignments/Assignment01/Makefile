@@ -1,6 +1,6 @@
 CC = gcc
 IC = icc
-CFLAGS = -O3 -std=c99
+CFLAGS = -O3 -std=c99 -lm
 
 default: ci fi comp fomp icomp ifomp
 
