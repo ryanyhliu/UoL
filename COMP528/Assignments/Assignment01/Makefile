@@ -23,4 +23,4 @@ ifomp: ompfInsertion.c coordReader.c
 	$(IC) $(CFLAGS) -openmp -o ifomp.exe ompfInsertion.c coordReader.c
 
 clean:
-	rm -f ci fi comp fomp icomp ifomp
+    rm -f ci.exe fi.exe comp.exe fomp.exe icomp.exe ifomp.exe
