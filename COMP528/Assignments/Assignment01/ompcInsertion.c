@@ -166,12 +166,12 @@ InsertionTask findCheapestInsertion(int *seq, double **dist, int numOfCoords, in
 {
 	InsertionTask globalBestTask = {-1, -1, DBL_MAX};
 
-	int i;
-	int tempPoint;
-	int k;
-	bool alreadyInSeq;
-	int nextIndex;
-	double currentCost;
+	int i = 0;
+	int tempPoint = 0;
+	int k = 0;
+	bool alreadyInSeq = false;
+	int nextIndex = -1;
+	double currentCost = 0;
 
 #pragma omp parallel
 	{
