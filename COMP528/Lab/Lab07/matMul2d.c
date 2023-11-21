@@ -32,7 +32,7 @@ void print_matrix(int mat[MAXSIZE][MAXSIZE])
     {
         for (int j = 0; j < MAXSIZE; j++)
         {
-            printf("%d ", mat[i][j]);
+            printf("%3d ", mat[i][j]);
         }
         printf("\n");
     }
@@ -70,6 +70,8 @@ int main(int argc, char *argv[])
     {
         fill_matrix(X);
         fill_matrix(Y);
+        print_matrix(X);
+        print_matrix(Y);
     }
 
     /*What's the difference here between MPI_Bcast and MPI_Scatter*/
