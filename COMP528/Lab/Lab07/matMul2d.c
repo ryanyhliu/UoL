@@ -69,8 +69,10 @@ int main(int argc, char *argv[])
     if (my_rank == root)
     {
         fill_matrix(X);
+        sleep(1);
         fill_matrix(Y);
         print_matrix(X);
+        printf("---")
         print_matrix(Y);
     }
 
