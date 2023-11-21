@@ -74,6 +74,7 @@ int main(int argc, char *argv[])
         print_matrix(X);
         printf("\n");
         print_matrix(Y);
+        printf("\n");
     }
 
     /*What's the difference here between MPI_Bcast and MPI_Scatter*/
