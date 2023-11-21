@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
         sleep(1);
         fill_matrix(Y);
         print_matrix(X);
-        printf("---")
+        printf("\n");
         print_matrix(Y);
     }
 
