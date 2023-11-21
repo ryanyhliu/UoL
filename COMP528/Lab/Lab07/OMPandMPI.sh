@@ -41,8 +41,8 @@ echo "Compiling $SRC to $EXE"
 echo "-------------------------"
 
 # Compile the source code
-# mpiicc -qopenmp -std=c99 $SRC -o $EXE
-mpiicc -std=c99 $SRC -o $EXE # NO OpenMP compile
+mpiicc -qopenmp -std=c99 $SRC -o $EXE
+# mpiicc -std=c99 $SRC -o $EXE # NO OpenMP compile
 
 # Check if the executable was created
 if test -x $EXE; then 
