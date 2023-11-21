@@ -40,7 +40,9 @@ void print_matrix(int mat[MAXSIZE][MAXSIZE])
 
 int main(int argc, char *argv[])
 {
+    printf("Before MPI init\n");
     MPI_Init(&argc, &argv);
+    printf("After MPI init\n");
     double tStart, tEnd;
 
     tStart = MPI_Wtime();
