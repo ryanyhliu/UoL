@@ -12,13 +12,15 @@ void fill_matrix(int mat[MAXSIZE][MAXSIZE])
 {
 #pragma omp parallel
     {
-        srand(time(NULL));
-#pragma omp for nowait
+        // srand(time(NULL));
+        unsigned int seed = time(NULL) ^ omp_get_thread_num();
+#pragma omp for 
         for (int i = 0; i < MAXSIZE; i++)
         {
             for (int j = 0; j < MAXSIZE; j++)
             {
-                mat[i][j] = rand() % 10;
+                // mat[i][j] = rand() % 10;
+                mat[i][j] = rand_r(&seed) % 10;
             }
         }
     }
@@ -57,8 +59,10 @@ int main(int argc, char *argv[])
         exit(-1);
     }
 
-    from = my_rank * MAXSIZE / comm_size;
-    to = (my_rank + comm_size) * MAXSIZE / comm_size;
+    // from = my_rank * MAXSIZE / comm_size;
+    // to = (my_rank + comm_size) * MAXSIZE / comm_size;
+    from = my_rank * part_size;
+    to = (my_rank + 1) * part_size;
 
     /*if root rank, fill the matrices X and Y*/
 
@@ -77,7 +81,7 @@ int main(int argc, char *argv[])
 Consider NUMA, consider the chunk size of your schedules. Experiment!!!!!!!*/
 #pragma omp parallel
     {
-#pragma omp for nowait
+#pragma omp for
         for (i = from; i < to; i++)
         {
             for (j = 0; j < MAXSIZE; j++)
