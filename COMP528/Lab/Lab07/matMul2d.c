@@ -10,13 +10,12 @@ int X[MAXSIZE][MAXSIZE], Y[MAXSIZE][MAXSIZE], Z[MAXSIZE][MAXSIZE];
 
 void fill_matrix(int mat[MAXSIZE][MAXSIZE])
 {
-#pragma omp parallel nowait
+#pragma omp parallel
     {
         srand(time(NULL));
-#pragma omp for
+#pragma omp for nowait
         for (int i = 0; i < MAXSIZE; i++)
         {
-#pragma omp for
             for (int j = 0; j < MAXSIZE; j++)
             {
                 mat[i][j] = rand() % 10;
@@ -78,14 +77,12 @@ int main(int argc, char *argv[])
 Consider NUMA, consider the chunk size of your schedules. Experiment!!!!!!!*/
 #pragma omp parallel
     {
-#pragma omp for
+#pragma omp for nowait
         for (i = from; i < to; i++)
         {
-#pragma omp for
             for (j = 0; j < MAXSIZE; j++)
             {
                 localZ[i][j] = 0;
-#pragma omp for
                 for (k = 0; k < MAXSIZE; k++)
                 {
                     localZ[i][j] += localX[i][k] * localY[k][j];

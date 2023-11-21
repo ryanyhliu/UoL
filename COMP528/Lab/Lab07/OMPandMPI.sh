@@ -41,7 +41,7 @@ echo "Compiling $SRC to $EXE"
 echo "-------------------------"
 
 # Compile the source code
-mpiicc -qopenmp $SRC -o $EXE
+mpiicc -std=c99 -qopenmp $SRC -o $EXE
 
 # Check if the executable was created
 if test -x $EXE; then 
