@@ -4,7 +4,7 @@
 #include <time.h>
 #include <omp.h>
 
-#define MAXSIZE 8 // 1024 /* change the size of matrices as required*/
+#define MAXSIZE 3 // 1024 /* change the size of matrices as required*/
 
 int X[MAXSIZE][MAXSIZE], Y[MAXSIZE][MAXSIZE], Z[MAXSIZE][MAXSIZE];
 
