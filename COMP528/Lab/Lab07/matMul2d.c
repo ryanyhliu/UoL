@@ -82,7 +82,8 @@ Consider NUMA, consider the chunk size of your schedules. Experiment!!!!!!!*/
 #pragma omp parallel
     {
 #pragma omp for
-        for (i = from; i < to; i++)
+        // for (i = from; i < to; i++)
+        for (i = 0; i < part_size; i++)
         {
             for (j = 0; j < MAXSIZE; j++)
             {
