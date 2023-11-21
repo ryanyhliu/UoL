@@ -38,12 +38,12 @@ void print_matrix(int mat[MAXSIZE][MAXSIZE])
 
 int main(int argc, char *argv[])
 {
+    MPI_Init(&argc, &argv);
     double tStart, tEnd;
 
     tStart = MPI_Wtime();
 
     int my_rank, comm_size, from, to;
-    MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
 
