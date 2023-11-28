@@ -49,8 +49,6 @@ void convert2Dto1D(int **arr2D, int *arr1D){
             arr1D[index++] = arr2D[i][j];
         }
     }
-
-    return arr1D;
 }
 
 void **convert1Dto2D(int *arr1D, int **arr2D){
