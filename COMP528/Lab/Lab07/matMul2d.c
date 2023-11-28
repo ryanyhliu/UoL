@@ -39,7 +39,7 @@ void print_matrix(int mat[MAXSIZE][MAXSIZE])
     }
 }
 
-void convert2Dto1D(int **arr2D, int *arr1D){
+void convert2Dto1D(int arr2D[MAXSIZE][MAXSIZE], int *arr1D){
     // int *arr1D = (int *)malloc(MAXSIZE * MAXSIZE * sizeof(int));
     int index = 0;
     int i;
@@ -51,7 +51,7 @@ void convert2Dto1D(int **arr2D, int *arr1D){
     }
 }
 
-void **convert1Dto2D(int *arr1D, int **arr2D){
+void **convert1Dto2D(int *arr1D, int arr2D[MAXSIZE][MAXSIZE]){
     // int arr2D[MAXSIZE][MAXSIZE];
     int index = 0;
     int i;
@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
 
     int part_size = MAXSIZE * MAXSIZE / comm_size;
     int localX[part_size][MAXSIZE], localY[part_size][MAXSIZE], localZ[part_size][MAXSIZE];
-    int localX_1D[part_size], localY_1D[part_size], localZ_1D[part_size];
+    int localX_1D[part_size * MAXSIZE], localY_1D[part_size * MAXSIZE], localZ_1D[part_size * MAXSIZE];
     int i, j, k;
     int root = 0;
 
@@ -114,12 +114,13 @@ int main(int argc, char *argv[])
 
     int X_1D[MAXSIZE * MAXSIZE];
     int Y_1D[MAXSIZE * MAXSIZE];
+    int Z_1D[MAXSIZE * MAXSIZE];
 
     convert2Dto1D(X, X_1D);
     convert2Dto1D(Y, Y_1D);
 
-    MPI_Scatter(X_1D, part_size, MPI_INT, localX_1D, part_size, MPI_INT, root, MPI_COMM_WORLD);
-    MPI_Scatter(Y_1D, part_size, MPI_INT, localY_1D, part_size, MPI_INT, root, MPI_COMM_WORLD);
+    MPI_Scatter(X_1D, part_size * MAXSIZE, MPI_INT, localX_1D, part_size * MAXSIZE, MPI_INT, root, MPI_COMM_WORLD);
+    MPI_Scatter(Y_1D, part_size * MAXSIZE, MPI_INT, localY_1D, part_size * MAXSIZE, MPI_INT, root, MPI_COMM_WORLD);
 
 
 
@@ -142,33 +143,25 @@ Consider NUMA, consider the chunk size of your schedules. Experiment!!!!!!!*/
 //         }
 //     }
 
-#pragma omp parallel
+    #pragma omp parallel for collapse(2) private(k)
+    for (i = 0; i < part_size; i++) 
     {
-#pragma omp for
-        // for (i = from; i < to; i++)
-        for (i = 0; i < part_size; i++)
+        for (j = 0; j < MAXSIZE; j++) 
         {
-            localZ_1D[i] += localX_1D[i] * localY_1D[i];
-
-            // for (j = 0; j < MAXSIZE; j++)
-            // {
-            //     localZ[i][j] = 0;
-            //     for (k = 0; k < MAXSIZE; k++)
-            //     {
-            //         localZ[i][j] += localX[i][k] * localY[k][j];
-            //     }
-            // }
+            for (k = 0; k < MAXSIZE; k++)
+            {
+                localZ_1D[i * MAXSIZE + j]  += localX_1D[i * MAXSIZE + k] * localY_1D[k * MAXSIZE + j];
+            }
         }
     }
 
     // MPI_Gather(localZ, part_size * MAXSIZE, MPI_INT, Z, part_size * MAXSIZE, MPI_INT, root, MPI_COMM_WORLD);
-    int Z_1D[MAXSIZE * MAXSIZE];
-    MPI_Gather(localZ_1D, part_size, MPI_INT, Z_1D, part_size, MPI_INT, root, MPI_COMM_WORLD);
-    convert1Dto2D(Z_1D, Z);
+    MPI_Gather(localZ_1D, part_size * MAXSIZE, MPI_INT, Z_1D, part_size * MAXSIZE, MPI_INT, root, MPI_COMM_WORLD);
 
     /*if root print mat Z*/
     if (my_rank == 0)
     {
+        convert1Dto2D(Z_1D, Z);
         print_matrix(Z);
     }
 
@@ -179,6 +172,9 @@ Consider NUMA, consider the chunk size of your schedules. Experiment!!!!!!!*/
     free(X_1D);
     free(Y_1D);
     free(Z_1D);
+    free(localX_1D);
+    free(localY_1D);
+    free(localZ_1D);
 
     MPI_Finalize();
     return 0;
