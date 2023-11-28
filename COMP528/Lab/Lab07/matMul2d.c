@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <omp.h>
+#include <unistd.h>
 
 #define MAXSIZE 1024 // 1024 /* change the size of matrices as required*/
 
@@ -38,6 +39,34 @@ void print_matrix(int mat[MAXSIZE][MAXSIZE])
     }
 }
 
+int *convert2Dto1D(int **arr2D){
+    int *arr1D = (int *)malloc(MAXSIZE * MAXSIZE * sizeof(int));
+    int index = 0;
+    int i;
+    int j;
+    for (i = 0; i < MAXSIZE; i++){
+        for (j = 0; j < MAXSIZE; j++){
+            arr1D[index++] = arr2D[i][j];
+        }
+    }
+
+    return arr1D;
+}
+
+int **convert1Dto2D(int *arr1D){
+    int arr2D[MAXSIZE][MAXSIZE];
+    int index = 0;
+    int i;
+    int j;
+    
+    for (i = 0; i < MAXSIZE; i++){
+        for (j = 0; j < MAXSIZE; j++){
+            arr2D = arr1D[index++];
+        }
+    }
+}
+
+
 int main(int argc, char *argv[])
 {
     printf("Before MPI init\n");
@@ -53,6 +82,7 @@ int main(int argc, char *argv[])
 
     int part_size = MAXSIZE * MAXSIZE / comm_size;
     int localX[part_size][MAXSIZE], localY[part_size][MAXSIZE], localZ[part_size][MAXSIZE];
+    int localX_1D[part_size], localY_1D[part_size], localZ_1D[part_size];
     int i, j, k;
     int root = 0;
 
@@ -81,8 +111,16 @@ int main(int argc, char *argv[])
 
     /*What's the difference here between MPI_Bcast and MPI_Scatter*/
 
-    MPI_Scatter(X, part_size * MAXSIZE, MPI_INT, localX, part_size * MAXSIZE, MPI_INT, root, MPI_COMM_WORLD);
-    MPI_Scatter(Y, part_size * MAXSIZE, MPI_INT, localY, part_size * MAXSIZE, MPI_INT, root, MPI_COMM_WORLD);
+    // MPI_Scatter(X, part_size * MAXSIZE, MPI_INT, localX, part_size * MAXSIZE, MPI_INT, root, MPI_COMM_WORLD);
+    // MPI_Scatter(Y, part_size * MAXSIZE, MPI_INT, localY, part_size * MAXSIZE, MPI_INT, root, MPI_COMM_WORLD);
+
+    int *X_1D = convert2Dto1D(X);
+    int *Y_1D = convert2Dto1D(Y);
+
+    MPI_Scatter(X_1D, part_size, MPI_INT, localX_1D, part_size, MPI_INT, root, MPI_COMM_WORLD);
+    MPI_Scatter(Y_1D, part_size, MPI_INT, localY_1D, part_size, MPI_INT, root, MPI_COMM_WORLD);
+
+
 
 /*parallelise here using OpenMP: fastest time wins!!!! Use clauses and anythign at your disposal. Change the code if you want to.
 Consider NUMA, consider the chunk size of your schedules. Experiment!!!!!!!*/
@@ -103,7 +141,10 @@ Consider NUMA, consider the chunk size of your schedules. Experiment!!!!!!!*/
         }
     }
 
-    MPI_Gather(localZ, part_size * MAXSIZE, MPI_INT, Z, part_size * MAXSIZE, MPI_INT, root, MPI_COMM_WORLD);
+    // MPI_Gather(localZ, part_size * MAXSIZE, MPI_INT, Z, part_size * MAXSIZE, MPI_INT, root, MPI_COMM_WORLD);
+    int Z_1D[MAXSIZE * MAXSIZE];
+    MPI_Gather(localZ_1D, part_size, MPI_INT, Z_1D, part_size, MPI_INT, root, MPI_COMM_WORLD);
+    Z = convert1Dto2D(Z_1D);
 
     /*if root print mat Z*/
     if (my_rank == 0)
@@ -114,6 +155,10 @@ Consider NUMA, consider the chunk size of your schedules. Experiment!!!!!!!*/
     tEnd = MPI_Wtime();
 
     printf("\nProgram took %lf milliseconds\n", (tEnd - tStart) * 1000);
+
+    free(X_1D);
+    free(Y_1D);
+    free(Z_1D);
 
     MPI_Finalize();
     return 0;
