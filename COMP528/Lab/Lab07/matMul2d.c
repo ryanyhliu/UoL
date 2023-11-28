@@ -59,7 +59,7 @@ void **convert1Dto2D(int *arr1D, int **arr2D){
     
     for (i = 0; i < MAXSIZE; i++){
         for (j = 0; j < MAXSIZE; j++){
-            arr2D = arr1D[index++];
+            arr2D[i][j] = arr1D[index++];
         }
     }
 }
