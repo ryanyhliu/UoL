@@ -143,17 +143,31 @@ Consider NUMA, consider the chunk size of your schedules. Experiment!!!!!!!*/
 //         }
 //     }
 
+
+    // #pragma omp parallel for collapse(2) private(k)
+    // for (i = 0; i < part_size; i++) 
+    // {
+    //     for (j = 0; j < MAXSIZE; j++) 
+    //     {
+    //         for (k = 0; k < MAXSIZE; k++)
+    //         {
+    //             localZ_1D[i * MAXSIZE + j]  += localX_1D[i * MAXSIZE + k] * localY_1D[k * MAXSIZE + j];
+    //         }
+    //     }
+    // }
+
     #pragma omp parallel for collapse(2) private(k)
-    for (i = 0; i < part_size; i++) 
-    {
-        for (j = 0; j < MAXSIZE; j++) 
-        {
-            for (k = 0; k < MAXSIZE; k++)
-            {
-                localZ_1D[i * MAXSIZE + j]  += localX_1D[i * MAXSIZE + k] * localY_1D[k * MAXSIZE + j];
+    for (int i = 0; i < part_size; ++i) {
+        for (int j = 0; j < MAXSIZE; ++j) {
+            int sum = 0;
+            for (int k = 0; k < MAXSIZE; ++k) {
+                sum += localX_1D[i * MAXSIZE + k] * localY_1D[k * MAXSIZE + j];
             }
+            localZ_1D[i * MAXSIZE + j] = sum;
         }
     }
+
+
 
     // MPI_Gather(localZ, part_size * MAXSIZE, MPI_INT, Z, part_size * MAXSIZE, MPI_INT, root, MPI_COMM_WORLD);
     MPI_Gather(localZ_1D, part_size * MAXSIZE, MPI_INT, Z_1D, part_size * MAXSIZE, MPI_INT, root, MPI_COMM_WORLD);
