@@ -1,0 +1,19 @@
+这段代码是一个简单的 CUDA (Compute Unified Device Architecture) 程序，用于在 GPU 上执行并行计算。CUDA 是 NVIDIA 开发的一个平台，允许开发人员使用 C/C++ 编写程序来在 GPU 上执行并行处理。我将逐行解释这段代码：
+
+1-2: 引入标准输入输出头文件 stdio.h 和标准库头文件 stdlib.h，这些是用于基本的输入输出操作和一些通用功能。
+
+3-11: 定义了一个名为 helloKernel 的 CUDA 内核函数。这个函数将在 GPU 上执行。它接收一个参数 N，表示要执行的总迭代次数。
+
+3: __global__ 是一个 CUDA 关键字，指示 helloKernel 是一个运行在 GPU 上的函数（内核）。
+4-5: 计算当前线程的全局索引 i。这是通过将线程的索引（threadIdx.x）与其所在块的索引（blockIdx.x）和块的大小（blockDim.x）结合起来实现的。
+6-9: 如果当前线程的索引在允许的范围内（小于 N），则打印一条消息，包括线程和块的信息以及迭代次数。
+12-30: 定义了 main 函数，这是程序的入口点。
+
+13-15: 定义了一些变量。N 是要执行的总迭代次数，numGPUs 用于存储系统中 GPU 的数量，blks 是 CUDA 块的数量，threadsPerBlk 是每个块的线程数量。
+18: 使用 cudaGetDeviceCount 函数检查系统中的 GPU 数量。
+19-29: 如果检测到至少一个 GPU，则执行以下操作：
+21: 在 CPU 上打印一条消息。
+24: 调用 helloKernel 内核，使用 <<<blks,threadsPerBlk>>> 语法指定块和每块的线程数量。这意味着内核将在 blks 个块上执行，每个块有 threadsPerBlk 个线程。
+26: 再次在 CPU 上打印一条消息。
+31-33: 如果没有检测到 GPU，则打印一条相应的消息。
+总的来说，这个程序是一个简单的示例，展示了如何在 GPU 上使用 CUDA 编程模型执行基本的并行操作。程序首先检查是否有可用的 GPU，然后在 GPU 上并行运行 helloKernel 内核，每个内核实例打印其线程和块的信息。
