@@ -31,7 +31,6 @@ package Lab06;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import java.security.*;
 import javax.crypto.*;
 
 /**

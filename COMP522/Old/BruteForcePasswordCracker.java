@@ -5,8 +5,6 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.spec.KeySpec;
-// import java.security.spec.PBEKeySpec;
-import java.util.Arrays;
 import java.util.Base64;
 
 public class BruteForcePasswordCracker {

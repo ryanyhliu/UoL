@@ -19,53 +19,21 @@ In particular:
 
 */
 
-/*
- * Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- *   - Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer.
- *
- *   - Redistributions in binary form must reproduce the above copyright
- *     notice, this list of conditions and the following disclaimer in the
- *     documentation and/or other materials provided with the distribution.
- *
- *   - Neither the name of Oracle nor the names of its
- *     contributors may be used to endorse or promote products derived
- *     from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
- * IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
- * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
- * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
- * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-import java.io.*;
-import java.math.BigInteger;
 import java.security.*;
 import java.security.spec.*;
-import java.security.interfaces.*;
 import javax.crypto.*;
 import javax.crypto.spec.*;
 import javax.crypto.interfaces.*;
 // import com.sun.crypto.provider.SunJCE;
 
 public class DHKeyAgreement2 {
-    private DHKeyAgreement2() {}
+    private DHKeyAgreement2() {
+    }
+
     public static void main(String argv[]) throws Exception {
         // Set a timer
         long timerStart = System.nanoTime();
 
-        
         /*
          * Alice creates her own DH key pair with 2048-bit key size
          */
@@ -73,15 +41,15 @@ public class DHKeyAgreement2 {
         KeyPairGenerator aliceKpairGen = KeyPairGenerator.getInstance("DH");
         aliceKpairGen.initialize(512);
         KeyPair aliceKpair = aliceKpairGen.generateKeyPair();
-        
+
         // Alice creates and initializes her DH KeyAgreement object
         System.out.println("ALICE: Initialization ...");
         KeyAgreement aliceKeyAgree = KeyAgreement.getInstance("DH");
         aliceKeyAgree.init(aliceKpair.getPrivate());
-        
+
         // Alice encodes her public key, and sends it over to Bob.
         byte[] alicePubKeyEnc = aliceKpair.getPublic().getEncoded();
-        
+
         /*
          * Let's turn over to Bob. Bob has received Alice's public key
          * in encoded format.
@@ -97,7 +65,7 @@ public class DHKeyAgreement2 {
          * He must use the same parameters when he generates his own key
          * pair.
          */
-        DHParameterSpec dhParamFromAlicePubKey = ((DHPublicKey)alicePubKey).getParams();
+        DHParameterSpec dhParamFromAlicePubKey = ((DHPublicKey) alicePubKey).getParams();
 
         // Bob creates his own DH key pair
         System.out.println("BOB: Generate DH keypair ...");
@@ -139,18 +107,20 @@ public class DHKeyAgreement2 {
          * agreement protocol.
          * Both generate the (same) shared secret.
          */
-       /* try {
+        /*
+         * try {
          */
-            byte[] aliceSharedSecret = aliceKeyAgree.generateSecret();
-            int aliceLen = aliceSharedSecret.length;
-            byte[] bobSharedSecret = new byte[aliceLen];
-            int bobLen;
-/*        } 
-catch (ShortBufferException e) {
-            System.out.println(e.getMessage());
-        }        // provide output buffer of required size
-*/
-            bobLen = bobKeyAgree.generateSecret(bobSharedSecret, 0);
+        byte[] aliceSharedSecret = aliceKeyAgree.generateSecret();
+        int aliceLen = aliceSharedSecret.length;
+        byte[] bobSharedSecret = new byte[aliceLen];
+        int bobLen;
+        /*
+         * }
+         * catch (ShortBufferException e) {
+         * System.out.println(e.getMessage());
+         * } // provide output buffer of required size
+         */
+        bobLen = bobKeyAgree.generateSecret(bobSharedSecret, 0);
         System.out.println("Alice secret: " +
                 toHexString(aliceSharedSecret));
         System.out.println("Bob secret: " +
@@ -207,10 +177,10 @@ catch (ShortBufferException e) {
         aliceCipher.init(Cipher.DECRYPT_MODE, aliceAesKey, aesParams);
         byte[] recovered = aliceCipher.doFinal(ciphertext);
         if (!java.util.Arrays.equals(cleartext, recovered))
-            throw new Exception("AES in CBC mode recovered text is " +  "different from cleartext");
-        System.out.println("AES in CBC mode recovered text is " +  "same as cleartext");
+            throw new Exception("AES in CBC mode recovered text is " + "different from cleartext");
+        System.out.println("AES in CBC mode recovered text is " + "same as cleartext");
 
-        System.out.println("---RunTime:" +  (System.nanoTime() - timerStart));
+        System.out.println("---RunTime:" + (System.nanoTime() - timerStart));
     }
 
     /*
@@ -233,7 +203,7 @@ catch (ShortBufferException e) {
         int len = block.length;
         for (int i = 0; i < len; i++) {
             byte2hex(block[i], buf);
-            if (i < len-1) {
+            if (i < len - 1) {
                 buf.append(":");
             }
         }

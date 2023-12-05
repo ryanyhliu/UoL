@@ -3,7 +3,6 @@ package Assignment02.HMACwithSHA256;
 import java.security.MessageDigest;
 
 import javax.crypto.*;
-import javax.crypto.spec.SecretKeySpec;
 
 public class HMACwithSHA256 {
     public static void main(String[] args) throws Exception {
