@@ -1,4 +1,4 @@
-package Old;
+package Lab05;
 /*
 A. Lisitsa, 2019 The code below was 
 taken  from 

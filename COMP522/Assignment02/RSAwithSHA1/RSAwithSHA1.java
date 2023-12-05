@@ -1,4 +1,4 @@
-package Assignment02;
+package Assignment02.RSAwithSHA1;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -9,6 +9,8 @@ import java.security.SecureRandom;
 import javax.crypto.Cipher;
 
 
+
+
 public class RSAwithSHA1 {
     public static void main(String[] args) throws Exception {
         Sender sender = new Sender();
@@ -16,15 +18,18 @@ public class RSAwithSHA1 {
 
         String message = "This is a secret message";
 
-        // Set timer
-        long timerStart = System.nanoTime();
-
+        
         byte[] digest = sender.generateDigest(message);
         byte[] encryptedDigest = sender.encryptDigest(digest);
-
+        
+        // Set timer
+        long startTime = System.nanoTime();
         boolean isValid = verifier.verify(encryptedDigest, message.getBytes(), sender.getPublicKey());
+        long endTime = System.nanoTime();
+
         System.out.println("Is message valid? " + isValid);
-        System.out.println("Time: " +  (System.nanoTime() - timerStart));
+        System.out.println("Verification time: " + (endTime - startTime) + " nanoseconds");
+        
     }
 }
 
