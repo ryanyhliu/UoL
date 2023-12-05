@@ -1,6 +1,4 @@
-package Lab05;
-
-
+package Assignment02.DiffleHellman_4Parties;
 
 /*
 A Lisitsa, 2019, The code below was taken without any changes from 
@@ -45,8 +43,8 @@ import javax.crypto.interfaces.*;
  * This program executes the Diffie-Hellman key agreement protocol between
  * 3 parties: Alice, Bob, and Carol using a shared 2048-bit DH parameter.
  */
-public class DHKeyAgreement3 {
-    private DHKeyAgreement3() {
+public class DHKeyAgreement4 {
+    private DHKeyAgreement4() {
     }
 
     public static void main(String argv[]) throws Exception {
@@ -55,45 +53,71 @@ public class DHKeyAgreement3 {
         KeyPairGenerator aliceKpairGen = KeyPairGenerator.getInstance("DH");
         aliceKpairGen.initialize(2048);
         KeyPair aliceKpair = aliceKpairGen.generateKeyPair();
+
         // This DH parameters can also be constructed by creating a
         // DHParameterSpec object using agreed-upon values
         DHParameterSpec dhParamShared = ((DHPublicKey) aliceKpair.getPublic()).getParams();
+
         // Bob creates his own DH key pair using the same params
         System.out.println("BOB: Generate DH keypair ...");
         KeyPairGenerator bobKpairGen = KeyPairGenerator.getInstance("DH");
         bobKpairGen.initialize(dhParamShared);
         KeyPair bobKpair = bobKpairGen.generateKeyPair();
+
         // Carol creates her own DH key pair using the same params
         System.out.println("CAROL: Generate DH keypair ...");
         KeyPairGenerator carolKpairGen = KeyPairGenerator.getInstance("DH");
         carolKpairGen.initialize(dhParamShared);
         KeyPair carolKpair = carolKpairGen.generateKeyPair();
+
+        // Dave 创建自己的 DH 密钥对
+        System.out.println("DAVE: Generate DH keypair ...");
+        KeyPairGenerator daveKpairGen = KeyPairGenerator.getInstance("DH");
+        daveKpairGen.initialize(dhParamShared);
+        KeyPair daveKpair = daveKpairGen.generateKeyPair();
+
+
+
+
+
         // Alice initialize
         System.out.println("ALICE: Initialize ...");
         KeyAgreement aliceKeyAgree = KeyAgreement.getInstance("DH");
         aliceKeyAgree.init(aliceKpair.getPrivate());
+
         // Bob initialize
         System.out.println("BOB: Initialize ...");
         KeyAgreement bobKeyAgree = KeyAgreement.getInstance("DH");
         bobKeyAgree.init(bobKpair.getPrivate());
+
         // Carol initialize
         System.out.println("CAROL: Initialize ...");
         KeyAgreement carolKeyAgree = KeyAgreement.getInstance("DH");
         carolKeyAgree.init(carolKpair.getPrivate());
-        
 
-        // Alice uses Carol's public key
-        Key ac = aliceKeyAgree.doPhase(carolKpair.getPublic(), false);
-        // Bob uses Alice's public key
-        Key ba = bobKeyAgree.doPhase(aliceKpair.getPublic(), false);
-        // Carol uses Bob's public key
-        Key cb = carolKeyAgree.doPhase(bobKpair.getPublic(), false);
-        // Alice uses Carol's result from above
-        aliceKeyAgree.doPhase(cb, true);
-        // Bob uses Alice's result from above
-        bobKeyAgree.doPhase(ac, true);
-        // Carol uses Bob's result from above
-        carolKeyAgree.doPhase(ba, true);
+        // Dave 初始化
+        System.out.println("DAVE: Initialize ...");
+        KeyAgreement daveKeyAgree = KeyAgreement.getInstance("DH");
+        daveKeyAgree.init(daveKpair.getPrivate());
+
+
+
+
+        Key da = aliceKeyAgree.doPhase(daveKpair.getPublic(), false);
+        Key ab = bobKeyAgree.doPhase(aliceKpair.getPublic(), false);
+        Key bc = carolKeyAgree.doPhase(bobKpair.getPublic(), false);
+        Key cd = daveKeyAgree.doPhase(carolKpair.getPublic(), false);
+
+        Key cda = aliceKeyAgree.doPhase(cd, false);
+        Key dab = bobKeyAgree.doPhase(da, false);
+        Key abc = carolKeyAgree.doPhase(ab, false);
+        Key bcd = daveKeyAgree.doPhase(bc, false);
+
+        Key bcda = aliceKeyAgree.doPhase(bcd, true);
+        Key cdab = bobKeyAgree.doPhase(cda, true);
+        Key abcd = daveKeyAgree.doPhase(abc, true);
+        Key dabc = carolKeyAgree.doPhase(dab, true);
+
 
 
 
@@ -104,6 +128,14 @@ public class DHKeyAgreement3 {
         System.out.println("Bob secret: " + toHexString(bobSharedSecret));
         byte[] carolSharedSecret = carolKeyAgree.generateSecret();
         System.out.println("Carol secret: " + toHexString(carolSharedSecret));
+        // 生成共享密钥
+        byte[] daveSharedSecret = daveKeyAgree.generateSecret();
+        System.out.println("Dave secret: " + toHexString(daveSharedSecret));
+
+
+
+
+
         // Compare Alice and Bob
         if (!java.util.Arrays.equals(aliceSharedSecret, bobSharedSecret))
             throw new Exception("Alice and Bob differ");
@@ -112,6 +144,10 @@ public class DHKeyAgreement3 {
         if (!java.util.Arrays.equals(bobSharedSecret, carolSharedSecret))
             throw new Exception("Bob and Carol differ");
         System.out.println("Bob and Carol are the same");
+        // 比较 Dave 和 Carol 的就行
+        if (!java.util.Arrays.equals(carolSharedSecret, daveSharedSecret))
+            throw new Exception("Carol and Dave differ");
+        System.out.println("Carol and Dave are the same");
     }
 
     /*
