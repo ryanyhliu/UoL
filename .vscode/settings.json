@@ -10,5 +10,9 @@
     "cSpell.words": [
         "Hmac",
         "Pairgenerator"
+    ],
+    "cmake.sourceDirectory": "C:/Program Files/CMake/share/cmake-3.28/Modules/FortranCInterface",
+    "makefile.configurations": [
+        
     ]
 }

@@ -51,62 +51,56 @@ int main(int argc, char *argv[]){
 
 }
 
-int *cheapestInsertion(double **dMatrix, int numOfCoords){
-	//Setting up variables
-	int i, j;
-	int nextNode, insertPos;
+int *nearestAddition(double **dMatrix, int numOfCoords){
+    // 设置变量
+    int i, j;
+    int nextNode, insertPos;
 
-	//Memory allocation for the tour and visited arrays. Tour is numOfCoords + 1 for returning to origin
-	int *tour = (int *)malloc((1 + numOfCoords) * sizeof(int));
-	bool *visited = (bool *)malloc(numOfCoords * sizeof(bool));
+    // 为路径和已访问数组分配内存。路径长度为numOfCoords + 1，为了返回起点
+    int *tour = (int *)malloc((1 + numOfCoords) * sizeof(int));
+    bool *visited = (bool *)malloc(numOfCoords * sizeof(bool));
 
-	//Initialising tour to empty
-	for(i = 0; i < numOfCoords; i++){
-		tour[i] = -1;
-	}
+    // 初始化路径为未定义
+    for(i = 0; i < numOfCoords; i++){
+        tour[i] = -1;
+    }
 
-	//Tour always starts with 0. 0 is visited
-	tour[0] = 0;
-	tour[1] = 0;
-	visited[0] = true;
-	
-	//Hard coding because I'm lazy
-	int numVisited = 1;
-	int tourLength = 2;
-	
-	//While there are still unvisited vertices
-	while(numVisited < numOfCoords){
-		double minCost = __DBL_MAX__;
+    // 路径始终从0开始。0已被访问
+    tour[0] = 0;
+    tour[1] = 0;
+    visited[0] = true;
+    
+    // 由于懒惰，硬编码
+    int numVisited = 1;
+    int tourLength = 2;
+    
+    // 当还有未访问的顶点时
+    while(numVisited < numOfCoords){
+        double minCost = __DBL_MAX__;
 
-		//Find an unvisited vertex such that the cost of adding it to the tour is minimal 
-		for(i = 0; i < tourLength - 1; i++){
-			for(j = 0; j < numOfCoords; j++){
-				if(!visited[j]){
-					double cost = dMatrix[tour[i]][j] + dMatrix[j][tour[i + 1]] - dMatrix[tour[i]][tour[i + 1]];
-					if(cost < minCost){
-						minCost = cost;
-						nextNode = j;
-						insertPos = i + 1;
-					}
-				}
-			}
-		}		
+        // 寻找最近的未访问顶点
+        for(i = 0; i < numOfCoords; i++){
+            if(!visited[i]){
+                double cost = dMatrix[tour[tourLength - 1]][i];
+                if(cost < minCost){
+                    minCost = cost;
+                    nextNode = i;
+                }
+            }
+        }
 
-		//Shift array to add next vertex
-		for(i = numOfCoords; i > insertPos; i--){
-			tour[i] = tour[i - 1];
-		}
+        // 将最近的顶点添加到路径末尾
+        tour[tourLength] = nextNode;
+        visited[nextNode] = true;
+        tourLength++;
+        numVisited++;
+    }
 
-		tour[insertPos] = nextNode;
-		visited[nextNode] = true;
-		
-		tourLength++;
-		numVisited++;
-	}
-
-	free(visited);
-	return tour;
+    // 释放已访问数组的内存
+    free(visited);
+    return tour;
 }
+
 
 double **createDistanceMatrix(double **coords, int numOfCoords){
 	int i, j;
