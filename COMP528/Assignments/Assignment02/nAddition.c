@@ -10,7 +10,7 @@ double **readCoords(char *filename, int numOfCoords);
 void *writeTourToFile(int *tour, int tourLength, char *filename);
 double **createDistanceMatrix(double **coords, int numOfCoords);
 double sqrt(double arg);
-int *cheapestInsertion(double **dMatrix, int numOfCoords);
+int *nearestAddition(double **dMatrix, int numOfCoords);
 
 int main(int argc, char *argv[]){
 	char filename[500];
@@ -31,7 +31,7 @@ int main(int argc, char *argv[]){
 	double tStart = omp_get_wtime();
 
 	double **dMatrix = createDistanceMatrix(coords, numOfCoords);
-	int *tour = cheapestInsertion(dMatrix, numOfCoords);
+	int *tour = nearestAddition(dMatrix, numOfCoords);
 
 	
 	double tEnd = omp_get_wtime();
@@ -52,54 +52,103 @@ int main(int argc, char *argv[]){
 }
 
 int *nearestAddition(double **dMatrix, int numOfCoords){
-    // 设置变量
-    int i, j;
-    int nextNode, insertPos;
-
-    // 为路径和已访问数组分配内存。路径长度为numOfCoords + 1，为了返回起点
-    int *tour = (int *)malloc((1 + numOfCoords) * sizeof(int));
+    int *tour = (int *)malloc((numOfCoords + 1) * sizeof(int));
     bool *visited = (bool *)malloc(numOfCoords * sizeof(bool));
 
-    // 初始化路径为未定义
-    for(i = 0; i < numOfCoords; i++){
-        tour[i] = -1;
-    }
+    int i, j, nearestNode, insertPos;
 
-    // 路径始终从0开始。0已被访问
-    tour[0] = 0;
-    tour[1] = 0;
-    visited[0] = true;
+    // 初始化路径和访问状态
+    for (i = 0; i < numOfCoords + 1; i++) {
+        // tour[i] = -1;
+        visited[i] = false;
+    }
     
-    // 由于懒惰，硬编码
-    int numVisited = 1;
-    int tourLength = 2;
-    
-    // 当还有未访问的顶点时
+    int tPointStartEnd = 15; // 测试用, 起点&终点
+
+    tour[0] = tPointStartEnd; // 起点
+    tour[1] = tPointStartEnd; // 初始时回到起点
+    visited[tPointStartEnd] = true; // 标记起点为已访问
+
+	int numVisited = 1;
+    int tourLength = 2; // 当前路径长度
+
     while(numVisited < numOfCoords){
-        double minCost = __DBL_MAX__;
+        double minDistance = __DBL_MAX__;
 
         // 寻找最近的未访问顶点
-        for(i = 0; i < numOfCoords; i++){
-            if(!visited[i]){
-                double cost = dMatrix[tour[tourLength - 1]][i];
-                if(cost < minCost){
-                    minCost = cost;
-                    nextNode = i;
+        for (i = 0; i < numOfCoords; i++) {
+            if (!visited[i]) {
+                for (j = 1; j < tourLength; j++) { // 反正要比较最后一个, 不用比较第一个了
+                    double distance = dMatrix[tour[j]][i];
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        nearestNode = i;
+
+                        // printf("---TEST 03: 当前轮 (%d -> %d) Dist: %.5f\n", tour[j], i, dMatrix[i][tour[j]]);
+
+                        // 决定插入位置 (前/后), 选总长度增加最小的 -> 实际上就是比较 (j-1, i) or (i, j+1) 
+                        if (j == tourLength - 1)
+                        {
+                            // 如果是终点
+                            if (dMatrix[tour[0]][i] + dMatrix[i][tour[1]] - dMatrix[tour[0]][tour[1]] <= dMatrix[tour[j - 1]][i] + dMatrix[i][tour[j]] - dMatrix[tour[j - 1]][tour[j]])
+                            {
+                                insertPos = 1;
+                                // printf("---TEST 03: 起点后 (%d -> %d) Dist: %.5f\n", 1, i, dMatrix[i][tour[1]]);
+                            }
+                            else
+                            {
+                                insertPos = j;
+                                // printf("---TEST 03: 终点前 (%d -> %d) Dist: %.5f\n", tour[j - 1], i, dMatrix[i][tour[j - 1]]);
+                            }
+                        }
+                        else // 比较插入点前边点 / 后边点 与添加点的新增距离
+                        {
+                            if (dMatrix[tour[j - 1]][i] + dMatrix[i][tour[j]] - dMatrix[tour[j - 1]][tour[j]] <= dMatrix[i][tour[j]] + dMatrix[i][tour[j + 1]] - dMatrix[tour[j]][tour[j + 1]])
+                            {
+                                insertPos = j;
+                                // printf("---TEST 03: 点前 (%d -> %d) Dist: %.5f\n", tour[j - 1], i, dMatrix[i][tour[j - 1]]);
+                            }
+                            else
+                            {
+                                insertPos = j + 1;
+                                // printf("---TEST 03: 点后 (%d -> %d) Dist: %.5f\n", i, tour[j + 1], dMatrix[i][tour[j + 1]]);
+                            }
+                        }
+                        
+                        
+
+                        // insertPos = (j == 0 || j == tourLength - 1) ? tourLength - 1 : j;
+                    }
                 }
             }
         }
 
-        // 将最近的顶点添加到路径末尾
-        tour[tourLength] = nextNode;
-        visited[nextNode] = true;
-        tourLength++;
+        // 更新路径和访问状态
+        for (i = tourLength; i > insertPos; i--) {
+            tour[i] = tour[i - 1];
+        }
+        tour[insertPos] = nearestNode;
+        visited[nearestNode] = true;
         numVisited++;
+        tourLength++;
+
+
+        // TODO debug
+        // printf("---TEST 01: ");
+        // for (i = 0; i < numOfCoords + 1; i++){
+        //     printf(" %d", tour[i]);
+        // }
+        // printf("\n");
+        // // printf("---TEST 02: Distance: %.5f", minDistance);
+        // // printf("\n");
+
     }
 
-    // 释放已访问数组的内存
     free(visited);
     return tour;
 }
+
+
 
 
 double **createDistanceMatrix(double **coords, int numOfCoords){
@@ -118,6 +167,14 @@ double **createDistanceMatrix(double **coords, int numOfCoords){
 			dMatrix[i][j] = sqrt((diffX * diffX) + (diffY * diffY));
 		}
 	}
+
+    // TODO debug printMatrix
+    // for(i = 0; i < numOfCoords; i++){
+    //     for(j = 0; j < numOfCoords; j++){
+    //         printf(" %010.5f", dMatrix[i][j]);
+    //     }
+    //     printf("\n");
+    // }
 
 	return dMatrix;
 

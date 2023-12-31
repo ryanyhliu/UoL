@@ -29,3 +29,9 @@ clean:
 
 gcomplete: main-mpi.c coordReader.c ompcInsertion.c ompfInsertion.c ompnAddition.c
 	mpicc -fopenmp -std=c99 main-mpi.c coordReader.c ompcInsertion.c ompfInsertion.c ompnAddition.c -o gcomplete -lm
+
+na: nAddition.c coordReader.c
+	$(CCOMP) $(VER) nAddition.c coordReader.c -o na.exe $(LM)
+
+delna:
+	rm -f na.exe
