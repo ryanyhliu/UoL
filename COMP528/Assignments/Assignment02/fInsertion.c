@@ -5,11 +5,18 @@
 #include<math.h>
 #include<omp.h>
 
+typedef struct {
+    int *tour;
+    double totalDistance;
+} TourResult;
+
 int readNumOfCoords(char *filename);
 double **readCoords(char *filename, int numOfCoords);
 void *writeTourToFile(int *tour, int tourLength, char *filename);
 double **createDistanceMatrix(double **coords, int numOfCoords);
-int *farthestInsertion(double **dMatrix, int numOfCoords);
+// int *farthestInsertion(double **dMatrix, int numOfCoords);
+TourResult farthestInsertion(double **dMatrix, int numOfCoords, int pointOfStartEnd);
+int *findTour(double **dMatrix, int numOfCoords);
 
 int main(int argc, char *argv[]){
 	char filename[500];
@@ -29,7 +36,8 @@ int main(int argc, char *argv[]){
 	double tStart = omp_get_wtime();
 
 	double **dMatrix = createDistanceMatrix(coords, numOfCoords);
-	int *tour = farthestInsertion(dMatrix, numOfCoords);
+	// int *tour = farthestInsertion(dMatrix, numOfCoords);
+	int *tour = findTour(dMatrix, numOfCoords);
 	
 	double tEnd = omp_get_wtime();
 
@@ -47,7 +55,35 @@ int main(int argc, char *argv[]){
 	free(tour);
 }
 
-int *farthestInsertion(double **dMatrix, int numOfCoords){
+
+int *findTour(double **dMatrix, int numOfCoords){
+    int *minTour = (int *)malloc((numOfCoords + 1) * sizeof(int)); 
+    double minDistance = __DBL_MAX__;
+    TourResult pathResult;
+    pathResult.tour = (int *)malloc((numOfCoords + 1) * sizeof(int)); 
+    pathResult.totalDistance = 0.0;
+
+    // 遍历起点
+    int i = 0;
+    for (int i = 0; i < numOfCoords; i++)
+    {
+        pathResult = farthestInsertion(dMatrix, numOfCoords, i);
+        if (pathResult.totalDistance < minDistance)
+        {
+            // printf("---TEST 05: point: %d; pathDis: %f \n", i, pathResult.totalDistance);
+            minDistance = pathResult.totalDistance;
+            minTour = pathResult.tour;
+        }        
+    }
+	// free(pathResult.tour);
+    return minTour;
+}
+
+TourResult farthestInsertion(double **dMatrix, int numOfCoords, int pointOfStartEnd){
+	TourResult result;
+    result.tour = (int *)malloc((numOfCoords + 1) * sizeof(int)); 
+    result.totalDistance = 0.0;
+
 	//Setting up variables
 	int i, j, k;
 	int nextNode, insertPos;
@@ -62,9 +98,9 @@ int *farthestInsertion(double **dMatrix, int numOfCoords){
 	}
 
 	//Tour always starts with 0. 0 is visited
-	tour[0] = 0;
-	tour[1] = 0;
-	visited[0] = true;
+	tour[0] = pointOfStartEnd;
+	tour[1] = pointOfStartEnd;
+	visited[pointOfStartEnd] = true;
 	
 	//Hard coding because I'm lazy
 	int numVisited = 1;
@@ -74,6 +110,7 @@ int *farthestInsertion(double **dMatrix, int numOfCoords){
 	while(numVisited < numOfCoords){
 		double maxCost = 0;
 		double minCost = __DBL_MAX__;
+		double thisDistance = 0.0;
 
 		/*Find a vertex that is furthest from any vertex in the tour*/
 		for(i = 0; i < tourLength - 1; i++){
@@ -83,6 +120,7 @@ int *farthestInsertion(double **dMatrix, int numOfCoords){
 					if(cost > maxCost){
 						maxCost = cost;
 						nextNode = j;
+						thisDistance = cost; // 增加的路径长度
 					}
 				}
 			}
@@ -104,12 +142,15 @@ int *farthestInsertion(double **dMatrix, int numOfCoords){
 		tour[insertPos] = nextNode;
 		visited[nextNode] = true;
 		tourLength++;
+		result.totalDistance += thisDistance;
 
 		numVisited++;
 	}
 
+	result.tour = tour;
 	free(visited);
-	return tour;
+
+	return result;
 }
 
 double **createDistanceMatrix(double **coords, int numOfCoords){
