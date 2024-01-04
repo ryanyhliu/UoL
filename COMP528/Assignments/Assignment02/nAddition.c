@@ -142,6 +142,7 @@ TourResult nearestAddition(double **dMatrix, int numOfCoords, int pointOfStartEn
                                 thisDistance = dMatrix[tour[j - 1]][i] + dMatrix[i][tour[j]] - dMatrix[tour[j - 1]][tour[j]];
                             }
                         }
+                        
                         else // 比较插入点前边点 / 后边点 与添加点的新增距离
                         {
                             if (dMatrix[tour[j - 1]][i] + dMatrix[i][tour[j]] - dMatrix[tour[j - 1]][tour[j]] <= dMatrix[i][tour[j]] + dMatrix[i][tour[j + 1]] - dMatrix[tour[j]][tour[j + 1]])
@@ -215,12 +216,12 @@ double **createDistanceMatrix(double **coords, int numOfCoords){
 	}
 
     // TODO debug printMatrix
-    // for(i = 0; i < numOfCoords; i++){
-    //     for(j = 0; j < numOfCoords; j++){
-    //         printf(" %010.5f", dMatrix[i][j]);
-    //     }
-    //     printf("\n");
-    // }
+    for(i = 0; i < numOfCoords; i++){
+        for(j = 0; j < numOfCoords; j++){
+            printf(" %010.5f", dMatrix[i][j]);
+        }
+        printf("\n");
+    }
 
 	return dMatrix;
 

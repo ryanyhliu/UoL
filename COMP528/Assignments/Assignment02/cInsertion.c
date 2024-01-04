@@ -82,6 +82,7 @@ int *findTour(double **dMatrix, int numOfCoords){
     return minTour;
 }
 
+
 TourResult cheapestInsertion(double **dMatrix, int numOfCoords, int pointOfStartEnd){
 	TourResult result;
     result.tour = (int *)malloc((numOfCoords + 1) * sizeof(int)); 

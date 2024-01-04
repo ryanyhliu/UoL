@@ -1,140 +1,127 @@
-#include<stdio.h>
-#include<stdlib.h>
-#include<stdbool.h>
-#include<math.h>
-#include<string.h>
-#include<omp.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <math.h>
+#include <string.h>
+#include <omp.h>
 
-int readNumOfCoords(char *filename);
-double **readCoords(char *filename, int numOfCoords);
-void *writeTourToFile(int *tour, int tourLength, char *filename);
-double **createDistanceMatrix(double **coords, int numOfCoords);
-int *cheapestInsertion(double **dMatrix, int numOfCoords);
+typedef struct {
+    int *tour;
+    double totalDistance;
+} TourResult;
 
-int main(int argc, char *argv[]){
+int *findCheapestTour(double **dMatrix, int numOfCoords){
+    // int *minTour = (int *)malloc((numOfCoords + 1) * sizeof(int)); 
+    // double minDistance = __DBL_MAX__;
+    TourResult pathResult;
+    pathResult.tour = (int *)malloc((numOfCoords + 1) * sizeof(int)); 
+    pathResult.totalDistance = 0.0;
 
-	if(argc != 3){
-		printf("Program should be called as ./program <coordFile> <outFileName>");
-		exit(EXIT_FAILURE);
+	// OMP
+	int numThreads = omp_get_max_threads();
+	double *threadMinCosts = (double *)malloc(numThreads * sizeof(double));
+	int **threadMinTour = (int **)malloc(numThreads * sizeof(int *));
+	double *threadMinDistance = (double *)malloc(numThreads * sizeof(double));
+	for (int i = 0; i < numThreads; i++) {
+		threadMinDistance[i] = __DBL_MAX__;
+		threadMinTour[i] = (int *)malloc((numOfCoords + 1) * sizeof(int));
 	}
 
-	//Argument setup for file and output
-	char filename[500];
-	char outFileName[500];
 
-	strcpy(filename, argv[1]);
-	strcpy(outFileName, argv[2]);
+	#pragma omp parallel
+	{
+		int threadID = omp_get_thread_num();
+		threadMinCosts[threadID] = __DBL_MAX__;
 
-	if(filename == NULL){
-		printf("Input file name missing");
-		exit(EXIT_FAILURE);
+		#pragma omp for
+		for (int i = 0; i < numOfCoords; i++){
+			TourResult pathResult = cheapestInsertion(dMatrix, numOfCoords, i);
+			if (pathResult.totalDistance < threadMinDistance[threadID]) {
+				threadMinDistance[threadID] = pathResult.totalDistance;
+				memcpy(threadMinTour[threadID], pathResult.tour, (numOfCoords + 1) * sizeof(int));
+			}
+		}
 	}
 
-	if(outFileName == NULL){
-		printf("Output file name missing");
-		exit(EXIT_FAILURE);
+	// Find the overall min tour and distance
+	int *minTour = (int *)malloc((numOfCoords + 1) * sizeof(int)); 
+	double minDistance = __DBL_MAX__;
+	for (int i = 0; i < numThreads; i++) {
+		if (threadMinDistance[i] < minDistance) {
+			minDistance = threadMinDistance[i];
+			memcpy(minTour, threadMinTour[i], (numOfCoords + 1) * sizeof(int));
+		}
+		free(threadMinTour[i]); // 释放线程局部分配的内存
 	}
 
-	//Reading files
-	int numOfCoords = readNumOfCoords(filename);
-	double **coords = readCoords(filename, numOfCoords);
+	free(threadMinCosts);
+    free(threadMinTour);
+    free(threadMinDistance);
 
-	double tStart = omp_get_wtime();
 
-	/*Program starts*/
+    // 遍历起点
+    // for (i = 0; i < numOfCoords; i++)
+    // {
+    //     pathResult = cheapestInsertion(dMatrix, numOfCoords, i);
+    //     if (pathResult.totalDistance < minDistance)
+    //     {
+    //         // printf("---TEST 05: point: %d; pathDis: %f \n", i, pathResult.totalDistance);
+    //         minDistance = pathResult.totalDistance;
+    //         minTour = pathResult.tour;
+    //     }        
+    // }
 
-	double **dMatrix = createDistanceMatrix(coords, numOfCoords);
-	int *tour = cheapestInsertion(dMatrix, numOfCoords);
-	
-	/*Program ends*/
 
-	double tEnd = omp_get_wtime();
+	// free(pathResult.tour);
 
-	printf("\nTook %f milliseconds\n", (tEnd - tStart) * 1000);
 
-	if (writeTourToFile(tour, numOfCoords + 1, outFileName) == NULL){
-		printf("Error");
-	}
-
-	//Free memory
-	for(int i = 0; i < numOfCoords; i++){
-		free(dMatrix[i]);
-	}
-
-	free(dMatrix);
-	free(tour);
+    return minTour;
 }
 
-int *cheapestInsertion(double **dMatrix, int numOfCoords){
-
+TourResult cheapestInsertion(double **dMatrix, int numOfCoords, int pointOfStartEnd){
+	TourResult result;
+    result.tour = (int *)malloc((numOfCoords + 1) * sizeof(int)); 
+    result.totalDistance = 0.0;
+	
 	//Setting up variables
-	int nextNode, insertPos;
+	int i, j;
 
 	//Memory allocation for the tour and visited arrays. Tour is numOfCoords + 1 for returning to origin
-	//Visited uses calloc, array is instantiated with "0" as all elements. Good for boolean arrays.
 	int *tour = (int *)malloc((1 + numOfCoords) * sizeof(int));
-	bool *visited = (bool *)calloc(numOfCoords, sizeof(bool));
+	bool *visited = (bool *)malloc(numOfCoords * sizeof(bool));
 
-	if(tour == NULL){
-		printf("Memory allocation failed");
-		exit(EXIT_FAILURE);
-	}
-
-	//Initialising tour to empty
-	for(int i = 0; i < numOfCoords; i++){
-		tour[i] = -1;
-	}
-
-	//Tour always starts and ends at 0. 0 is visited
-	tour[0] = 0;
-	tour[1] = 0;
-	visited[0] = true;
+	//Tour always starts with 0. 0 is visited
+	tour[0] = pointOfStartEnd;
+	tour[1] = pointOfStartEnd;
+	visited[pointOfStartEnd] = true;
 	
 	//Hard coding because I'm lazy
 	int numVisited = 1;
 	int tourLength = 2;
 
-	//Where OMP starts... Get the env variable for the max num of threads.
+	// OMP
 	int numThreads = omp_get_max_threads();
+    double *threadMinCosts = (double *)malloc(numThreads * 8 * sizeof(double));
+    int *threadNextNode = (int *)malloc(numThreads * 8 * sizeof(int));
+    int *threadInsertPos = (int *)malloc(numThreads * 8 * sizeof(int));
 
-	printf("This program uses %d threads \n\n", numThreads);
+
 	
-	/*
-	Set up arrays to be the size of the number of threads. Each thread will store 
-	its minCost, its nextNode, and its insertPos in its respective memory location.
-	Thread 0 will store its results at position 0, thread 1 will store its results at position 1 etc.
-	*/
 
-	double *threadMinCosts = NULL;
-	int *threadNextNode = NULL;
-	int *threadInsertPos = NULL;
-		
-	threadMinCosts = (double*)malloc(numThreads * 8 * sizeof(double));
-	threadNextNode = (int*)malloc(numThreads * 8 * sizeof(int));
-	threadInsertPos = (int*)malloc(numThreads * 8 * sizeof(int));
-
-	//Start a parallel section
-	#pragma omp parallel 
+	#pragma omp parallel
 	{
-		//Each thread now has started, and it stores its thread number in threadID
 		int threadID = omp_get_thread_num();
-		while(numVisited < numOfCoords){
-
-			//Thread only accesses its memory location in the shared array. No race conditions.
-			threadMinCosts[threadID * 8] = __DBL_MAX__;
+		while (numVisited < numOfCoords) {
+			threadMinCosts[threadID * 8] = __DBL_MAX__;  // 使用 threadID * 8
 			threadNextNode[threadID * 8] = -1;
 			threadInsertPos[threadID * 8] = -1;
 
-			//Begin a workshare construct. Threads divide i and j and work on their respective iterations.
 			#pragma omp for collapse(2)
-			for(int i = 0; i < tourLength - 1; i++){	
-				for(int j = 0; j < numOfCoords; j++){
-
-					//Each thread performs their cheapest insertion. Works on each position in the tour.
-					if(!visited[j]){
-						double cost = dMatrix[tour[i]][j] + dMatrix[tour[i+1]][j] - dMatrix[tour[i]][tour[i + 1]];
-						if(cost < threadMinCosts[threadID * 8]){
-
+			for (int i = 0; i < tourLength - 1; i++) {
+				for (int j = 0; j < numOfCoords; j++) {
+					if (!visited[j]) {
+						double cost = dMatrix[tour[i]][j] + dMatrix[j][tour[i + 1]] - dMatrix[tour[i]][tour[i + 1]];
+						if (cost < threadMinCosts[threadID * 8]) {  // 使用 threadID * 8
 							threadMinCosts[threadID * 8] = cost;
 							threadNextNode[threadID * 8] = j;
 							threadInsertPos[threadID * 8] = i + 1;
@@ -142,65 +129,49 @@ int *cheapestInsertion(double **dMatrix, int numOfCoords){
 					}
 				}
 			}
+		
 
-			//Only one thread works on this part. This part must be serial. OMP single instead of master. Therefore implicit barrier
 			#pragma omp single
 			{
 				int bestNextNode = -1;
 				int bestInsertPos = -1;
 				double minCost = __DBL_MAX__;
 
-				//A single thread loops through each threads memory locations. Finds the minCost
-				for(int i = 0; i < numThreads; i++){
-					if(threadMinCosts[i * 8] < minCost){
+				for (int i = 0; i < numThreads; i++) {
+					if (threadMinCosts[i * 8] < minCost) {
 						minCost = threadMinCosts[i * 8];
 						bestNextNode = threadNextNode[i * 8];
 						bestInsertPos = threadInsertPos[i * 8];
 					}
-				}	
-
-				//One thread places the bestNextNode in the bestInsertPos
-				for(int i = numOfCoords; i > bestInsertPos; i--){
-					tour[i] = tour[i - 1];
 				}
+			
+				if (bestNextNode != -1) {
+					for (int i = numOfCoords; i > bestInsertPos; i--) {
+						tour[i] = tour[i - 1];
+					}
 
-				tour[bestInsertPos] = bestNextNode;
-				visited[bestNextNode] = true;		
-				
-				tourLength++;
-				numVisited++;
+					tour[bestInsertPos] = bestNextNode;
+					visited[bestNextNode] = true;
 
+					tourLength++;
+					numVisited++;
+
+					result.totalDistance += minCost;
+				}
+				else
+				{
+					printf("Error: GetBestNextNode\n");
+				}
 			}
 		}
 	}
 
-	//Free all memory when done
-	
-	free(visited);
+	result.tour = tour;
+
 	free(threadMinCosts);
-	free(threadNextNode);
-	free(threadInsertPos);
+    free(threadNextNode);
+    free(threadInsertPos);
+    free(visited);
 
-	return tour;
-}
-
-double **createDistanceMatrix(double **coords, int numOfCoords){
-	int i, j;
-	
-	double **dMatrix = (double **)malloc(numOfCoords * sizeof(double));
-
-	for(i = 0; i < numOfCoords; i++){
-		dMatrix[i] = (double *)malloc(numOfCoords * sizeof(double));
-	}
-
-	#pragma omp parallel for collapse(2)
-	for(i = 0; i < numOfCoords; i++){
-		for(j = 0; j < numOfCoords; j++){
-			double diffX = coords[i][0] - coords[j][0];
-			double diffY = coords[i][1] - coords[j][1];
-			dMatrix[i][j] = sqrt((diffX * diffX) + (diffY * diffY));
-		}
-	}
-
-	return dMatrix;
+	return result;
 }
