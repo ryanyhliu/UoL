@@ -10,18 +10,22 @@ typedef struct {
     double totalDistance;
 } TourResult;
 
+
+
 int readNumOfCoords(char *filename);
 double **readCoords(char *filename, int numOfCoords);
 void *writeTourToFile(int *tour, int tourLength, char *filename);
 double **createDistanceMatrix(double **coords, int numOfCoords);
 double sqrt(double arg);
-// int *cheapestInsertion(double **dMatrix, int numOfCoords);
-TourResult cheapestInsertion(double **dMatrix, int numOfCoords, int pointOfStartEnd);
-TourResult farthestInsertion(double **dMatrix, int numOfCoords, int pointOfStartEnd);
-TourResult nearestAddition(double **dMatrix, int numOfCoords, int pointOfStartEnd);
+
 int *findCheapestTour(double **dMatrix, int numOfCoords);
 int *findFarthestTour(double **dMatrix, int numOfCoords);
 int *findNearestTour(double **dMatrix, int numOfCoords);
+TourResult cheapestInsertion(double **dMatrix, int numOfCoords, int pointOfStartEnd);
+TourResult farthestInsertion(double **dMatrix, int numOfCoords, int pointOfStartEnd);
+TourResult nearestAddition(double **dMatrix, int numOfCoords, int pointOfStartEnd);
+
+
 
 int main(int argc, char *argv[]){
 	char filename[500];
@@ -47,6 +51,7 @@ int main(int argc, char *argv[]){
 
 	double **dMatrix = createDistanceMatrix(coords, numOfCoords);
 	
+
 	int *tourCheapest = findCheapestTour(dMatrix, numOfCoords);
 	int *tourFarthest = findFarthestTour(dMatrix, numOfCoords);
 	int *tourNearest = findNearestTour(dMatrix, numOfCoords);
@@ -76,6 +81,251 @@ int main(int argc, char *argv[]){
 	free(tourNearest);
 
 }
+
+int *findCheapestTour(double **dMatrix, int numOfCoords){
+    int *minTour = (int *)malloc((numOfCoords + 1) * sizeof(int)); 
+    double minDistance = __DBL_MAX__;
+    TourResult pathResult;
+    pathResult.tour = (int *)malloc((numOfCoords + 1) * sizeof(int)); 
+    pathResult.totalDistance = 0.0;
+
+    // 遍历起点
+    int i = 0;
+    for (int i = 0; i < numOfCoords; i++)
+    {
+        pathResult = cheapestInsertion(dMatrix, numOfCoords, i);
+        if (pathResult.totalDistance < minDistance)
+        {
+            // printf("---TEST 05: point: %d; pathDis: %f \n", i, pathResult.totalDistance);
+            minDistance = pathResult.totalDistance;
+            minTour = pathResult.tour;
+
+			// TODO	debug
+			// printf("Cheapest: ");
+			// for (int i = 0; i < numOfCoords + 1; i++)
+			// {
+			// 	printf(" %d", minTour[i]);
+			// }
+			// printf("\n");
+        }        
+    }
+	// free(pathResult.tour);
+    return minTour;
+}
+
+
+int *findFarthestTour(double **dMatrix, int numOfCoords){
+    int *minTour = (int *)malloc((numOfCoords + 1) * sizeof(int)); 
+    double minDistance = __DBL_MAX__;
+    TourResult pathResult;
+    pathResult.tour = (int *)malloc((numOfCoords + 1) * sizeof(int)); 
+    pathResult.totalDistance = 0.0;
+
+    // 遍历起点
+    int i = 0;
+    for (int i = 0; i < numOfCoords; i++)
+    {
+        pathResult = farthestInsertion(dMatrix, numOfCoords, i);
+        if (pathResult.totalDistance < minDistance)
+        {
+            // printf("---TEST 05: point: %d; pathDis: %f \n", i, pathResult.totalDistance);
+            minDistance = pathResult.totalDistance;
+            minTour = pathResult.tour;
+
+			// TODO	debug
+			// printf("Farthest: ");
+			// for (int i = 0; i < numOfCoords + 1; i++)
+			// {
+			// 	printf(" %d", minTour[i]);
+			// }
+			// printf("\n");
+        }        
+    }
+	// free(pathResult.tour);
+    return minTour;
+}
+
+int *findNearestTour(double **dMatrix, int numOfCoords){
+    int *minTour = (int *)malloc((numOfCoords + 1) * sizeof(int)); 
+    double minDistance = __DBL_MAX__;
+    TourResult pathResult;
+    pathResult.tour = (int *)malloc((numOfCoords + 1) * sizeof(int)); 
+    pathResult.totalDistance = 0.0;
+
+    // 遍历起点
+    int i = 0;
+    for (int i = 0; i < numOfCoords; i++)
+    {
+        pathResult = nearestAddition(dMatrix, numOfCoords, i);
+        if (pathResult.totalDistance < minDistance)
+        {
+            // printf("---TEST 05: point: %d; pathDis: %f \n", i, pathResult.totalDistance);
+            minDistance = pathResult.totalDistance;
+            minTour = pathResult.tour;
+
+			// TODO	debug
+			// printf("Nearest : ");
+			// for (int i = 0; i < numOfCoords + 1; i++)
+			// {
+			// 	printf(" %d", minTour[i]);
+			// }
+			// printf("\n");
+        }        
+    }
+
+	
+	// free(pathResult.tour);
+    return minTour;
+}
+
+// int *findCheapestTour(double **dMatrix, int numOfCoords){
+//     TourResult pathResult;
+//     pathResult.tour = (int *)malloc((numOfCoords + 1) * sizeof(int)); 
+//     pathResult.totalDistance = 0.0;
+
+// 	// OMP
+// 	int numThreads = omp_get_max_threads();
+// 	double *threadMinCosts = (double *)malloc(numThreads * sizeof(double));
+// 	int **threadMinTour = (int **)malloc(numThreads * sizeof(int *));
+// 	double *threadMinDistance = (double *)malloc(numThreads * sizeof(double));
+// 	for (int i = 0; i < numThreads; i++) {
+// 		threadMinDistance[i] = __DBL_MAX__;
+// 		threadMinTour[i] = (int *)malloc((numOfCoords + 1) * sizeof(int));
+// 	}
+
+
+// 	#pragma omp parallel
+// 	{
+// 		int threadID = omp_get_thread_num();
+// 		threadMinCosts[threadID] = __DBL_MAX__;
+
+// 		#pragma omp for
+// 		for (int i = 0; i < numOfCoords; i++){
+// 			TourResult pathResult = cheapestInsertion(dMatrix, numOfCoords, i);
+// 			if (pathResult.totalDistance < threadMinDistance[threadID]) {
+// 				threadMinDistance[threadID] = pathResult.totalDistance;
+// 				memcpy(threadMinTour[threadID], pathResult.tour, (numOfCoords + 1) * sizeof(int));
+// 			}
+// 		}
+// 	}
+
+// 	// Find the overall min tour and distance
+// 	int *minTour = (int *)malloc((numOfCoords + 1) * sizeof(int)); 
+// 	double minDistance = __DBL_MAX__;
+// 	for (int i = 0; i < numThreads; i++) {
+// 		if (threadMinDistance[i] < minDistance) {
+// 			minDistance = threadMinDistance[i];
+// 			memcpy(minTour, threadMinTour[i], (numOfCoords + 1) * sizeof(int));
+// 		}
+// 		free(threadMinTour[i]); // 释放线程局部分配的内存
+// 	}
+
+// 	free(threadMinCosts);
+//     free(threadMinTour);
+//     free(threadMinDistance);
+
+//     return minTour;
+// }
+
+
+
+// int *findFarthestTour(double **dMatrix, int numOfCoords){
+//     TourResult pathResult;
+//     pathResult.tour = (int *)malloc((numOfCoords + 1) * sizeof(int)); 
+//     pathResult.totalDistance = 0.0;
+
+// 	// OMP
+// 	int numThreads = omp_get_max_threads();
+// 	double *threadMinCosts = (double *)malloc(numThreads * sizeof(double));
+// 	int **threadMinTour = (int **)malloc(numThreads * sizeof(int *));
+// 	double *threadMinDistance = (double *)malloc(numThreads * sizeof(double));
+// 	for (int i = 0; i < numThreads; i++) {
+// 		threadMinDistance[i] = __DBL_MAX__;
+// 		threadMinTour[i] = (int *)malloc((numOfCoords + 1) * sizeof(int));
+// 	}
+
+// 	#pragma omp parallel
+// 	{
+// 		int threadID = omp_get_thread_num();
+// 		threadMinCosts[threadID] = __DBL_MAX__;
+
+// 		#pragma omp for
+// 		for (int i = 0; i < numOfCoords; i++){
+// 			TourResult pathResult = farthestInsertion(dMatrix, numOfCoords, i);
+// 			if (pathResult.totalDistance < threadMinDistance[threadID]) {
+// 				threadMinDistance[threadID] = pathResult.totalDistance;
+// 				memcpy(threadMinTour[threadID], pathResult.tour, (numOfCoords + 1) * sizeof(int));
+// 			}
+// 		}
+// 	}
+
+// 	// Find the overall min tour and distance
+// 	int *minTour = (int *)malloc((numOfCoords + 1) * sizeof(int)); 
+// 	double minDistance = __DBL_MAX__;
+// 	for (int i = 0; i < numThreads; i++) {
+// 		if (threadMinDistance[i] < minDistance) {
+// 			minDistance = threadMinDistance[i];
+// 			memcpy(minTour, threadMinTour[i], (numOfCoords + 1) * sizeof(int));
+// 		}
+// 		free(threadMinTour[i]); // 释放线程局部分配的内存
+// 	}
+
+// 	free(threadMinCosts);
+//     free(threadMinTour);
+//     free(threadMinDistance);
+
+//     return minTour;
+// }
+
+
+
+// int *findNearestTour(double **dMatrix, int numOfCoords){
+//     TourResult pathResult;
+//     pathResult.tour = (int *)malloc((numOfCoords + 1) * sizeof(int)); 
+//     pathResult.totalDistance = 0.0;
+
+// 	// OMP
+// 	int numThreads = omp_get_max_threads();
+// 	double *threadMinCosts = (double *)malloc(numThreads * sizeof(double));
+// 	int **threadMinTour = (int **)malloc(numThreads * sizeof(int *));
+// 	double *threadMinDistance = (double *)malloc(numThreads * sizeof(double));
+// 	for (int i = 0; i < numThreads; i++) {
+// 		threadMinDistance[i] = __DBL_MAX__;
+// 		threadMinTour[i] = (int *)malloc((numOfCoords + 1) * sizeof(int));
+// 	}
+
+// 	#pragma omp parallel
+// 	{
+// 		int threadID = omp_get_thread_num();
+// 		threadMinCosts[threadID] = __DBL_MAX__;
+
+// 		#pragma omp for
+// 		for (int i = 0; i < numOfCoords; i++){
+// 			TourResult pathResult = nearestAddition(dMatrix, numOfCoords, i);
+// 			if (pathResult.totalDistance < threadMinDistance[threadID]) {
+// 				threadMinDistance[threadID] = pathResult.totalDistance;
+// 				memcpy(threadMinTour[threadID], pathResult.tour, (numOfCoords + 1) * sizeof(int));
+// 			}
+// 		}
+// 	}
+
+// 	// Find the overall min tour and distance
+// 	int *minTour = (int *)malloc((numOfCoords + 1) * sizeof(int)); 
+// 	double minDistance = __DBL_MAX__;
+// 	for (int i = 0; i < numThreads; i++) {
+// 		if (threadMinDistance[i] < minDistance) {
+// 			minDistance = threadMinDistance[i];
+// 			memcpy(minTour, threadMinTour[i], (numOfCoords + 1) * sizeof(int));
+// 		}
+// 		free(threadMinTour[i]); // 释放线程局部分配的内存
+// 	}
+
+// 	free(threadMinCosts);
+//     free(threadMinTour);
+//     free(threadMinDistance);
+
+//     return minTour;
+// }
 
 
 double **createDistanceMatrix(double **coords, int numOfCoords)

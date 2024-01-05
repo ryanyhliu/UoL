@@ -185,6 +185,14 @@ int *findFarthestTour(double **dMatrix, int numOfCoords){
             // printf("---TEST 05: point: %d; pathDis: %f \n", i, pathResult.totalDistance);
             minDistance = pathResult.totalDistance;
             minTour = pathResult.tour;
+
+			// TODO	debug
+			printf("Tour: ");
+			for (int i = 0; i < numOfCoords + 1; i++)
+			{
+				printf(" %d", minTour[i]);
+			}
+			printf("\n");
         }        
     }
 	// free(pathResult.tour);
@@ -285,12 +293,12 @@ int *findNearestTour(double **dMatrix, int numOfCoords){
             minTour = pathResult.tour;
 
 			// TODO	debug
-			// printf("Tour: ");
-			// for (int i = 0; i < numOfCoords + 1; i++)
-			// {
-			// 	printf(" %d", minTour[i]);
-			// }
-			// printf("\n");
+			printf("Tour: ");
+			for (int i = 0; i < numOfCoords + 1; i++)
+			{
+				printf(" %d", minTour[i]);
+			}
+			printf("\n");
         }        
     }
 
