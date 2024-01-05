@@ -11,94 +11,188 @@ typedef struct {
     double totalDistance;
 } TourResult;
 
+
+
+
+
+// TourResult farthestInsertion(double **dMatrix, int numOfCoords, int pointOfStartEnd) {
+//     int *tour = (int *)malloc((1 + numOfCoords) * sizeof(int));
+//     bool *visited = (bool *)calloc(numOfCoords, sizeof(bool));
+
+// 	#pragma omp parallel for
+//     for(int i = 0; i < numOfCoords; i++) {
+//         tour[i] = -1;
+//     }
+
+//     tour[0] = pointOfStartEnd;
+//     tour[1] = pointOfStartEnd;
+//     visited[pointOfStartEnd] = true;
+
+//     int numVisited = 1;
+//     int tourLength = 2;
+//     double totalDistance = 0.0;
+
+//     int numThreads = omp_get_max_threads();
+//     double *threadMaxCosts = (double *)malloc(numThreads * sizeof(double));
+//     int *threadNextNode = (int *)malloc(numThreads * sizeof(int));
+
+//     while(numVisited < numOfCoords) {
+//         int bestNextNode = -1;
+//         double maxCost = 0;
+
+//         #pragma omp parallel 
+//         {
+//             int threadID = omp_get_thread_num();
+//             threadMaxCosts[threadID] = 0;
+//             threadNextNode[threadID] = -1;
+
+//             #pragma omp for nowait
+//             for(int i = 0; i < tourLength - 1; i++) {
+//                 for(int j = 0; j < numOfCoords; j++) {
+//                     if(!visited[j]) {
+//                         double cost = dMatrix[tour[i]][j];
+//                         if(cost > threadMaxCosts[threadID]) {
+//                             threadMaxCosts[threadID] = cost;
+//                             threadNextNode[threadID] = j;
+//                         }
+//                     }
+//                 }
+//             }
+
+//             #pragma omp critical
+//             {
+//                 if (threadMaxCosts[threadID] > maxCost) {
+//                     maxCost = threadMaxCosts[threadID];
+//                     bestNextNode = threadNextNode[threadID];
+//                 }
+//             }
+//         }
+
+//         double minCost = __DBL_MAX__;
+//         int insertPos = -1;
+
+// 		// #pragma omp parallel for
+//         for(int k = 0; k < tourLength - 1; k++) {
+//             double cost = dMatrix[tour[k]][bestNextNode] + dMatrix[bestNextNode][tour[k + 1]] - dMatrix[tour[k]][tour[k + 1]];
+//             if(cost < minCost) {
+//                 minCost = cost;
+//                 insertPos = k + 1;
+//             }
+//         }
+
+// 		// #pragma omp parallel for
+//         for(int i = numOfCoords; i > insertPos; i--) {
+//             tour[i] = tour[i - 1];
+//         }
+
+//         tour[insertPos] = bestNextNode;
+//         visited[bestNextNode] = true;
+//         totalDistance += minCost;
+//         tourLength++;
+//         numVisited++;
+//     }
+
+//     free(threadMaxCosts);
+//     free(threadNextNode);
+//     free(visited);
+
+//     TourResult result;
+//     result.tour = tour;
+//     result.totalDistance = totalDistance;
+//     return result;
+// }
+
+
+
+
 TourResult farthestInsertion(double **dMatrix, int numOfCoords, int pointOfStartEnd) {
-    TourResult result;
-    result.tour = (int *)malloc((numOfCoords + 1) * sizeof(int)); 
-    result.totalDistance = 0.0;
-
-    // Setting up variables
-    int i, j, k;
-    int nextNode = -1, insertPos = -1;
-
-    // Memory allocation for the tour and visited arrays
     int *tour = (int *)malloc((1 + numOfCoords) * sizeof(int));
-    bool *visited = (bool *)malloc(numOfCoords * sizeof(bool));
+    bool *visited = (bool *)calloc(numOfCoords, sizeof(bool));
 
-    // Initialising tour to empty
-    for(i = 0; i < numOfCoords; i++) {
+    for(int i = 0; i < numOfCoords; i++) {
         tour[i] = -1;
-        visited[i] = false;
     }
 
-    // Tour always starts with pointOfStartEnd
     tour[0] = pointOfStartEnd;
     tour[1] = pointOfStartEnd;
     visited[pointOfStartEnd] = true;
 
     int numVisited = 1;
     int tourLength = 2;
+    double totalDistance = 0.0;
+
+    int numThreads = omp_get_max_threads();
+    double *maxCosts = (double *)malloc(numThreads * sizeof(double));
+    int *nextNodes = (int *)malloc(numThreads * sizeof(int));
 
     while(numVisited < numOfCoords) {
-        double maxCost = 0.0;
+        int bestNextNode = -1;
+        double globalMaxCost = 0;
 
-        #pragma omp parallel for private(j) shared(maxCost, nextNode)
-        for(i = 0; i < tourLength - 1; i++) {
-            for(j = 0; j < numOfCoords; j++) {
-                if(!visited[j]) {
-                    double cost = dMatrix[tour[i]][j];
-                    #pragma omp critical
-                    {
-                        if(cost > maxCost) {
-                            maxCost = cost;
-                            nextNode = j;
+        #pragma omp parallel 
+        {
+            int threadID = omp_get_thread_num();
+            maxCosts[threadID] = 0;
+            nextNodes[threadID] = -1;
+
+            #pragma omp for nowait
+            for(int i = 0; i < tourLength - 1; i++) {
+                for(int j = 0; j < numOfCoords; j++) {
+                    if(!visited[j]) {
+                        double cost = dMatrix[tour[i]][j];
+                        if(cost > maxCosts[threadID]) {
+                            maxCosts[threadID] = cost;
+                            nextNodes[threadID] = j;
                         }
+                    }
+                }
+            }
+
+            // 在每个线程结束后执行，无需 critical
+            #pragma omp flush (globalMaxCost)
+            if (maxCosts[threadID] > globalMaxCost) {
+                #pragma omp critical
+                {
+                    if (maxCosts[threadID] > globalMaxCost) {
+                        globalMaxCost = maxCosts[threadID];
+                        bestNextNode = nextNodes[threadID];
                     }
                 }
             }
         }
 
         double minCost = __DBL_MAX__;
-        double thisDistance = 0.0;
+        int insertPos = -1;
 
-        for(k = 0; k < tourLength - 1; k++) {
-            double cost = dMatrix[tour[k]][nextNode] + dMatrix[nextNode][tour[k + 1]] - dMatrix[tour[k]][tour[k + 1]];
+        // 不是并行的部分
+        for(int k = 0; k < tourLength - 1; k++) {
+            double cost = dMatrix[tour[k]][bestNextNode] + dMatrix[bestNextNode][tour[k + 1]] - dMatrix[tour[k]][tour[k + 1]];
             if(cost < minCost) {
                 minCost = cost;
                 insertPos = k + 1;
-                thisDistance = cost;
-            }           
+            }
         }
 
-        for(i = numOfCoords; i > insertPos; i--) {
+        for(int i = numOfCoords; i > insertPos; i--) {
             tour[i] = tour[i - 1];
         }
 
-        tour[insertPos] = nextNode;
-        visited[nextNode] = true;
+        tour[insertPos] = bestNextNode;
+        visited[bestNextNode] = true;
+        totalDistance += minCost;
         tourLength++;
-        result.totalDistance += thisDistance;
-
         numVisited++;
     }
 
-    result.tour = tour;
+    free(maxCosts);
+    free(nextNodes);
     free(visited);
 
+    TourResult result;
+    result.tour = tour;
+    result.totalDistance = totalDistance;
     return result;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
