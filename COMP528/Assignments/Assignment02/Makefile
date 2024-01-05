@@ -51,5 +51,5 @@ clean:
 # na: nAddition.c coordReader.c
 # 	$(OMP) $(VER) nAddition.c coordReader.c -o na $(LM)
 
-mo: main-only.c coordReader.c
-	$(OMP) $(VER) main-only.c coordReader.c -o mo $(LM)
+# mo: main-only.c coordReader.c
+# 	$(OMP) $(VER) main-only.c coordReader.c -o mo $(LM)
