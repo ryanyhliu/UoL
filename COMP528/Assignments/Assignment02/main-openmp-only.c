@@ -93,7 +93,7 @@ int *findCheapestTour(double **dMatrix, int numOfCoords){
     int i = 0;
     for (int i = 0; i < numOfCoords; i++)
     {
-		printf("Cheapest Point: %d\n", i);
+		// printf("Cheapest Point: %d\n", i);
         pathResult = cheapestInsertion(dMatrix, numOfCoords, i);
         if (pathResult.totalDistance < minDistance)
         {
@@ -126,7 +126,7 @@ int *findFarthestTour(double **dMatrix, int numOfCoords){
     int i = 0;
     for (int i = 0; i < numOfCoords; i++)
     {
-		printf("Farthest Point: %d\n", i);
+		// printf("Farthest Point: %d\n", i);
         pathResult = farthestInsertion(dMatrix, numOfCoords, i);
         if (pathResult.totalDistance < minDistance)
         {
@@ -158,7 +158,7 @@ int *findNearestTour(double **dMatrix, int numOfCoords){
     int i = 0;
     for (int i = 0; i < numOfCoords; i++)
     {
-		printf("Nearest Point: %d\n", i);
+		// printf("Nearest Point: %d\n", i);
         pathResult = nearestAddition(dMatrix, numOfCoords, i);
         if (pathResult.totalDistance < minDistance)
         {
