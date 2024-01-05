@@ -199,7 +199,7 @@ double **createDistanceMatrix(double **coords, int numOfCoords)
         dMatrix[i] = (double *)malloc(numOfCoords * sizeof(double));
     }
 
-#pragma omp parallel for collapse(2)
+// #pragma omp parallel for collapse(2)
     for (i = 0; i < numOfCoords; i++)
     {
         for (j = 0; j < numOfCoords; j++)
