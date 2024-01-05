@@ -47,8 +47,8 @@ if test -x $EXE; then
 
       # run multiple times. Because we have exported how many threads we're using, we just execute the file.
       # for i in {1..5}; do ./${EXE}; done
-      # for i in {1..5}; do ./${EXE} $COORD_FILE_NAME $OUTPUT_FILE_NAME; done
-      ./${EXE} $COORD_FILE_NAME $OUTPUT_FILE_NAME_c $OUTPUT_FILE_NAME_f $OUTPUT_FILE_NAME_n
+      for i in {1..3}; do ./${EXE} $COORD_FILE_NAME $OUTPUT_FILE_NAME_c $OUTPUT_FILE_NAME_f $OUTPUT_FILE_NAME_n; done
+      # ./${EXE} $COORD_FILE_NAME $OUTPUT_FILE_NAME_c $OUTPUT_FILE_NAME_f $OUTPUT_FILE_NAME_n
 else
       echo $SRC did not built to $EXE
 fi
