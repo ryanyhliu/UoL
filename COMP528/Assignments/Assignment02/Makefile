@@ -1,7 +1,10 @@
-OMP = gcc -fopenmp
-MPI = mpicc 
+GCC = gcc
+ICC = icc
 
-IOMP = icc -qopenmp
+OMP = -fopenmp
+IOMP = -qopenmp
+
+MPI = mpicc 
 IMPI = mpiicc
 
 VER = -std=c99
@@ -33,16 +36,16 @@ LM = -lm
 default: gomp-only gcomplete iomp-only icomplete
 
 gomp-only: main-openmp-only.c coordReader.c ompcInsertion.c ompfInsertion.c ompnAddition.c
-	$(OMP) $(VER) main-openmp-only.c coordReader.c ompcInsertion.c ompfInsertion.c ompnAddition.c -o gomp-only $(LM)
+	$(GCC) $(OMP) $(VER) main-openmp-only.c coordReader.c ompcInsertion.c ompfInsertion.c ompnAddition.c -o gomp-only $(LM)
 
 gcomplete: main-mpi.c coordReader.c ompcInsertion.c ompfInsertion.c ompnAddition.c
-	$(MPI) $(VER) main-mpi.c coordReader.c ompcInsertion.c ompfInsertion.c ompnAddition.c -o gcomplete $(LM)
+	$(MPI) $(OMP) $(VER) main-mpi.c coordReader.c ompcInsertion.c ompfInsertion.c ompnAddition.c -o gcomplete $(LM)
 
 iomp-only: main-openmp-only.c coordReader.c ompcInsertion.c ompfInsertion.c ompnAddition.c
-	$(IOMP) $(VER) main-openmp-only.c coordReader.c ompcInsertion.c ompfInsertion.c ompnAddition.c -o iomp-only $(LM)
+	$(ICC) $(IOMP) $(VER) main-openmp-only.c coordReader.c ompcInsertion.c ompfInsertion.c ompnAddition.c -o iomp-only $(LM)
 
 icomplete: main-mpi.c coordReader.c ompcInsertion.c ompfInsertion.c ompnAddition.c
-	$(IMPI) $(VER) main-mpi.c coordReader.c ompcInsertion.c ompfInsertion.c ompnAddition.c -o icomplete $(LM)
+	$(IMPI) $(IOMP) $(VER) main-mpi.c coordReader.c ompcInsertion.c ompfInsertion.c ompnAddition.c -o icomplete $(LM)
 
 clean:
 	rm -f gomp-only gcomplete iomp-only icomplete
