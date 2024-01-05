@@ -44,6 +44,8 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    printf("---TEST 01---\n");
+
     char filename[500];
     strcpy(filename, argv[1]);
     char outFileName_Cheapest[500];
@@ -59,6 +61,8 @@ int main(int argc, char *argv[]) {
 
     int tourLength = numOfCoords + 1; // Assuming each tour includes all coordinates plus the start/end point
 
+    printf("---TEST 02---\n");
+
     // Define MPI data type for TourResult
     MPI_Datatype MPI_TOURRESULT;
     MPI_Datatype type[2] = {MPI_INT, MPI_DOUBLE};
@@ -68,6 +72,9 @@ int main(int argc, char *argv[]) {
     disp[1] = offsetof(TourResult, totalDistance);
     MPI_Type_create_struct(2, blocklen, disp, type, &MPI_TOURRESULT);
     MPI_Type_commit(&MPI_TOURRESULT);
+
+    printf("---TEST 03---\n");
+
 
     TourResult local_best_tour_cheapest, local_best_tour_farthest, local_best_tour_nearest;
     local_best_tour_cheapest.tour = (int *)malloc(tourLength * sizeof(int));
@@ -92,6 +99,9 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    printf("---TEST 04---\n");
+
+
     // Gather results to the root process
     TourResult *all_tours_cheapest = NULL, *all_tours_farthest = NULL, *all_tours_nearest = NULL;
     if (world_rank == 0) {
@@ -105,9 +115,15 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    printf("---TEST 05---\n");
+
+
     MPI_Gather(&local_best_tour_cheapest, 1, MPI_TOURRESULT, all_tours_cheapest, 1, MPI_TOURRESULT, 0, MPI_COMM_WORLD);
     MPI_Gather(&local_best_tour_farthest, 1, MPI_TOURRESULT, all_tours_farthest, 1, MPI_TOURRESULT, 0, MPI_COMM_WORLD);
     MPI_Gather(&local_best_tour_nearest, 1, MPI_TOURRESULT, all_tours_nearest, 1, MPI_TOURRESULT, 0, MPI_COMM_WORLD);
+
+    printf("---TEST 06---\n");
+
 
     // Process results in the root process
 	if (world_rank == 0) {
@@ -131,18 +147,25 @@ int main(int argc, char *argv[]) {
 			}
 		}
 
+        printf("---TEST 07---\n");
+
+
 		// Write the best tours to their respective files
 		writeTourToFile(all_tours_cheapest[minIndexCheapest].tour, numOfCoords + 1, outFileName_Cheapest);
 		writeTourToFile(all_tours_farthest[minIndexFarthest].tour, numOfCoords + 1, outFileName_Farthest);
 		writeTourToFile(all_tours_nearest[minIndexNearest].tour, numOfCoords + 1, outFileName_Nearest);
 	}
 
+    printf("---TEST 08---\n");
 
     // Clean up
     MPI_Type_free(&MPI_TOURRESULT);
     free(local_best_tour_cheapest.tour);
     free(local_best_tour_farthest.tour);
     free(local_best_tour_nearest.tour);
+
+    printf("---TEST 09---\n");
+
     if (world_rank == 0) {
         for (int i = 0; i < world_size; i++) {
             free(all_tours_cheapest[i].tour);
@@ -153,12 +176,18 @@ int main(int argc, char *argv[]) {
         free(all_tours_farthest);
         free(all_tours_nearest);
     }
+
+    printf("---TEST 10---\n");
+
     for (int i = 0; i < numOfCoords; i++) {
         free(coords[i]);
         free(dMatrix[i]);
     }
     free(coords);
     free(dMatrix);
+
+    printf("---TEST 11---\n");
+
 
     MPI_Finalize();
     return 0;
