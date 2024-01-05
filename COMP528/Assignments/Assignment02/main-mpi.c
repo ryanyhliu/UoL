@@ -5,6 +5,7 @@
 #include <omp.h>
 #include <string.h>
 #include <mpi.h>
+#include <stddef.h>
 
 typedef struct
 {
