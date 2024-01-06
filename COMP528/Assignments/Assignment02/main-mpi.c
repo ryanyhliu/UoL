@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
     double **coords = readCoords(filename, numOfCoords);
     double **dMatrix = createDistanceMatrix(coords, numOfCoords);
 
-    int tourLength = numOfCoords + 1 + 1;
+    int tourLength = numOfCoords + 1;
 
     printf("---TEST 02---\n");
 
@@ -223,22 +223,22 @@ int main(int argc, char *argv[])
 
 
         //释放结构体数组
-        if (all_tours_cheapest != NULL)
-        {
-            free(all_tours_cheapest);
-        }
-        printf("---TEST 094---\n");
+        // if (all_tours_cheapest != NULL)
+        // {
+        //     free(all_tours_cheapest);
+        // }
+        // printf("---TEST 094---\n");
 
-        if (all_tours_farthest != NULL)
-        {
-            free(all_tours_farthest);
-        }
-        printf("---TEST 095---\n");
+        // if (all_tours_farthest != NULL)
+        // {
+        //     free(all_tours_farthest);
+        // }
+        // printf("---TEST 095---\n");
 
-        if (all_tours_nearest != NULL)
-        {
-            free(all_tours_nearest);
-        }
+        // if (all_tours_nearest != NULL)
+        // {
+        //     free(all_tours_nearest);
+        // }
 
     }
 
