@@ -168,14 +168,26 @@ int main(int argc, char *argv[]) {
 
     if (world_rank == 0) {
         for (int i = 0; i < world_size; i++) {
-            free(all_tours_cheapest[i].tour);
-            free(all_tours_farthest[i].tour);
-            free(all_tours_nearest[i].tour);
+            // 释放每个结构体中的tour数组
+            if (all_tours_cheapest[i].tour != NULL) {
+                free(all_tours_cheapest[i].tour);
+                all_tours_cheapest[i].tour = NULL;
+            }
+            if (all_tours_farthest[i].tour != NULL) {
+                free(all_tours_farthest[i].tour);
+                all_tours_farthest[i].tour = NULL;
+            }
+            if (all_tours_nearest[i].tour != NULL) {
+                free(all_tours_nearest[i].tour);
+                all_tours_nearest[i].tour = NULL;
+            }
         }
+        // 释放结构体数组
         free(all_tours_cheapest);
         free(all_tours_farthest);
         free(all_tours_nearest);
     }
+
 
     printf("---TEST 10---\n");
 
