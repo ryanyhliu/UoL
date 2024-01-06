@@ -53,11 +53,11 @@ if test -x $EXE; then
 
       # if EXE end with 'complete', then use mpirun, else use ./${EXE}
       if [[ $EXE == *complete ]]; then
-            echo mpirun -np $procs ./${EXE} $PARAMS
-            # mpirun -np $procs ./${EXE} $PARAMS
+            # echo mpirun -np $procs ./${EXE} $PARAMS
+            mpirun -np $procs ./${EXE} $PARAMS
       else
-            echo ./${EXE} $COORD_FILE_NAME $PARAMS
-            # ./${EXE} $COORD_FILE_NAME $PARAMS
+            # echo ./${EXE} $COORD_FILE_NAME $PARAMS
+            ./${EXE} $COORD_FILE_NAME $PARAMS
       fi
       # for i in {1..3}; do ./${EXE} $COORD_FILE_NAME $COUTPUT_FILE_NAME $FOUTPUT_FILE_NAM $NOUTPUT_FILE_NAME; done
       # ./${EXE} $COORD_FILE_NAME $COUTPUT_FILE_NAME $FOUTPUT_FILE_NAM $NOUTPUT_FILE_NAME
