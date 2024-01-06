@@ -186,7 +186,7 @@ int main(int argc, char *argv[])
     // Clean up
     MPI_Type_free(&MPI_TOURRESULT);
 
-    
+
     if (local_best_tour_cheapest.tour != NULL)
     {
         free(local_best_tour_cheapest.tour);
@@ -256,6 +256,7 @@ int main(int argc, char *argv[])
     //     free(coords[i]);
     //     free(dMatrix[i]);
     // }
+
     free(coords);
     coords = NULL;
     free(dMatrix);
@@ -264,6 +265,8 @@ int main(int argc, char *argv[])
     printf("---TEST 11---\n");
 
     MPI_Finalize();
+    printf("---TEST 12---\n");
+
     return 0;
 }
 
