@@ -92,9 +92,7 @@ int main(int argc, char *argv[])
 
     for (int i = 0; i < numOfCoords; i++)
     {
-        TourResult current_tour_cheapest = malloc(sizeof(TourResult));
-        memcpy(current_tour_cheapest, cheapestInsertion(dMatrix, numOfCoords, i), sizeof(TourResult));
-        // = cheapestInsertion(dMatrix, numOfCoords, i);
+        TourResult current_tour_cheapest = cheapestInsertion(dMatrix, numOfCoords, i);
         if (current_tour_cheapest.totalDistance < local_best_tour_cheapest.totalDistance)
         {
             memcpy(local_best_tour_cheapest.tour, current_tour_cheapest.tour, tourLength * sizeof(int));
@@ -102,9 +100,7 @@ int main(int argc, char *argv[])
         }
         free(current_tour_cheapest.tour);
 
-        TourResult current_tour_farthest = malloc(sizeof(TourResult));
-        memcpy(current_tour_cheapest, farthestInsertion(dMatrix, numOfCoords, i), sizeof(TourResult));
-        // = farthestInsertion(dMatrix, numOfCoords, i);
+        TourResult current_tour_farthest = farthestInsertion(dMatrix, numOfCoords, i);
         if (current_tour_farthest.totalDistance < local_best_tour_farthest.totalDistance)
         {
             memcpy(local_best_tour_farthest.tour, current_tour_farthest.tour, tourLength * sizeof(int));
@@ -112,9 +108,7 @@ int main(int argc, char *argv[])
         }
         free(current_tour_farthest.tour);
 
-        TourResult current_tour_nearest = malloc(sizeof(TourResult));
-        memcpy(current_tour_cheapest, nearestAddition(dMatrix, numOfCoords, i), sizeof(TourResult));
-        // = nearestAddition(dMatrix, numOfCoords, i);
+        TourResult current_tour_nearest = nearestAddition(dMatrix, numOfCoords, i);
         if (current_tour_nearest.totalDistance < local_best_tour_nearest.totalDistance)
         {
             memcpy(local_best_tour_nearest.tour, current_tour_nearest.tour, tourLength * sizeof(int));
