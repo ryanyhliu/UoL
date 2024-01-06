@@ -106,6 +106,9 @@ typedef struct {
 
 
 TourResult farthestInsertion(double **dMatrix, int numOfCoords, int pointOfStartEnd) {
+    double tolerance = 1e-9;
+
+
     int *tour = (int *)malloc((1 + numOfCoords) * sizeof(int));
     bool *visited = (bool *)calloc(numOfCoords, sizeof(bool));
 
@@ -167,7 +170,7 @@ TourResult farthestInsertion(double **dMatrix, int numOfCoords, int pointOfStart
         // 不是并行的部分
         for(int k = 0; k < tourLength - 1; k++) {
             double cost = dMatrix[tour[k]][bestNextNode] + dMatrix[bestNextNode][tour[k + 1]] - dMatrix[tour[k]][tour[k + 1]];
-            if(cost < minCost) {
+            if(cost < minCost - tolerance) {
                 minCost = cost;
                 insertPos = k + 1;
             }

@@ -109,7 +109,6 @@ int main(int argc, char *argv[])
         {
             memcpy(local_best_tour_farthest.tour, &current_tour_farthest.tour, tourLength * sizeof(int));
             local_best_tour_farthest.totalDistance = current_tour_farthest.totalDistance;
-
         }
         free(current_tour_farthest.tour);
 
