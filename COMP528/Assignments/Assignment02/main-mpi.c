@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
         TourResult current_tour_cheapest = cheapestInsertion(dMatrix, numOfCoords, i);
         if (current_tour_cheapest.totalDistance < local_best_tour_cheapest.totalDistance)
         {
-            memcpy(local_best_tour_cheapest.tour, &current_tour_cheapest.tour, tourLength * sizeof(int));
+            memcpy(local_best_tour_cheapest.tour, current_tour_cheapest.tour, tourLength * sizeof(int));
             local_best_tour_cheapest.totalDistance = current_tour_cheapest.totalDistance;
         }
         free(current_tour_cheapest.tour);
@@ -107,7 +107,7 @@ int main(int argc, char *argv[])
         TourResult current_tour_farthest = farthestInsertion(dMatrix, numOfCoords, i);
         if (current_tour_farthest.totalDistance < local_best_tour_farthest.totalDistance)
         {
-            memcpy(local_best_tour_farthest.tour, &current_tour_farthest.tour, tourLength * sizeof(int));
+            memcpy(local_best_tour_farthest.tour, current_tour_farthest.tour, tourLength * sizeof(int));
             local_best_tour_farthest.totalDistance = current_tour_farthest.totalDistance;
         }
         free(current_tour_farthest.tour);
@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
         TourResult current_tour_nearest = nearestAddition(dMatrix, numOfCoords, i);
         if (current_tour_nearest.totalDistance < local_best_tour_nearest.totalDistance)
         {
-            memcpy(local_best_tour_nearest.tour, &current_tour_nearest.tour, tourLength * sizeof(int));
+            memcpy(local_best_tour_nearest.tour, current_tour_nearest.tour, tourLength * sizeof(int));
             local_best_tour_nearest.totalDistance = current_tour_nearest.totalDistance;
         }
         free(current_tour_nearest.tour);
