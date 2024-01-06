@@ -109,6 +109,7 @@ int main(int argc, char *argv[])
         {
             memcpy(local_best_tour_farthest.tour, current_tour_farthest.tour, tourLength * sizeof(int));
             local_best_tour_farthest.totalDistance = current_tour_farthest.totalDistance;
+
         }
         // free(current_tour_farthest.tour);
 
@@ -185,19 +186,19 @@ int main(int argc, char *argv[])
     printf("---TEST 08---\n");
 
     // Clean up
-    // MPI_Type_free(&MPI_TOURRESULT);
-    // if (local_best_tour_cheapest.tour != NULL)
-    // {
-    //     free(local_best_tour_cheapest.tour);
-    // }
-    // if (local_best_tour_farthest.tour != NULL)
-    // {
-    //     free(local_best_tour_farthest.tour);
-    // }
-    // if (local_best_tour_nearest.tour != NULL)
-    // {
-    //     free(local_best_tour_nearest.tour);
-    // }
+    MPI_Type_free(&MPI_TOURRESULT);
+    if (local_best_tour_cheapest.tour != NULL)
+    {
+        free(local_best_tour_cheapest.tour);
+    }
+    if (local_best_tour_farthest.tour != NULL)
+    {
+        free(local_best_tour_farthest.tour);
+    }
+    if (local_best_tour_nearest.tour != NULL)
+    {
+        free(local_best_tour_nearest.tour);
+    }
 
     printf("---TEST 09---\n");
 
@@ -224,25 +225,25 @@ int main(int argc, char *argv[])
 
     //     }
     //     //释放结构体数组
-    //     if (all_tours_cheapest != NULL)
-    //     {
-    //         free(all_tours_cheapest);
-    //     }
-    //     all_tours_cheapest = NULL;
-    //     printf("---TEST 094---\n");
+        if (all_tours_cheapest != NULL)
+        {
+            free(all_tours_cheapest);
+        }
+        all_tours_cheapest = NULL;
+        printf("---TEST 094---\n");
 
-    //     if (all_tours_farthest != NULL)
-    //     {
-    //         free(all_tours_farthest);
-    //     }
-    //     all_tours_farthest = NULL;
-    //     printf("---TEST 095---\n");
+        if (all_tours_farthest != NULL)
+        {
+            free(all_tours_farthest);
+        }
+        all_tours_farthest = NULL;
+        printf("---TEST 095---\n");
 
-    //     if (all_tours_nearest != NULL)
-    //     {
-    //         free(all_tours_nearest);
-    //     }
-    //     all_tours_nearest = NULL;
+        if (all_tours_nearest != NULL)
+        {
+            free(all_tours_nearest);
+        }
+        all_tours_nearest = NULL;
 
     // }
 
@@ -252,8 +253,8 @@ int main(int argc, char *argv[])
     //     free(coords[i]);
     //     free(dMatrix[i]);
     // }
-    // free(coords);
-    // free(dMatrix);
+    free(coords);
+    free(dMatrix);
 
     printf("---TEST 11---\n");
 
