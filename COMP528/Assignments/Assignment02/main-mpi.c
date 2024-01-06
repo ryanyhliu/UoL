@@ -236,12 +236,12 @@ int main(int argc, char *argv[]) {
 
     printf("---TEST 10---\n");
 
-    for (int i = 0; i < numOfCoords; i++) {
-        free(coords[i]);
-        free(dMatrix[i]);
-    }
-    free(coords);
-    free(dMatrix);
+    // for (int i = 0; i < numOfCoords; i++) {
+    //     free(coords[i]);
+    //     free(dMatrix[i]);
+    // }
+    // free(coords);
+    // free(dMatrix);
 
     printf("---TEST 11---\n");
 
