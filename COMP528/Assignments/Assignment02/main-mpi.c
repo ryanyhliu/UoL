@@ -105,7 +105,7 @@ int main(int argc, char *argv[]) {
 
         TourResult current_tour_nearest = nearestAddition(dMatrix, numOfCoords, i);
         if (current_tour_nearest.totalDistance < local_best_tour_nearest.totalDistance) {
-            memccpy(local_best_tour_nearest.tour, current_tour_nearest.tour, tourLength * sizeof(int));
+            memcpy(local_best_tour_nearest.tour, current_tour_nearest.tour, tourLength * sizeof(int));
             local_best_tour_nearest.totalDistance = current_tour_nearest.totalDistance;
         }
         free(current_tour_nearest.tour);

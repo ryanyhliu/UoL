@@ -3,3 +3,6 @@
 ./gomp-only.exe 16_coords.coord my_16_cout.dat my_16_fout.dat my_16_nout.dat
 ./gomp-only.exe 512_coords.coord my_512_cout.dat my_512_fout.dat my_512_nout.dat
 
+module load compilers/intel/2019u5
+module load mpi/intel-mpi/2019u5/bin
+
