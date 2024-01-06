@@ -19,9 +19,9 @@ void *writeTourToFile(int *tour, int tourLength, char *filename);
 double **createDistanceMatrix(double **coords, int numOfCoords);
 double sqrt(double arg);
 
-int *findCheapestTour(double **dMatrix, int numOfCoords);
-int *findFarthestTour(double **dMatrix, int numOfCoords);
-int *findNearestTour(double **dMatrix, int numOfCoords);
+// int *findCheapestTour(double **dMatrix, int numOfCoords);
+// int *findFarthestTour(double **dMatrix, int numOfCoords);
+// int *findNearestTour(double **dMatrix, int numOfCoords);
 TourResult cheapestInsertion(double **dMatrix, int numOfCoords, int pointOfStartEnd);
 TourResult farthestInsertion(double **dMatrix, int numOfCoords, int pointOfStartEnd);
 TourResult nearestAddition(double **dMatrix, int numOfCoords, int pointOfStartEnd);
@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
     double **coords = readCoords(filename, numOfCoords);
     double **dMatrix = createDistanceMatrix(coords, numOfCoords);
 
-    int tourLength = numOfCoords + 1;
+    int tourLength = numOfCoords + 1 + 1;
 
     printf("---TEST 02---\n");
 
