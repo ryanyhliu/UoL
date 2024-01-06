@@ -194,20 +194,20 @@ int main(int argc, char *argv[]) {
             // 释放每个结构体中的tour数组
             if (all_tours_cheapest[i].tour != NULL) {
                 free(all_tours_cheapest[i].tour);
-                // all_tours_cheapest[i].tour = NULL;
+                all_tours_cheapest[i].tour = NULL;
             }
             printf("---TEST 091---\n");
 
             if (all_tours_farthest[i].tour != NULL) {
                 free(all_tours_farthest[i].tour);
-                // all_tours_farthest[i].tour = NULL;
+                all_tours_farthest[i].tour = NULL;
             }
             printf("---TEST 092---\n");
 
 
             if (all_tours_nearest[i].tour != NULL) {
                 free(all_tours_nearest[i].tour);
-                // all_tours_nearest[i].tour = NULL;
+                all_tours_nearest[i].tour = NULL;
             }
             printf("---TEST 093---\n");
 
