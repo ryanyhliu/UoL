@@ -23,21 +23,21 @@ int *findCheapestTour(double **dMatrix, int numOfCoords);
 int *findFarthestTour(double **dMatrix, int numOfCoords);
 int *findNearestTour(double **dMatrix, int numOfCoords);
 TourResult cheapestInsertion(double **dMatrix, int numOfCoords, int pointOfStartEnd);
-TourResult farthestInsertion(double **dMatrix, int numOfCoords, int pointOfStartEnd);
+TourResult farthestIsertion(double **dMatrix, int numOfCoords, int pointOfStartEnd);
 TourResult nearestAddition(double **dMatrix, int numOfCoords, int pointOfStartEnd);
 
-
-
-
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
     MPI_Init(&argc, &argv);
 
     int world_size, world_rank;
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
     MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 
-    if (argc < 5) {
-        if (world_rank == 0) {
+    if (argc < 5)
+    {
+        if (world_rank == 0)
+        {
             fprintf(stderr, "Usage: %s <input file> <output file 1> <output file 2> <output file 3>\n", argv[0]);
         }
         MPI_Abort(MPI_COMM_WORLD, 1);
@@ -76,53 +76,63 @@ int main(int argc, char *argv[]) {
 
     printf("---TEST 03---\n");
 
+    TourResult local_best_tour_cheapest = {
+        .tour = (int *)malloc(tourLength * sizeof(int)),
+        .totalDistance = __DBL_MAX__};
 
-    TourResult local_best_tour_cheapest = { .tour = NULL, .totalDistance = __DBL_MAX__ };
-    TourResult local_best_tour_farthest = { .tour = NULL, .totalDistance = __DBL_MAX__ };
-    TourResult local_best_tour_nearest = { .tour = NULL, .totalDistance = __DBL_MAX__ };
+    TourResult local_best_tour_farthest = {
+        .tour = (int *)malloc(tourLength * sizeof(int)),
+        .totalDistance = __DBL_MAX__};
 
-    local_best_tour_cheapest.tour = (int *)malloc(tourLength * sizeof(int));
-    local_best_tour_farthest.tour = (int *)malloc(tourLength * sizeof(int));
-    local_best_tour_nearest.tour = (int *)malloc(tourLength * sizeof(int));
+    TourResult local_best_tour_nearest = {
+        .tour = (int *)malloc(tourLength * sizeof(int)),
+        .totalDistance = __DBL_MAX__};
 
-    local_best_tour_cheapest.totalDistance = local_best_tour_farthest.totalDistance = local_best_tour_nearest.totalDistance = __DBL_MAX__;
+    // local_best_tour_cheapest.tour = (int *)malloc(tourLength * sizeof(int));
+    // local_best_tour_farthest.tour = (int *)malloc(tourLength * sizeof(int));
+    // local_best_tour_nearest.tour = (int *)malloc(tourLength * sizeof(int));
 
+    // local_best_tour_cheapest.totalDistance = local_best_tour_farthest.totalDistance = local_best_tour_nearest.totalDistance = __DBL_MAX__;
 
-
-    for (int i = 0; i < numOfCoords; i++) {
+    for (int i = 0; i < numOfCoords; i++)
+    {
         TourResult current_tour_cheapest = cheapestInsertion(dMatrix, numOfCoords, i);
-        if (current_tour_cheapest.totalDistance < local_best_tour_cheapest.totalDistance) {
+        if (current_tour_cheapest.totalDistance < local_best_tour_cheapest.totalDistance)
+        {
             memcpy(local_best_tour_cheapest.tour, current_tour_cheapest.tour, tourLength * sizeof(int));
             local_best_tour_cheapest.totalDistance = current_tour_cheapest.totalDistance;
         }
-        free(current_tour_cheapest.tour);
+        // free(current_tour_cheapest.tour);
 
         TourResult current_tour_farthest = farthestInsertion(dMatrix, numOfCoords, i);
-        if (current_tour_farthest.totalDistance < local_best_tour_farthest.totalDistance) {
+        if (current_tour_farthest.totalDistance < local_best_tour_farthest.totalDistance)
+        {
             memcpy(local_best_tour_farthest.tour, current_tour_farthest.tour, tourLength * sizeof(int));
             local_best_tour_farthest.totalDistance = current_tour_farthest.totalDistance;
         }
-        free(current_tour_farthest.tour);
+        // free(current_tour_farthest.tour);
 
         TourResult current_tour_nearest = nearestAddition(dMatrix, numOfCoords, i);
-        if (current_tour_nearest.totalDistance < local_best_tour_nearest.totalDistance) {
+        if (current_tour_nearest.totalDistance < local_best_tour_nearest.totalDistance)
+        {
             memcpy(local_best_tour_nearest.tour, current_tour_nearest.tour, tourLength * sizeof(int));
             local_best_tour_nearest.totalDistance = current_tour_nearest.totalDistance;
         }
-        free(current_tour_nearest.tour);
+        // free(current_tour_nearest.tour);
     }
 
     printf("---TEST 04---\n");
 
-
     // Gather results to the root process
     TourResult *all_tours_cheapest = NULL, *all_tours_farthest = NULL, *all_tours_nearest = NULL;
-    if (world_rank == 0) {
+    if (world_rank == 0)
+    {
         all_tours_cheapest = (TourResult *)malloc(world_size * sizeof(TourResult));
         all_tours_farthest = (TourResult *)malloc(world_size * sizeof(TourResult));
         all_tours_nearest = (TourResult *)malloc(world_size * sizeof(TourResult));
 
-        for (int i = 0; i < world_size; i++) {
+        for (int i = 0; i < world_size; i++)
+        {
             all_tours_cheapest[i].tour = (int *)malloc(tourLength * sizeof(int));
             all_tours_farthest[i].tour = (int *)malloc(tourLength * sizeof(int));
             all_tours_nearest[i].tour = (int *)malloc(tourLength * sizeof(int));
@@ -131,44 +141,46 @@ int main(int argc, char *argv[]) {
 
     printf("---TEST 05---\n");
 
-
     MPI_Gather(&local_best_tour_cheapest, 1, MPI_TOURRESULT, all_tours_cheapest, 1, MPI_TOURRESULT, 0, MPI_COMM_WORLD);
     MPI_Gather(&local_best_tour_farthest, 1, MPI_TOURRESULT, all_tours_farthest, 1, MPI_TOURRESULT, 0, MPI_COMM_WORLD);
     MPI_Gather(&local_best_tour_nearest, 1, MPI_TOURRESULT, all_tours_nearest, 1, MPI_TOURRESULT, 0, MPI_COMM_WORLD);
 
     printf("---TEST 06---\n");
 
-
     // Process results in the root process
-	if (world_rank == 0) {
-		int minIndexCheapest = 0, minIndexFarthest = 0, minIndexNearest = 0;
-		double minDistanceCheapest = all_tours_cheapest[0].totalDistance;
-		double minDistanceFarthest = all_tours_farthest[0].totalDistance;
-		double minDistanceNearest = all_tours_nearest[0].totalDistance;
+    if (world_rank == 0)
+    {
+        int minIndexCheapest = 0, minIndexFarthest = 0, minIndexNearest = 0;
+        double minDistanceCheapest = all_tours_cheapest[0].totalDistance;
+        double minDistanceFarthest = all_tours_farthest[0].totalDistance;
+        double minDistanceNearest = all_tours_nearest[0].totalDistance;
 
-		for (int i = 1; i < world_size; i++) {
-			if (all_tours_cheapest[i].totalDistance < minDistanceCheapest) {
-				minDistanceCheapest = all_tours_cheapest[i].totalDistance;
-				minIndexCheapest = i;
-			}
-			if (all_tours_farthest[i].totalDistance < minDistanceFarthest) {
-				minDistanceFarthest = all_tours_farthest[i].totalDistance;
-				minIndexFarthest = i;
-			}
-			if (all_tours_nearest[i].totalDistance < minDistanceNearest) {
-				minDistanceNearest = all_tours_nearest[i].totalDistance;
-				minIndexNearest = i;
-			}
-		}
+        for (int i = 1; i < world_size; i++)
+        {
+            if (all_tours_cheapest[i].totalDistance < minDistanceCheapest)
+            {
+                minDistanceCheapest = all_tours_cheapest[i].totalDistance;
+                minIndexCheapest = i;
+            }
+            if (all_tours_farthest[i].totalDistance < minDistanceFarthest)
+            {
+                minDistanceFarthest = all_tours_farthest[i].totalDistance;
+                minIndexFarthest = i;
+            }
+            if (all_tours_nearest[i].totalDistance < minDistanceNearest)
+            {
+                minDistanceNearest = all_tours_nearest[i].totalDistance;
+                minIndexNearest = i;
+            }
+        }
 
         printf("---TEST 07---\n");
 
-
-		// Write the best tours to their respective files
-		writeTourToFile(all_tours_cheapest[minIndexCheapest].tour, numOfCoords + 1, outFileName_Cheapest);
-		writeTourToFile(all_tours_farthest[minIndexFarthest].tour, numOfCoords + 1, outFileName_Farthest);
-		writeTourToFile(all_tours_nearest[minIndexNearest].tour, numOfCoords + 1, outFileName_Nearest);
-	}
+        // Write the best tours to their respective files
+        writeTourToFile(all_tours_cheapest[minIndexCheapest].tour, numOfCoords + 1, outFileName_Cheapest);
+        writeTourToFile(all_tours_farthest[minIndexFarthest].tour, numOfCoords + 1, outFileName_Farthest);
+        writeTourToFile(all_tours_nearest[minIndexNearest].tour, numOfCoords + 1, outFileName_Nearest);
+    }
 
     printf("---TEST 08---\n");
 
@@ -186,7 +198,6 @@ int main(int argc, char *argv[]) {
     // {
     //     free(local_best_tour_nearest.tour);
     // }
-        
 
     printf("---TEST 09---\n");
 
@@ -204,7 +215,6 @@ int main(int argc, char *argv[]) {
     //             all_tours_farthest[i].tour = NULL;
     //         }
     //         printf("---TEST 092---\n");
-
 
     //         if (all_tours_nearest[i].tour != NULL) {
     //             free(all_tours_nearest[i].tour);
@@ -228,16 +238,13 @@ int main(int argc, char *argv[]) {
     //     all_tours_farthest = NULL;
     //     printf("---TEST 095---\n");
 
-
     //     if (all_tours_nearest != NULL)
     //     {
     //         free(all_tours_nearest);
     //     }
     //     all_tours_nearest = NULL;
-        
+
     // }
-
-
 
     printf("---TEST 10---\n");
 
@@ -250,37 +257,31 @@ int main(int argc, char *argv[]) {
 
     printf("---TEST 11---\n");
 
-
     MPI_Finalize();
     return 0;
 }
 
-
-
-
-
 double **createDistanceMatrix(double **coords, int numOfCoords)
 {
-	int i, j;
+    int i, j;
 
-	double **dMatrix = (double **)malloc(numOfCoords * sizeof(double));
+    double **dMatrix = (double **)malloc(numOfCoords * sizeof(double));
 
-	for (i = 0; i < numOfCoords; i++)
-	{
-		dMatrix[i] = (double *)malloc(numOfCoords * sizeof(double));
-	}
+    for (i = 0; i < numOfCoords; i++)
+    {
+        dMatrix[i] = (double *)malloc(numOfCoords * sizeof(double));
+    }
 
 #pragma omp parallel for collapse(2)
-	for (i = 0; i < numOfCoords; i++)
-	{
-		for (j = 0; j < numOfCoords; j++)
-		{
-			double diffX = coords[i][0] - coords[j][0];
-			double diffY = coords[i][1] - coords[j][1];
-			dMatrix[i][j] = sqrt((diffX * diffX) + (diffY * diffY));
-		}
-	}
+    for (i = 0; i < numOfCoords; i++)
+    {
+        for (j = 0; j < numOfCoords; j++)
+        {
+            double diffX = coords[i][0] - coords[j][0];
+            double diffY = coords[i][1] - coords[j][1];
+            dMatrix[i][j] = sqrt((diffX * diffX) + (diffY * diffY));
+        }
+    }
 
-	return dMatrix;
+    return dMatrix;
 }
-
