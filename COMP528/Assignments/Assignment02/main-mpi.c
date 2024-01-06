@@ -87,27 +87,29 @@ int main(int argc, char *argv[]) {
 
     local_best_tour_cheapest.totalDistance = local_best_tour_farthest.totalDistance = local_best_tour_nearest.totalDistance = __DBL_MAX__;
 
+
+
     for (int i = 0; i < numOfCoords; i++) {
         TourResult current_tour_cheapest = cheapestInsertion(dMatrix, numOfCoords, i);
         if (current_tour_cheapest.totalDistance < local_best_tour_cheapest.totalDistance) {
             memcpy(local_best_tour_cheapest.tour, current_tour_cheapest.tour, tourLength * sizeof(int));
             local_best_tour_cheapest.totalDistance = current_tour_cheapest.totalDistance;
         }
-        // free(current_tour_cheapest.tour);
+        free(current_tour_cheapest.tour);
 
         TourResult current_tour_farthest = farthestInsertion(dMatrix, numOfCoords, i);
         if (current_tour_farthest.totalDistance < local_best_tour_farthest.totalDistance) {
             memcpy(local_best_tour_farthest.tour, current_tour_farthest.tour, tourLength * sizeof(int));
             local_best_tour_farthest.totalDistance = current_tour_farthest.totalDistance;
         }
-        // free(current_tour_farthest.tour);
+        free(current_tour_farthest.tour);
 
         TourResult current_tour_nearest = nearestAddition(dMatrix, numOfCoords, i);
         if (current_tour_nearest.totalDistance < local_best_tour_nearest.totalDistance) {
             memcpy(local_best_tour_nearest.tour, current_tour_nearest.tour, tourLength * sizeof(int));
             local_best_tour_nearest.totalDistance = current_tour_nearest.totalDistance;
         }
-        // free(current_tour_nearest.tour);
+        free(current_tour_nearest.tour);
     }
 
     printf("---TEST 04---\n");
@@ -170,78 +172,78 @@ int main(int argc, char *argv[]) {
 
     printf("---TEST 08---\n");
 
-    // // Clean up
-    // MPI_Type_free(&MPI_TOURRESULT);
-    // if (local_best_tour_cheapest.tour != NULL)
-    // {
-    //     free(local_best_tour_cheapest.tour);
-    // }
-    // if (local_best_tour_farthest.tour != NULL)
-    // {
-    //     free(local_best_tour_farthest.tour);
-    // }
-    // if (local_best_tour_nearest.tour != NULL)
-    // {
-    //     free(local_best_tour_nearest.tour);
-    // }
+    // Clean up
+    MPI_Type_free(&MPI_TOURRESULT);
+    if (local_best_tour_cheapest.tour != NULL)
+    {
+        free(local_best_tour_cheapest.tour);
+    }
+    if (local_best_tour_farthest.tour != NULL)
+    {
+        free(local_best_tour_farthest.tour);
+    }
+    if (local_best_tour_nearest.tour != NULL)
+    {
+        free(local_best_tour_nearest.tour);
+    }
         
 
-    // printf("---TEST 09---\n");
+    printf("---TEST 09---\n");
 
-    // if (world_rank == 0) {
-    //     for (int i = 0; i < world_size; i++) {
-    //         // 释放每个结构体中的tour数组
-    //         if (all_tours_cheapest[i].tour != NULL) {
-    //             free(all_tours_cheapest[i].tour);
-    //             all_tours_cheapest[i].tour = NULL;
-    //         }
-    //         printf("---TEST 091---\n");
+    if (world_rank == 0) {
+        for (int i = 0; i < world_size; i++) {
+            // 释放每个结构体中的tour数组
+            if (all_tours_cheapest[i].tour != NULL) {
+                free(all_tours_cheapest[i].tour);
+                all_tours_cheapest[i].tour = NULL;
+            }
+            printf("---TEST 091---\n");
 
-    //         if (all_tours_farthest[i].tour != NULL) {
-    //             free(all_tours_farthest[i].tour);
-    //             all_tours_farthest[i].tour = NULL;
-    //         }
-    //         printf("---TEST 092---\n");
-
-
-    //         if (all_tours_nearest[i].tour != NULL) {
-    //             free(all_tours_nearest[i].tour);
-    //             all_tours_nearest[i].tour = NULL;
-    //         }
-    //         printf("---TEST 093---\n");
-
-    //     }
-    //     //释放结构体数组
-    //     if (all_tours_cheapest != NULL)
-    //     {
-    //         free(all_tours_cheapest);
-    //     }
-    //     printf("---TEST 094---\n");
-
-    //     if (all_tours_farthest != NULL)
-    //     {
-    //         free(all_tours_farthest);
-    //     }
-    //     printf("---TEST 095---\n");
+            if (all_tours_farthest[i].tour != NULL) {
+                free(all_tours_farthest[i].tour);
+                all_tours_farthest[i].tour = NULL;
+            }
+            printf("---TEST 092---\n");
 
 
-    //     if (all_tours_nearest != NULL)
-    //     {
-    //         free(all_tours_nearest);
-    //     }
+            if (all_tours_nearest[i].tour != NULL) {
+                free(all_tours_nearest[i].tour);
+                all_tours_nearest[i].tour = NULL;
+            }
+            printf("---TEST 093---\n");
+
+        }
+        //释放结构体数组
+        if (all_tours_cheapest != NULL)
+        {
+            free(all_tours_cheapest);
+        }
+        printf("---TEST 094---\n");
+
+        if (all_tours_farthest != NULL)
+        {
+            free(all_tours_farthest);
+        }
+        printf("---TEST 095---\n");
+
+
+        if (all_tours_nearest != NULL)
+        {
+            free(all_tours_nearest);
+        }
         
-    // }
+    }
 
 
 
     printf("---TEST 10---\n");
 
-    // for (int i = 0; i < numOfCoords; i++) {
-    //     free(coords[i]);
-    //     free(dMatrix[i]);
-    // }
-    // free(coords);
-    // free(dMatrix);
+    for (int i = 0; i < numOfCoords; i++) {
+        free(coords[i]);
+        free(dMatrix[i]);
+    }
+    free(coords);
+    free(dMatrix);
 
     printf("---TEST 11---\n");
 
