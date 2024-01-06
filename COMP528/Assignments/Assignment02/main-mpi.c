@@ -240,7 +240,7 @@ int main(int argc, char *argv[])
             free(all_tours_nearest);
         }
 
-    // }
+    }
 
     printf("---TEST 10---\n");
 
