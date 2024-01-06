@@ -103,7 +103,6 @@ int main(int argc, char *argv[])
             local_best_tour_cheapest.totalDistance = current_tour_cheapest.totalDistance;
         }
         free(current_tour_cheapest.tour);
-        free(current_tour_cheapest);
 
         TourResult current_tour_farthest = farthestInsertion(dMatrix, numOfCoords, i);
         if (current_tour_farthest.totalDistance < local_best_tour_farthest.totalDistance)
@@ -113,7 +112,6 @@ int main(int argc, char *argv[])
 
         }
         free(current_tour_farthest.tour);
-        free(current_tour_farthest);
 
         TourResult current_tour_nearest = nearestAddition(dMatrix, numOfCoords, i);
         if (current_tour_nearest.totalDistance < local_best_tour_nearest.totalDistance)
@@ -122,7 +120,6 @@ int main(int argc, char *argv[])
             local_best_tour_nearest.totalDistance = current_tour_nearest.totalDistance;
         }
         free(current_tour_nearest.tour);
-        free(current_tour_nearest);
     }
 
     printf("---TEST 04---\n");
@@ -203,15 +200,9 @@ int main(int argc, char *argv[])
         free(local_best_tour_nearest.tour);
     }
 
-    free(local_best_tour_cheapest);
-    free(local_best_tour_farthest);
-    free(local_best_tour_nearest);
 
     printf("---TEST 09---\n");
 
-    free(all_tours_cheapest);
-    free(all_tours_farthest);
-    free(all_tours_nearest);
 
     // if (world_rank == 0) {
     //     for (int i = 0; i < world_size; i++) {
