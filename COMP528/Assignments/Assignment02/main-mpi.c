@@ -231,21 +231,18 @@ int main(int argc, char *argv[])
         {
             free(all_tours_cheapest);
         }
-        all_tours_cheapest = NULL;
         printf("---TEST 094---\n");
 
         if (all_tours_farthest != NULL)
         {
             free(all_tours_farthest);
         }
-        all_tours_farthest = NULL;
         printf("---TEST 095---\n");
 
         if (all_tours_nearest != NULL)
         {
             free(all_tours_nearest);
         }
-        all_tours_nearest = NULL;
 
     // }
 
