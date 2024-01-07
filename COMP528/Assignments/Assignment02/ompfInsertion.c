@@ -37,62 +37,51 @@ double getDistance_FarthestInsertion(double **dMatrix, int numOfCoords, int poin
     int *nextNodes = (int *)malloc(numThreads * sizeof(int));
 
     while(numVisited < numOfCoords) {
-        int bestNextNode = -1;
-        double globalMaxCost = 0;
+        double globalMinCost = __DBL_MAX__;
+        int globalBestNextNode = -1;
+        int globalInsertPos = -1;
 
         #pragma omp parallel 
         {
-            int threadID = omp_get_thread_num();
-            maxCosts[threadID] = 0;
-            nextNodes[threadID] = -1;
+            double localMinCost = __DBL_MAX__;
+            int localBestNextNode = -1;
+            int localInsertPos = -1;
 
             #pragma omp for nowait
-            for(int i = 0; i < tourLength - 1; i++) {
-                for(int j = 0; j < numOfCoords; j++) {
-                    if(!visited[j]) {
-                        double cost = dMatrix[tour[i]][j];
-                        if(cost > maxCosts[threadID]) {
-                            maxCosts[threadID] = cost;
-                            nextNodes[threadID] = j;
+            for (int j = 0; j < numOfCoords; j++) {
+                if (!visited[j]) {
+                    for (int i = 0; i < tourLength - 1; i++) {
+                        double cost = dMatrix[tour[i]][j] + dMatrix[j][tour[i + 1]] - dMatrix[tour[i]][tour[i + 1]];
+                        if (cost < localMinCost) {
+                            localMinCost = cost;
+                            localBestNextNode = j;
+                            localInsertPos = i + 1;
                         }
                     }
                 }
             }
 
-            // 在每个线程结束后执行，无需 critical
-            #pragma omp flush (globalMaxCost)
-            if (maxCosts[threadID] > globalMaxCost) {
-                #pragma omp critical
-                {
-                    if (maxCosts[threadID] > globalMaxCost) {
-                        globalMaxCost = maxCosts[threadID];
-                        bestNextNode = nextNodes[threadID];
-                    }
+            #pragma omp critical
+            {
+                if (localMinCost < globalMinCost) {
+                    globalMinCost = localMinCost;
+                    globalBestNextNode = localBestNextNode;
+                    globalInsertPos = localInsertPos;
                 }
             }
         }
 
-        double minCost = __DBL_MAX__;
-        int insertPos = -1;
-
-        // 不是并行的部分
-        for(int k = 0; k < tourLength - 1; k++) {
-            double cost = dMatrix[tour[k]][bestNextNode] + dMatrix[bestNextNode][tour[k + 1]] - dMatrix[tour[k]][tour[k + 1]];
-            if(cost < minCost - tolerance) {
-                minCost = cost;
-                insertPos = k + 1;
+        // 插入操作
+        if (globalBestNextNode != -1) {
+            for (int i = tourLength; i >= globalInsertPos; i--) {
+                tour[i] = tour[i - 1];
             }
+            tour[globalInsertPos] = globalBestNextNode;
+            visited[globalBestNextNode] = true;
+            totalDistance += globalMinCost;
+            tourLength++;
+            numVisited++;
         }
-
-        for(int i = numOfCoords; i > insertPos; i--) {
-            tour[i] = tour[i - 1];
-        }
-
-        tour[insertPos] = bestNextNode;
-        visited[bestNextNode] = true;
-        totalDistance += minCost;
-        tourLength++;
-        numVisited++;
     }
 
     free(maxCosts);
