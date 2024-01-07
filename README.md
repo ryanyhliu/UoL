@@ -29,7 +29,7 @@ module load mpi/intel-mpi/2019u5/bin
 mpirun -np 4 ./gcomplete 16_coords.coord my_16_cout.dat my_16_fout.dat my_16_nout.dat
 
 #### Barkla run
-sbatch -N 16 -n 32 -c 8  -t 10 OpenMP_batch.sh gcomplete 512_coords.coord my_512_cout.dat my_512_fout.dat my_512_nout.dat
+sbatch -N 16 -n 32 -c 8 OpenMP_batch.sh gcomplete 512_coords.coord my_512_cout.dat my_512_fout.dat my_512_nout.dat
 
 
 

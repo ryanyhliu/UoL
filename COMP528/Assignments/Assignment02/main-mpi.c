@@ -262,6 +262,8 @@
 //     return 0;
 // }
 
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -270,6 +272,25 @@
 #include <string.h>
 #include <mpi.h>
 #include <stddef.h>
+
+
+
+
+// 定义一个结构体来存储距离和对应的索引
+typedef struct {
+    double distance;
+    int index;
+} DistanceIndex;
+
+
+
+
+
+
+
+
+
+
 
 int readNumOfCoords(char *filename);
 double **readCoords(char *filename, int numOfCoords);
@@ -284,19 +305,32 @@ int *getTour_FarthestInsertion(double **dMatrix, int numOfCoords, int pointOfSta
 double getDistance_NearestAddition(double **dMatrix, int numOfCoords, int pointOfStartEnd);
 int *getTour_NearestAddition(double **dMatrix, int numOfCoords, int pointOfStartEnd);
 
-int main(int argc, char *argv[])
-{
+
+
+
+
+
+
+// 自定义的归约操作，用于同时更新距离和索引
+void minDistanceIndex(DistanceIndex *in, DistanceIndex *inout, int *len, MPI_Datatype *datatype) {
+    for (int i = 0; i < *len; ++i) {
+        if (in[i].distance < inout[i].distance) {
+            inout[i].distance = in[i].distance;
+            inout[i].index = in[i].index;
+        }
+    }
+}
+
+
+int main(int argc, char *argv[]) {
     MPI_Init(&argc, &argv);
 
     int world_size, world_rank;
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
     MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 
-    // ... 文件读取和数据初始化 ...
-    if (argc < 5)
-    {
-        if (world_rank == 0)
-        {
+    if (argc < 5) {
+        if (world_rank == 0) {
             fprintf(stderr, "Usage: %s <input file> <output file 1> <output file 2> <output file 3>\n", argv[0]);
         }
         MPI_Abort(MPI_COMM_WORLD, 1);
@@ -318,77 +352,207 @@ int main(int argc, char *argv[])
     double **dMatrix = createDistanceMatrix(coords, numOfCoords);
 
     // 分布式计算最佳起点
-    double localMinDistanceCheapest = __DBL_MAX__;
-    double localMinDistanceFarthest = __DBL_MAX__;
-    double localMinDistanceNearest = __DBL_MAX__;
+    DistanceIndex localMinCheapest = {DBL_MAX, -1};
+    DistanceIndex localMinFarthest = {DBL_MAX, -1};
+    DistanceIndex localMinNearest = {DBL_MAX, -1};
 
-    int localBestStartPointCheapest = -1;
-    int localBestStartPointFarthest = -1;
-    int localBestStartPointNearest = -1;
-
-    for (int i = world_rank; i < numOfCoords; i += world_size)
-    {
+    for (int i = world_rank; i < numOfCoords; i += world_size) {
         double distanceCheapest = getDistance_CheapestInsertion(dMatrix, numOfCoords, i);
-        if (distanceCheapest < localMinDistanceCheapest)
-        {
-            localMinDistanceCheapest = distanceCheapest;
-            localBestStartPointCheapest = i;
+        if (distanceCheapest < localMinCheapest.distance) {
+            localMinCheapest.distance = distanceCheapest;
+            localMinCheapest.index = i;
         }
 
         double distanceFarthest = getDistance_FarthestInsertion(dMatrix, numOfCoords, i);
-        if (distanceFarthest < localMinDistanceFarthest)
-        {
-            localMinDistanceFarthest = distanceFarthest;
-            localBestStartPointFarthest = i;
+        if (distanceFarthest < localMinFarthest.distance) {
+            localMinFarthest.distance = distanceFarthest;
+            localMinFarthest.index = i;
         }
 
         double distanceNearest = getDistance_NearestAddition(dMatrix, numOfCoords, i);
-        if (distanceNearest < localMinDistanceNearest)
-        {
-            localMinDistanceNearest = distanceNearest;
-            localBestStartPointNearest = i;
+        if (distanceNearest < localMinNearest.distance) {
+            localMinNearest.distance = distanceNearest;
+            localMinNearest.index = i;
         }
     }
 
     // 汇总全局最佳起点
-    double globalMinDistanceCheapest, globalMinDistanceFarthest, globalMinDistanceNearest;
-    int globalBestStartPointCheapest, globalBestStartPointFarthest, globalBestStartPointNearest;
+    DistanceIndex globalMinCheapest, globalMinFarthest, globalMinNearest;
+    MPI_Op customOp;
+    MPI_Op_create((MPI_User_function *)minDistanceIndex, 1, &customOp);
 
-    MPI_Allreduce(&localMinDistanceCheapest, &globalMinDistanceCheapest, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
-    MPI_Allreduce(&localBestStartPointCheapest, &globalBestStartPointCheapest, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD);
+    MPI_Allreduce(&localMinCheapest, &globalMinCheapest, 1, MPI_DOUBLE_INT, customOp, MPI_COMM_WORLD);
+    MPI_Allreduce(&localMinFarthest, &globalMinFarthest, 1, MPI_DOUBLE_INT, customOp, MPI_COMM_WORLD);
+    MPI_Allreduce(&localMinNearest, &globalMinNearest, 1, MPI_DOUBLE_INT, customOp, MPI_COMM_WORLD);
 
-    MPI_Allreduce(&localMinDistanceFarthest, &globalMinDistanceFarthest, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
-    MPI_Allreduce(&localBestStartPointFarthest, &globalBestStartPointFarthest, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD);
-
-    MPI_Allreduce(&localMinDistanceNearest, &globalMinDistanceNearest, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
-    MPI_Allreduce(&localBestStartPointNearest, &globalBestStartPointNearest, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD);
+    MPI_Op_free(&customOp);
 
     // 主进程使用最佳起点获取完整路径并输出
-    if (world_rank == 0)
-    {
-        int *tourCheapest = getTour_CheapestInsertion(dMatrix, numOfCoords, globalBestStartPointCheapest);
-        int *tourFarthest = getTour_FarthestInsertion(dMatrix, numOfCoords, globalBestStartPointFarthest);
-        int *tourNearest = getTour_NearestAddition(dMatrix, numOfCoords, globalBestStartPointNearest);
+    if (world_rank == 0) {
+        int *tourCheapest = getTour_CheapestInsertion(dMatrix, numOfCoords, globalMinCheapest.index);
+        int *tourFarthest = getTour_FarthestInsertion(dMatrix, numOfCoords, globalMinFarthest.index);
+        int *tourNearest = getTour_NearestAddition(dMatrix, numOfCoords, globalMinNearest.index);
 
-        // ... 将tourCheapest, tourFarthest, tourNearest写入相应的文件 ...
-        // Write the best tours to their respective files
         writeTourToFile(tourCheapest, numOfCoords + 1, outFileName_Cheapest);
         writeTourToFile(tourFarthest, numOfCoords + 1, outFileName_Farthest);
         writeTourToFile(tourNearest, numOfCoords + 1, outFileName_Nearest);
-    
 
         free(tourCheapest);
         free(tourFarthest);
         free(tourNearest);
     }
 
-    // ... 清理和MPI终止 ...
+    // 清理和MPI终止
+    for (int i = 0; i < numOfCoords; i++) {
+        free(coords[i]);
+    }
     free(coords);
+
+    for (int i = 0; i < numOfCoords; i++) {
+        free(dMatrix[i]);
+    }
     free(dMatrix);
 
     MPI_Finalize();
     return 0;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// int main(int argc, char *argv[])
+// {
+//     MPI_Init(&argc, &argv);
+
+//     int world_size, world_rank;
+//     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+//     MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+
+//     // ... 文件读取和数据初始化 ...
+//     if (argc < 5)
+//     {
+//         if (world_rank == 0)
+//         {
+//             fprintf(stderr, "Usage: %s <input file> <output file 1> <output file 2> <output file 3>\n", argv[0]);
+//         }
+//         MPI_Abort(MPI_COMM_WORLD, 1);
+//         return 1;
+//     }
+
+//     char filename[500];
+//     char outFileName_Cheapest[500];
+//     char outFileName_Farthest[500];
+//     char outFileName_Nearest[500];
+
+//     strcpy(filename, argv[1]);
+//     strcpy(outFileName_Cheapest, argv[2]);
+//     strcpy(outFileName_Farthest, argv[3]);
+//     strcpy(outFileName_Nearest, argv[4]);
+
+//     int numOfCoords = readNumOfCoords(filename);
+//     double **coords = readCoords(filename, numOfCoords);
+//     double **dMatrix = createDistanceMatrix(coords, numOfCoords);
+
+//     // 分布式计算最佳起点
+//     double localMinDistanceCheapest = __DBL_MAX__;
+//     double localMinDistanceFarthest = __DBL_MAX__;
+//     double localMinDistanceNearest = __DBL_MAX__;
+
+//     int localBestStartPointCheapest = -1;
+//     int localBestStartPointFarthest = -1;
+//     int localBestStartPointNearest = -1;
+
+//     for (int i = world_rank; i < numOfCoords; i += world_size)
+//     {
+//         double distanceCheapest = getDistance_CheapestInsertion(dMatrix, numOfCoords, i);
+//         if (distanceCheapest < localMinDistanceCheapest)
+//         {
+//             localMinDistanceCheapest = distanceCheapest;
+//             localBestStartPointCheapest = i;
+//         }
+
+//         double distanceFarthest = getDistance_FarthestInsertion(dMatrix, numOfCoords, i);
+//         if (distanceFarthest < localMinDistanceFarthest)
+//         {
+//             localMinDistanceFarthest = distanceFarthest;
+//             localBestStartPointFarthest = i;
+//         }
+
+//         double distanceNearest = getDistance_NearestAddition(dMatrix, numOfCoords, i);
+//         if (distanceNearest < localMinDistanceNearest)
+//         {
+//             localMinDistanceNearest = distanceNearest;
+//             localBestStartPointNearest = i;
+//         }
+//     }
+
+//     // 汇总全局最佳起点
+//     double globalMinDistanceCheapest, globalMinDistanceFarthest, globalMinDistanceNearest;
+//     int globalBestStartPointCheapest, globalBestStartPointFarthest, globalBestStartPointNearest;
+
+//     MPI_Allreduce(&localMinDistanceCheapest, &globalMinDistanceCheapest, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
+//     MPI_Allreduce(&localBestStartPointCheapest, &globalBestStartPointCheapest, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD);
+
+//     MPI_Allreduce(&localMinDistanceFarthest, &globalMinDistanceFarthest, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
+//     MPI_Allreduce(&localBestStartPointFarthest, &globalBestStartPointFarthest, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD);
+
+//     MPI_Allreduce(&localMinDistanceNearest, &globalMinDistanceNearest, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
+//     MPI_Allreduce(&localBestStartPointNearest, &globalBestStartPointNearest, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD);
+
+//     // 主进程使用最佳起点获取完整路径并输出
+//     if (world_rank == 0)
+//     {
+//         int *tourCheapest = getTour_CheapestInsertion(dMatrix, numOfCoords, globalBestStartPointCheapest);
+//         int *tourFarthest = getTour_FarthestInsertion(dMatrix, numOfCoords, globalBestStartPointFarthest);
+//         int *tourNearest = getTour_NearestAddition(dMatrix, numOfCoords, globalBestStartPointNearest);
+
+//         // ... 将tourCheapest, tourFarthest, tourNearest写入相应的文件 ...
+//         // Write the best tours to their respective files
+//         writeTourToFile(tourCheapest, numOfCoords + 1, outFileName_Cheapest);
+//         writeTourToFile(tourFarthest, numOfCoords + 1, outFileName_Farthest);
+//         writeTourToFile(tourNearest, numOfCoords + 1, outFileName_Nearest);
+    
+
+//         free(tourCheapest);
+//         free(tourFarthest);
+//         free(tourNearest);
+//     }
+
+//     // ... 清理和MPI终止 ...
+//     free(coords);
+//     free(dMatrix);
+
+//     MPI_Finalize();
+//     return 0;
+// }
 
 double **createDistanceMatrix(double **coords, int numOfCoords)
 {
