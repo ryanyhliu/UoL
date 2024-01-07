@@ -34,6 +34,8 @@ int *getTour_NearestAddition(double **dMatrix, int numOfCoords, int pointOfStart
 
 
 int main(int argc, char *argv[]){
+    double tolerance = 1e-9;
+
     if (argc != 5){
         printf("Error: Incorrect number of arguments. Expected 4 file names.\n");
         return 1;
@@ -66,7 +68,7 @@ int main(int argc, char *argv[]){
     for (int i = 0; i < numOfCoords; i++) {
         int *tempTourCheapest = getTour_CheapestInsertion(dMatrix, numOfCoords, i);
         double distanceCheapest = getDistance_CheapestInsertion(dMatrix, numOfCoords, i); // 或使用您的成本计算函数
-        if (distanceCheapest < minDistanceCheapest) {
+        if (distanceCheapest < minDistanceCheapest  - tolerance) {
             minDistanceCheapest = distanceCheapest;
             free(tourCheapest);  // 释放旧路径
             tourCheapest = tempTourCheapest;
@@ -76,7 +78,7 @@ int main(int argc, char *argv[]){
 
         int *tempTourFarthest = getTour_FarthestInsertion(dMatrix, numOfCoords, i);
         double distanceFarthest = getDistance_FarthestInsertion(dMatrix, numOfCoords, i); // 或使用您的成本计算函数
-        if (distanceFarthest < minDistanceFarthest) {
+        if (distanceFarthest < minDistanceFarthest  - tolerance) {
             minDistanceFarthest = distanceFarthest;
             free(tourFarthest);  // 释放旧路径
             tourFarthest = tempTourFarthest;
@@ -86,7 +88,7 @@ int main(int argc, char *argv[]){
 
         int *tempTourNearest = getTour_NearestAddition(dMatrix, numOfCoords, i);
         double distanceNearest = getDistance_NearestAddition(dMatrix, numOfCoords, i); // 或使用您的成本计算函数
-        if (distanceNearest < minDistanceNearest) {
+        if (distanceNearest < minDistanceNearest  - tolerance) {
             minDistanceNearest = distanceNearest;
             free(tourNearest);  // 释放旧路径
             tourNearest = tempTourNearest;
