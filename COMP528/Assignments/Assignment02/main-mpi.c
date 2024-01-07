@@ -352,9 +352,9 @@ int main(int argc, char *argv[]) {
     double **dMatrix = createDistanceMatrix(coords, numOfCoords);
 
     // 分布式计算最佳起点
-    DistanceIndex localMinCheapest = {DBL_MAX, -1};
-    DistanceIndex localMinFarthest = {DBL_MAX, -1};
-    DistanceIndex localMinNearest = {DBL_MAX, -1};
+    DistanceIndex localMinCheapest = {__DBL_MAX__, -1};
+    DistanceIndex localMinFarthest = {__DBL_MAX__, -1};
+    DistanceIndex localMinNearest = {__DBL_MAX__, -1};
 
     for (int i = world_rank; i < numOfCoords; i += world_size) {
         double distanceCheapest = getDistance_CheapestInsertion(dMatrix, numOfCoords, i);
