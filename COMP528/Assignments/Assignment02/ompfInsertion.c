@@ -104,7 +104,7 @@ double getDistance_FarthestInsertion(double **dMatrix, int numOfCoords, int poin
                 double maxCost = 0;
                 for (int i = 0; i < numThreads; i++)
                 {
-                    if (threadMaxCosts[i * 8] > maxCost)
+                    if (threadMaxCosts[i * 8] - tolerance > maxCost)
                     {
                         maxCost = threadMaxCosts[i * 8];
                         bestNextNode = threadNextNode[i * 8];
@@ -252,7 +252,7 @@ int *getTour_FarthestInsertion(double **dMatrix, int numOfCoords, int pointOfSta
                     if (!visited[j])
                     {
                         double cost = dMatrix[tour[i]][j];
-                        if (cost > threadMaxCosts[threadID * 8])
+                        if (cost - tolerance > threadMaxCosts[threadID * 8])
                         {
                             // See Point 1
                             threadMaxCosts[threadID * 8] = cost;
