@@ -64,7 +64,7 @@ double getDistance_FarthestInsertion(double **dMatrix, int numOfCoords) {
             }
         }
 
-        double minInsertionCost = DBL_MAX;
+        double minInsertionCost = __DBL_MAX__;
         int bestInsertPos = -1;
         for (int i = 0; i < tourLength - 1; ++i) {
             double cost = dMatrix[tour[i]][globalFarthestNode] + dMatrix[globalFarthestNode][tour[i + 1]] - dMatrix[tour[i]][tour[i + 1]];
@@ -127,7 +127,7 @@ int *getTour_FarthestInsertion(double **dMatrix, int numOfCoords) {
         #pragma omp parallel
         {
             int threadID = omp_get_thread_num();
-            double maxDistance = -DBL_MAX;
+            double maxDistance = -__DBL_MAX__;
             int farthestNode = -1;
             #pragma omp for nowait
             for (int i = 0; i < numOfCoords; ++i) {
@@ -147,7 +147,7 @@ int *getTour_FarthestInsertion(double **dMatrix, int numOfCoords) {
         }
 
         // Reduce the results to find the overall farthest node
-        double globalMaxDistance = -DBL_MAX;
+        double globalMaxDistance = -__DBL_MAX__;
         int globalFarthestNode = -1;
         for (int i = 0; i < numThreads; ++i) {
             if (threadMaxCosts[i] > globalMaxDistance) {
@@ -157,7 +157,7 @@ int *getTour_FarthestInsertion(double **dMatrix, int numOfCoords) {
         }
         
         // Find the best position to insert the farthest node
-        double minInsertionCost = DBL_MAX;
+        double minInsertionCost = __DBL_MAX__;
         int bestInsertPos = -1;
         for (int i = 0; i < tourLength - 1; ++i) {
             double insertionCost = dMatrix[tour[i]][globalFarthestNode] + dMatrix[globalFarthestNode][tour[i + 1]] - dMatrix[tour[i]][tour[i + 1]];
