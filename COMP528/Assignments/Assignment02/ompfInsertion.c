@@ -49,7 +49,7 @@ double getDistance_FarthestInsertion(double **dMatrix, int numOfCoords, int poin
             }
         }
 
-        double minCost = DBL_MAX;
+        double minCost = __DBL_MAX__;
         int insertPos = -1;
 
         // 寻找插入最远节点的最佳位置
@@ -100,7 +100,7 @@ int *getTour_FarthestInsertion(double **dMatrix, int numOfCoords, int pointOfSta
     int tourLength = 1;
 
     while (tourLength < numOfCoords) {
-        double maxCost = -DBL_MAX;
+        double maxCost = 0;
         int nextNode = -1;
 
         // 寻找最远的未访问节点
@@ -116,7 +116,7 @@ int *getTour_FarthestInsertion(double **dMatrix, int numOfCoords, int pointOfSta
             }
         }
 
-        double minCost = DBL_MAX;
+        double minCost = __DBL_MAX__;
         int insertPos = -1;
 
         // 寻找插入最远节点的最佳位置
