@@ -50,7 +50,7 @@ double getDistance_FarthestInsertion(double **dMatrix, int numOfCoords, int poin
         int threadID = omp_get_thread_num();
 
         while (numVisited < numOfCoords) {
-            threadMinCosts[threadID * 8] = DBL_MAX;
+            threadMinCosts[threadID * 8] = __DBL_MAX__;
             threadMaxCosts[threadID * 8] = 0;
             threadNextNode[threadID * 8] = -1;
             threadInsertPos[threadID * 8] = -1;
@@ -94,7 +94,7 @@ double getDistance_FarthestInsertion(double **dMatrix, int numOfCoords, int poin
             // 单线程插入最佳位置
             #pragma omp single
             {
-                double minCost = DBL_MAX;
+                double minCost = __DBL_MAX__;
                 int bestInsertPos = -1;
                 for (int i = 0; i < numThreads; i++) {
                     if (threadMinCosts[i * 8] < minCost) {
@@ -167,7 +167,7 @@ int *getTour_FarthestInsertion(double **dMatrix, int numOfCoords, int pointOfSta
         int threadID = omp_get_thread_num();
 
         while (numVisited < numOfCoords) {
-            threadMinCosts[threadID * 8] = DBL_MAX;
+            threadMinCosts[threadID * 8] = __DBL_MAX__;
             threadMaxCosts[threadID * 8] = 0;
             threadNextNode[threadID * 8] = -1;
             threadInsertPos[threadID * 8] = -1;
@@ -211,7 +211,7 @@ int *getTour_FarthestInsertion(double **dMatrix, int numOfCoords, int pointOfSta
             // 单线程插入最佳位置
             #pragma omp single
             {
-                double minCost = DBL_MAX;
+                double minCost = __DBL_MAX__;
                 int bestInsertPos = -1;
                 for (int i = 0; i < numThreads; i++) {
                     if (threadMinCosts[i * 8] < minCost) {
@@ -321,7 +321,7 @@ int *getTour_FarthestInsertion(double **dMatrix, int numOfCoords, int pointOfSta
 //         {
 
 //             // Point 1: Thread only accesses its memory location in the shared array.
-//             threadMinCosts[threadID * 8] = __DBL_MAX__;
+//             threadMinCosts[threadID * 8] = ____DBL_MAX____;
 //             threadMaxCosts[threadID * 8] = 0;
 //             threadNextNode[threadID * 8] = -1;
 //             threadInsertPos[threadID * 8] = -1;
@@ -376,7 +376,7 @@ int *getTour_FarthestInsertion(double **dMatrix, int numOfCoords, int pointOfSta
 // #pragma omp single
 //             {
 //                 int bestInsertPos = -1;
-//                 double minCost = __DBL_MAX__;
+//                 double minCost = ____DBL_MAX____;
 
 //                 // Single thread loops through every thread's answer and chooses the cheapest one.
 //                 for (int i = 0; i < numThreads; i++)
@@ -479,7 +479,7 @@ int *getTour_FarthestInsertion(double **dMatrix, int numOfCoords, int pointOfSta
 //         {
 
 //             // Point 1: Thread only accesses its memory location in the shared array.
-//             threadMinCosts[threadID * 8] = __DBL_MAX__;
+//             threadMinCosts[threadID * 8] = ____DBL_MAX____;
 //             threadMaxCosts[threadID * 8] = 0;
 //             threadNextNode[threadID * 8] = -1;
 //             threadInsertPos[threadID * 8] = -1;
@@ -534,7 +534,7 @@ int *getTour_FarthestInsertion(double **dMatrix, int numOfCoords, int pointOfSta
 // #pragma omp single
 //             {
 //                 int bestInsertPos = -1;
-//                 double minCost = __DBL_MAX__;
+//                 double minCost = ____DBL_MAX____;
 
 //                 // Single thread loops through every thread's answer and chooses the cheapest one.
 //                 for (int i = 0; i < numThreads; i++)
