@@ -12,6 +12,9 @@
 
 double getDistance_FarthestInsertion(double **dMatrix, int numOfCoords, int pointOfStartEnd)
 {
+    double tolerance = 1e-9;
+
+
     double totalDistance = 0.0;
 
     // Setting up variables
@@ -114,7 +117,7 @@ double getDistance_FarthestInsertion(double **dMatrix, int numOfCoords, int poin
             for (int k = 0; k < tourLength - 1; k++)
             {
                 double cost = dMatrix[tour[k]][bestNextNode] + dMatrix[bestNextNode][tour[k + 1]] - dMatrix[tour[k]][tour[k + 1]];
-                if (cost < threadMinCosts[threadID * 8])
+                if (cost < threadMinCosts[threadID * 8] - tolerance)
                 {
                     threadMinCosts[threadID * 8] = cost;
                     threadInsertPos[threadID * 8] = k + 1;
@@ -130,7 +133,7 @@ double getDistance_FarthestInsertion(double **dMatrix, int numOfCoords, int poin
                 // Single thread loops through every thread's answer and chooses the cheapest one.
                 for (int i = 0; i < numThreads; i++)
                 {
-                    if (threadMinCosts[i * 8] < minCost)
+                    if (threadMinCosts[i * 8] < minCost - tolerance)
                     {
                         minCost = threadMinCosts[i * 8];
                         bestInsertPos = threadInsertPos[i * 8];
@@ -176,6 +179,8 @@ double getDistance_FarthestInsertion(double **dMatrix, int numOfCoords, int poin
 
 int *getTour_FarthestInsertion(double **dMatrix, int numOfCoords, int pointOfStartEnd)
 {
+    double tolerance = 1e-9;
+
     // Setting up variables
     int nextNode, insertPos;
 
@@ -276,7 +281,7 @@ int *getTour_FarthestInsertion(double **dMatrix, int numOfCoords, int pointOfSta
             for (int k = 0; k < tourLength - 1; k++)
             {
                 double cost = dMatrix[tour[k]][bestNextNode] + dMatrix[bestNextNode][tour[k + 1]] - dMatrix[tour[k]][tour[k + 1]];
-                if (cost < threadMinCosts[threadID * 8])
+                if (cost < threadMinCosts[threadID * 8] - tolerance)
                 {
                     threadMinCosts[threadID * 8] = cost;
                     threadInsertPos[threadID * 8] = k + 1;
@@ -292,7 +297,7 @@ int *getTour_FarthestInsertion(double **dMatrix, int numOfCoords, int pointOfSta
                 // Single thread loops through every thread's answer and chooses the cheapest one.
                 for (int i = 0; i < numThreads; i++)
                 {
-                    if (threadMinCosts[i * 8] < minCost)
+                    if (threadMinCosts[i * 8] < minCost - tolerance)
                     {
                         minCost = threadMinCosts[i * 8];
                         bestInsertPos = threadInsertPos[i * 8];
