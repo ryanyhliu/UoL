@@ -34,93 +34,86 @@ int *getTour_NearestAddition(double **dMatrix, int numOfCoords, int pointOfStart
 
 
 
-int main(int argc, char *argv[]) {
-    char filename[500];
-    char outFileName_Cheapest[500];
-    char outFileName_Farthest[500];
-    char outFileName_Nearest[500];
+int main(int argc, char *argv[]){
+	if (argc != 5){
+		printf("Error: Incorrect number of arguments. Expected 4 file names.\n");
+		return 1;
+	}
 
-    strcpy(filename, argv[1]);
-    strcpy(outFileName_Cheapest, argv[2]);
-    strcpy(outFileName_Farthest, argv[3]);
-    strcpy(outFileName_Nearest, argv[4]);
+	char filename[500];
+	char outFileName_Cheapest[500];
+	char outFileName_Farthest[500];
+	char outFileName_Nearest[500];
 
-    int numOfCoords = readNumOfCoords(filename);
-    double **coords = readCoords(filename, numOfCoords);
-    double **dMatrix = createDistanceMatrix(coords, numOfCoords);
+	strcpy(filename, argv[1]);
+	strcpy(outFileName_Cheapest, argv[2]);
+	strcpy(outFileName_Farthest, argv[3]);
+	strcpy(outFileName_Nearest, argv[4]);
 
-    double tStart = omp_get_wtime();
+	int numOfCoords = readNumOfCoords(filename);
+	double **coords = readCoords(filename, numOfCoords);
+	double **dMatrix = createDistanceMatrix(coords, numOfCoords);
 
-    double minDistanceCheapest = __DBL_MAX__, minDistanceNearest = __DBL_MAX__;
-    int bestStartPointCheapest, bestStartPointNearest;
+	double tStart = omp_get_wtime();
 
-    double minDistanceFarthest = __DBL_MAX__;
-    int bestStartPointFarthest = -1;
+	double minDistanceCheapest = __DBL_MAX__;
+	double minDistanceFarthest = __DBL_MAX__;
+	double minDistanceNearest = __DBL_MAX__;
+	int bestStartPointCheapest = -1;
+	int bestStartPointFarthest = -1;
+	int bestStartPointNearest = -1;
 
-    // FarthestInsertion的并行计算
-    #pragma omp parallel
-    {
-        double localMinDistanceFarthest = __DBL_MAX__;
-        int localBestStartPointFarthest = -1;
+	// 寻找最佳起点
+	for (int i = 0; i < numOfCoords; i++) {
+		double distanceCheapest = getDistance_CheapestInsertion(dMatrix, numOfCoords, i);
+		if (distanceCheapest < minDistanceCheapest) {
+			minDistanceCheapest = distanceCheapest;
+			bestStartPointCheapest = i;
+		}
 
-        #pragma omp for nowait
-        for (int i = 0; i < numOfCoords; i++) {
-            double distanceFarthest = getDistance_FarthestInsertion(dMatrix, numOfCoords, i);
-            if (distanceFarthest < localMinDistanceFarthest) {
-                localMinDistanceFarthest = distanceFarthest;
-                localBestStartPointFarthest = i;
-            }
-        }
+		double distanceFarthest = getDistance_FarthestInsertion(dMatrix, numOfCoords, i);
+		if (distanceFarthest < minDistanceFarthest) {
+			minDistanceFarthest = distanceFarthest;
+			bestStartPointFarthest = i;
+		}
 
-        #pragma omp critical
-        {
-            if (localMinDistanceFarthest < minDistanceFarthest) {
-                minDistanceFarthest = localMinDistanceFarthest;
-                bestStartPointFarthest = localBestStartPointFarthest;
-            }
-        }
-    }
+		double distanceNearest = getDistance_NearestAddition(dMatrix, numOfCoords, i);
+		if (distanceNearest < minDistanceNearest) {
+			minDistanceNearest = distanceNearest;
+			bestStartPointNearest = i;
+		}
+	}
 
-    // CheapestInsertion 和 NearestAddition 的串行计算
-    for (int i = 0; i < numOfCoords; i++) {
-        double distanceCheapest = getDistance_CheapestInsertion(dMatrix, numOfCoords, i);
-        if (distanceCheapest < minDistanceCheapest) {
-            minDistanceCheapest = distanceCheapest;
-            bestStartPointCheapest = i;
-        }
+	// 使用最佳起点获取完整路径
+	int *tourCheapest = getTour_CheapestInsertion(dMatrix, numOfCoords, bestStartPointCheapest);
+	int *tourFarthest = getTour_FarthestInsertion(dMatrix, numOfCoords, bestStartPointFarthest);
+	int *tourNearest = getTour_NearestAddition(dMatrix, numOfCoords, bestStartPointNearest);
 
-        double distanceNearest = getDistance_NearestAddition(dMatrix, numOfCoords, i);
-        if (distanceNearest < minDistanceNearest) {
-            minDistanceNearest = distanceNearest;
-            bestStartPointNearest = i;
-        }
-    }
+	double tEnd = omp_get_wtime();
+	printf("Took %f milliseconds\n", (tEnd - tStart) * 1000);
 
-    double tEnd = omp_get_wtime();
-    printf("Took %f milliseconds\n", (tEnd - tStart) * 1000);
+	// 写入计算出的路径到指定的输出文件
+	if (writeTourToFile(tourCheapest, numOfCoords + 1, outFileName_Cheapest) == NULL){
+		printf("Error writing Cheapest Insertion Tour\n");
+	}
+	if (writeTourToFile(tourFarthest, numOfCoords + 1, outFileName_Farthest) == NULL){
+		printf("Error writing Farthest Insertion Tour\n");
+	}
+	if (writeTourToFile(tourNearest, numOfCoords + 1, outFileName_Nearest) == NULL){
+		printf("Error writing Nearest Addition Tour\n");
+	}
 
-    // 获取完整路径并输出
-    int *tourCheapest = getTour_CheapestInsertion(dMatrix, numOfCoords, bestStartPointCheapest);
-    int *tourFarthest = getTour_FarthestInsertion(dMatrix, numOfCoords, bestStartPointFarthest);
-    int *tourNearest = getTour_NearestAddition(dMatrix, numOfCoords, bestStartPointNearest);
+	// 释放分配的内存
+	for(int i = 0; i < numOfCoords; i++){
+		free(dMatrix[i]);
+	}
+	free(dMatrix);
+	free(tourCheapest);
+	free(tourFarthest);
+	free(tourNearest);
 
-    // 写入文件
-    writeTourToFile(tourCheapest, numOfCoords + 1, outFileName_Cheapest);
-    writeTourToFile(tourFarthest, numOfCoords + 1, outFileName_Farthest);
-    writeTourToFile(tourNearest, numOfCoords + 1, outFileName_Nearest);
-
-    // 清理资源
-    for (int i = 0; i < numOfCoords; i++) {
-        free(dMatrix[i]);
-    }
-    free(dMatrix);
-    free(tourCheapest);
-    free(tourFarthest);
-    free(tourNearest);
-
-    return 0;
+	return 0;
 }
-
 // int *findCheapestTour(double **dMatrix, int numOfCoords){
 //     int *minTour = (int *)malloc((numOfCoords + 1) * sizeof(int)); 
 //     double minDistance = __DBL_MAX__;
