@@ -36,57 +36,53 @@ double getDistance_FarthestInsertion(double **dMatrix, int numOfCoords, int poin
     double *maxCosts = (double *)malloc(numThreads * sizeof(double));
     int *nextNodes = (int *)malloc(numThreads * sizeof(int));
 
-    while(numVisited < numOfCoords) {
-        int globalFarthestNextNode = -1;
-        double globalMaxDistance = -1;
+    while (numVisited < numOfCoords) {
+        int farthestNode = -1;
+        double farthestNodeDistance = -1;
 
-        // 找到最远的未访问节点
+        // Step 1: Find the farthest unvisited node
         #pragma omp parallel for
         for (int i = 0; i < numOfCoords; i++) {
             if (!visited[i]) {
-                double localMaxDistance = -1;
+                double nodeDistance = 0.0;
                 for (int j = 0; j < tourLength; j++) {
-                    double distance = dMatrix[tour[j]][i];
-                    if (distance > localMaxDistance) {
-                        localMaxDistance = distance;
-                    }
+                    nodeDistance += dMatrix[tour[j]][i];
                 }
 
                 #pragma omp critical
                 {
-                    if (localMaxDistance > globalMaxDistance) {
-                        globalMaxDistance = localMaxDistance;
-                        globalFarthestNextNode = i;
+                    if (nodeDistance > farthestNodeDistance) {
+                        farthestNodeDistance = nodeDistance;
+                        farthestNode = i;
                     }
                 }
             }
         }
 
-        // 寻找插入最远节点的最佳位置
-        double minInsertionCost = __DBL_MAX__;
-        int insertPos = -1;
+        // Step 2: Find the best insertion position for the farthest node
+        double bestInsertionCost = __DBL_MAX__;
+        int bestInsertPos = -1;
         for (int i = 0; i < tourLength - 1; i++) {
-            double cost = dMatrix[tour[i]][globalFarthestNextNode] + dMatrix[globalFarthestNextNode][tour[i + 1]] - dMatrix[tour[i]][tour[i + 1]];
-            if (cost < minInsertionCost) {
-                minInsertionCost = cost;
-                insertPos = i + 1;
+            double insertionCost = dMatrix[tour[i]][farthestNode] + dMatrix[farthestNode][tour[i + 1]] - dMatrix[tour[i]][tour[i + 1]];
+            if (insertionCost < bestInsertionCost) {
+                bestInsertionCost = insertionCost;
+                bestInsertPos = i + 1;
             }
         }
 
-        // 插入最远节点
-        for (int i = tourLength; i > insertPos; i--) {
+        // Step 3: Insert the farthest node at the best position
+        for (int i = tourLength; i > bestInsertPos; i--) {
             tour[i] = tour[i - 1];
         }
-        tour[insertPos] = globalFarthestNextNode;
-        visited[globalFarthestNextNode] = true;
-        totalDistance += minInsertionCost; // 这里应该是minInsertionCost，因为它代表了插入成本
+        tour[bestInsertPos] = farthestNode;
+        visited[farthestNode] = true;
+        totalDistance += bestInsertionCost; // Add the cost of inserting the farthest node
         tourLength++;
         numVisited++;
     }
 
-    free(maxCosts);
-    free(nextNodes);
     free(visited);
+    free(tour);
 
     // TourResult result;
     // result.tour = tour;
@@ -119,58 +115,53 @@ int *getTour_FarthestInsertion(double **dMatrix, int numOfCoords, int pointOfSta
     double *maxCosts = (double *)malloc(numThreads * sizeof(double));
     int *nextNodes = (int *)malloc(numThreads * sizeof(int));
 
-    while(numVisited < numOfCoords) {
-        int globalFarthestNextNode = -1;
-        double globalMaxDistance = -1;
+    while (numVisited < numOfCoords) {
+        int farthestNode = -1;
+        double farthestNodeDistance = -1;
 
-        // 找到最远的未访问节点
+        // Step 1: Find the farthest unvisited node
         #pragma omp parallel for
         for (int i = 0; i < numOfCoords; i++) {
             if (!visited[i]) {
-                double localMaxDistance = -1;
+                double nodeDistance = 0.0;
                 for (int j = 0; j < tourLength; j++) {
-                    double distance = dMatrix[tour[j]][i];
-                    if (distance > localMaxDistance) {
-                        localMaxDistance = distance;
-                    }
+                    nodeDistance += dMatrix[tour[j]][i];
                 }
 
                 #pragma omp critical
                 {
-                    if (localMaxDistance > globalMaxDistance) {
-                        globalMaxDistance = localMaxDistance;
-                        globalFarthestNextNode = i;
+                    if (nodeDistance > farthestNodeDistance) {
+                        farthestNodeDistance = nodeDistance;
+                        farthestNode = i;
                     }
                 }
             }
         }
 
-        // 寻找插入最远节点的最佳位置
-        double minInsertionCost = __DBL_MAX__;
-        int insertPos = -1;
+        // Step 2: Find the best insertion position for the farthest node
+        double bestInsertionCost = __DBL_MAX__;
+        int bestInsertPos = -1;
         for (int i = 0; i < tourLength - 1; i++) {
-            double cost = dMatrix[tour[i]][globalFarthestNextNode] + dMatrix[globalFarthestNextNode][tour[i + 1]] - dMatrix[tour[i]][tour[i + 1]];
-            if (cost < minInsertionCost) {
-                minInsertionCost = cost;
-                insertPos = i + 1;
+            double insertionCost = dMatrix[tour[i]][farthestNode] + dMatrix[farthestNode][tour[i + 1]] - dMatrix[tour[i]][tour[i + 1]];
+            if (insertionCost < bestInsertionCost) {
+                bestInsertionCost = insertionCost;
+                bestInsertPos = i + 1;
             }
         }
 
-        // 插入最远节点
-        for (int i = tourLength; i > insertPos; i--) {
+        // Step 3: Insert the farthest node at the best position
+        for (int i = tourLength; i > bestInsertPos; i--) {
             tour[i] = tour[i - 1];
         }
-        tour[insertPos] = globalFarthestNextNode;
-        visited[globalFarthestNextNode] = true;
-        totalDistance += minInsertionCost; // 这里应该是minInsertionCost，因为它代表了插入成本
+        tour[bestInsertPos] = farthestNode;
+        visited[farthestNode] = true;
+        totalDistance += bestInsertionCost; // Add the cost of inserting the farthest node
         tourLength++;
         numVisited++;
     }
 
-
-    free(maxCosts);
-    free(nextNodes);
     free(visited);
+    free(tour);
 
     // TourResult result;
     // result.tour = tour;
