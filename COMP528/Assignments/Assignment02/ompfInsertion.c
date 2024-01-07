@@ -76,7 +76,7 @@ double getDistance_FarthestInsertion(double **dMatrix, int numOfCoords, int poin
 
         numVisited++;
     }
-
+    tour[numOfCoords] = pointOfStartEnd;
     free(visited);
 
     return totalDistance;
@@ -148,6 +148,7 @@ int *getTour_FarthestInsertion(double **dMatrix, int numOfCoords, int pointOfSta
         numVisited++;
     }
 
+    tour[numOfCoords] = pointOfStartEnd;
     free(visited);
 
     return tour;
