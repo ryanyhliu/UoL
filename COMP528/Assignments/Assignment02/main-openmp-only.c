@@ -5,10 +5,10 @@
 #include<omp.h>
 #include<string.h>
 
-typedef struct {
-    int *tour;
-    double totalDistance;
-} TourResult;
+// typedef struct {
+//     int *tour;
+//     double totalDistance;
+// } TourResult;
 
 
 

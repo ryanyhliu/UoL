@@ -7,10 +7,6 @@
 
 
 
-
-// TOMB FOR MY ORIGINAL IDEA, I THINK THIS CODE IS MORE REASONABLE THAN FINAL VERSION
-
-
 // typedef struct {
 //     int *tour;
 //     double totalDistance;
