@@ -131,36 +131,48 @@ int *getTour_FarthestInsertion(double **dMatrix, int numOfCoords, int pointOfSta
     int *nextNodes = (int *)malloc(numThreads * sizeof(int));
 
     while(numVisited < numOfCoords) {
-        double minCost = __DBL_MAX__;
-        int bestNextNode = -1;
-        int insertPos = -1;
+        double globalMinCost = __DBL_MAX__;
+        int globalBestNextNode = -1;
+        int globalInsertPos = -1;
 
-        // OpenMP并行区域
-        #pragma omp parallel for reduction(min:minCost)
-        for (int j = 0; j < numOfCoords; j++) {
-            if (!visited[j]) {
-                for (int i = 0; i < tourLength - 1; i++) {
-                    double cost = dMatrix[tour[i]][j] + dMatrix[j][tour[i + 1]] - dMatrix[tour[i]][tour[i + 1]];
-                    #pragma omp critical
-                    {
-                        if (cost < minCost) {
-                            minCost = cost;
-                            bestNextNode = j;
-                            insertPos = i + 1;
+        #pragma omp parallel 
+        {
+            double localMinCost = __DBL_MAX__;
+            int localBestNextNode = -1;
+            int localInsertPos = -1;
+
+            #pragma omp for nowait
+            for (int j = 0; j < numOfCoords; j++) {
+                if (!visited[j]) {
+                    for (int i = 0; i < tourLength - 1; i++) {
+                        double cost = dMatrix[tour[i]][j] + dMatrix[j][tour[i + 1]] - dMatrix[tour[i]][tour[i + 1]];
+                        if (cost < localMinCost) {
+                            localMinCost = cost;
+                            localBestNextNode = j;
+                            localInsertPos = i + 1;
                         }
                     }
+                }
+            }
+
+            #pragma omp critical
+            {
+                if (localMinCost < globalMinCost) {
+                    globalMinCost = localMinCost;
+                    globalBestNextNode = localBestNextNode;
+                    globalInsertPos = localInsertPos;
                 }
             }
         }
 
         // 插入操作
-        if (bestNextNode != -1) {
-            for (int i = tourLength; i >= insertPos; i--) {
+        if (globalBestNextNode != -1) {
+            for (int i = tourLength; i >= globalInsertPos; i--) {
                 tour[i] = tour[i - 1];
             }
-            tour[insertPos] = bestNextNode;
-            visited[bestNextNode] = true;
-            totalDistance += minCost;
+            tour[globalInsertPos] = globalBestNextNode;
+            visited[globalBestNextNode] = true;
+            totalDistance += globalMinCost;
             tourLength++;
             numVisited++;
         }
