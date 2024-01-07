@@ -342,7 +342,7 @@ int main(int argc, char *argv[])
             localBestStartPointFarthest = i;
         }
 
-        double distanceNearest = getDistance_NearestInsertion(dMatrix, numOfCoords, i);
+        double distanceNearest = getDistance_NearestAddition(dMatrix, numOfCoords, i);
         if (distanceNearest < localMinDistanceNearest)
         {
             localMinDistanceNearest = distanceNearest;
@@ -368,7 +368,7 @@ int main(int argc, char *argv[])
     {
         int *tourCheapest = getTour_CheapestInsertion(dMatrix, numOfCoords, globalBestStartPointCheapest);
         int *tourFarthest = getTour_FarthestInsertion(dMatrix, numOfCoords, globalBestStartPointFarthest);
-        int *tourNearest = getTour_NearestInsertion(dMatrix, numOfCoords, globalBestStartPointNearest);
+        int *tourNearest = getTour_NearestAddition(dMatrix, numOfCoords, globalBestStartPointNearest);
 
         // ... 将tourCheapest, tourFarthest, tourNearest写入相应的文件 ...
         // Write the best tours to their respective files
