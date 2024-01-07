@@ -15,159 +15,142 @@
 double getDistance_FarthestInsertion(double **dMatrix, int numOfCoords, int pointOfStartEnd)
 {
     double tolerance = 1e-9;
-
     double totalDistance = 0.0;
-    // TourResult result;
-    // result.tour = (int *)malloc((numOfCoords + 1) * sizeof(int)); 
-    // result.totalDistance = 0.0;
 
-	//Setting up variables
-	int i, j, k;
-	int nextNode, insertPos;
+    int i, nextNode, insertPos;
+    int *tour = (int *)malloc((1 + numOfCoords) * sizeof(int));
+    bool *visited = (bool *)malloc(numOfCoords * sizeof(bool));
 
-	//Memory allocation for the tour and visited arrays. Tour is numOfCoords + 1 for returning to origin
-	int *tour = (int *)malloc((1 + numOfCoords) * sizeof(int));
-	bool *visited = (bool *)malloc(numOfCoords * sizeof(bool));
+    for(i = 0; i < numOfCoords; i++){
+        tour[i] = -1;
+        visited[i] = false;
+    }
 
-	//Initialising tour to empty
-	for(i = 0; i < numOfCoords; i++){
-		tour[i] = -1;
-	}
+    tour[0] = pointOfStartEnd;
+    visited[pointOfStartEnd] = true;
+    
+    int numVisited = 1;
+    int tourLength = 1;
+    
+    while(numVisited < numOfCoords) {
+        double maxCost = 0.0;
+        double minCost = __DBL_MAX__;
+        double thisDistance = 0.0;
+        int localNextNode = -1;
 
-	//Tour always starts with 0. 0 is visited
-	tour[0] = pointOfStartEnd;
-	tour[1] = pointOfStartEnd;
-	visited[pointOfStartEnd] = true;
-	
-	//Hard coding because I'm lazy
-	int numVisited = 1;
-	int tourLength = 2;
-	
-	/*While there are still some unvisited vertices*/
-	while(numVisited < numOfCoords){
-		double maxCost = 0;
-		double minCost = __DBL_MAX__;
-		double thisDistance = 0.0;
+        // 寻找距离任一巡游点最远的未访问节点
+        #pragma omp parallel for private(i) reduction(max:maxCost) shared(dMatrix, tour, visited)
+        for(i = 0; i < numOfCoords; i++) {
+            if(!visited[i]) {
+                for(int j = 0; j < tourLength; j++) {
+                    double cost = dMatrix[tour[j]][i];
+                    if(cost > maxCost) {
+                        maxCost = cost;
+                        localNextNode = i;
+                    }
+                }
+            }
+        }
 
-		/*Find a vertex that is furthest from any vertex in the tour*/
-		for(i = 0; i < tourLength - 1; i++){
-			for(j = 0; j < numOfCoords; j++){
-				if(!visited[j]){
-					double cost = dMatrix[tour[i]][j];
-					if(cost > maxCost){
-						maxCost = cost;
-						nextNode = j;
-						
-					}
-				}
-			}
-		}
-		
-		/*Add that farthest vertex into a position in the tour such that the increased cost is minimum*/
-		for(k = 0; k < tourLength - 1; k ++){
-			double cost = dMatrix[tour[k]][nextNode] + dMatrix[nextNode][tour[k + 1]] - dMatrix[tour[k]][tour[k + 1]];
-			if(cost < minCost - tolerance){
-				minCost = cost;
-				insertPos = k + 1;
-				thisDistance = cost; // 增加的路径长度
-			}			
-		}
-		
-		for(i = numOfCoords; i > insertPos; i--){
-			tour[i] = tour[i - 1];
-		}
+        nextNode = localNextNode;
 
-		tour[insertPos] = nextNode;
-		visited[nextNode] = true;
-		tourLength++;
-		totalDistance += thisDistance;
+        // 寻找将远点插入路径中的最佳位置
+        #pragma omp parallel for private(i) reduction(min:minCost) shared(dMatrix, tour)
+        for(i = 0; i < tourLength; i++) {
+            double cost = dMatrix[tour[i]][nextNode] + dMatrix[nextNode][tour[(i + 1) % tourLength]] - dMatrix[tour[i]][tour[(i + 1) % tourLength]];
+            if(cost < minCost - tolerance) {
+                minCost = cost;
+                insertPos = i + 1;
+                thisDistance = cost;
+            }
+        }
 
-		numVisited++;
-	}
+        for(i = numOfCoords; i > insertPos; i--) {
+            tour[i] = tour[i - 1];
+        }
 
-	// result.tour = tour;
-	free(visited);
-    free(tour);
+        tour[insertPos] = nextNode;
+        visited[nextNode] = true;
+        tourLength++;
+        totalDistance += thisDistance;
 
-	return totalDistance;
+        numVisited++;
+    }
+
+    free(visited);
+
+    return totalDistance;
 }
 
-int *getTour_FarthestInsertion(double **dMatrix, int numOfCoords, int pointOfStartEnd)
-{
+
+
+int *getTour_FarthestInsertion(double **dMatrix, int numOfCoords, int pointOfStartEnd) {
     double tolerance = 1e-9;
     double totalDistance = 0.0;
-    // TourResult result;
-    // result.tour = (int *)malloc((numOfCoords + 1) * sizeof(int)); 
-    // result.totalDistance = 0.0;
 
-	//Setting up variables
-	int i, j, k;
-	int nextNode, insertPos;
+    int i, nextNode, insertPos;
+    int *tour = (int *)malloc((1 + numOfCoords) * sizeof(int));
+    bool *visited = (bool *)malloc(numOfCoords * sizeof(bool));
 
-	//Memory allocation for the tour and visited arrays. Tour is numOfCoords + 1 for returning to origin
-	int *tour = (int *)malloc((1 + numOfCoords) * sizeof(int));
-	bool *visited = (bool *)malloc(numOfCoords * sizeof(bool));
+    for(i = 0; i < numOfCoords; i++){
+        tour[i] = -1;
+        visited[i] = false;
+    }
 
-	//Initialising tour to empty
-	for(i = 0; i < numOfCoords; i++){
-		tour[i] = -1;
-	}
+    tour[0] = pointOfStartEnd;
+    visited[pointOfStartEnd] = true;
+    
+    int numVisited = 1;
+    int tourLength = 1;
+    
+    while(numVisited < numOfCoords) {
+        double maxCost = 0.0;
+        double minCost = __DBL_MAX__;
+        double thisDistance = 0.0;
+        int localNextNode = -1;
 
-	//Tour always starts with 0. 0 is visited
-	tour[0] = pointOfStartEnd;
-	tour[1] = pointOfStartEnd;
-	visited[pointOfStartEnd] = true;
-	
-	//Hard coding because I'm lazy
-	int numVisited = 1;
-	int tourLength = 2;
-	
-	/*While there are still some unvisited vertices*/
-	while(numVisited < numOfCoords){
-		double maxCost = 0;
-		double minCost = __DBL_MAX__;
-		double thisDistance = 0.0;
+        // 寻找距离任一巡游点最远的未访问节点
+        #pragma omp parallel for private(i) reduction(max:maxCost) shared(dMatrix, tour, visited)
+        for(i = 0; i < numOfCoords; i++) {
+            if(!visited[i]) {
+                for(int j = 0; j < tourLength; j++) {
+                    double cost = dMatrix[tour[j]][i];
+                    if(cost > maxCost) {
+                        maxCost = cost;
+                        localNextNode = i;
+                    }
+                }
+            }
+        }
 
-		/*Find a vertex that is furthest from any vertex in the tour*/
-		for(i = 0; i < tourLength - 1; i++){
-			for(j = 0; j < numOfCoords; j++){
-				if(!visited[j]){
-					double cost = dMatrix[tour[i]][j];
-					if(cost > maxCost){
-						maxCost = cost;
-						nextNode = j;
-						
-					}
-				}
-			}
-		}
-		
-		/*Add that farthest vertex into a position in the tour such that the increased cost is minimum*/
-		for(k = 0; k < tourLength - 1; k ++){
-			double cost = dMatrix[tour[k]][nextNode] + dMatrix[nextNode][tour[k + 1]] - dMatrix[tour[k]][tour[k + 1]];
-			if(cost < minCost - tolerance){
-				minCost = cost;
-				insertPos = k + 1;
-				thisDistance = cost; // 增加的路径长度
-			}			
-		}
-		
-		for(i = numOfCoords; i > insertPos; i--){
-			tour[i] = tour[i - 1];
-		}
+        nextNode = localNextNode;
 
-		tour[insertPos] = nextNode;
-		visited[nextNode] = true;
-		tourLength++;
-		totalDistance += thisDistance;
+        // 寻找将远点插入路径中的最佳位置
+        #pragma omp parallel for private(i) reduction(min:minCost) shared(dMatrix, tour)
+        for(i = 0; i < tourLength; i++) {
+            double cost = dMatrix[tour[i]][nextNode] + dMatrix[nextNode][tour[(i + 1) % tourLength]] - dMatrix[tour[i]][tour[(i + 1) % tourLength]];
+            if(cost < minCost - tolerance) {
+                minCost = cost;
+                insertPos = i + 1;
+                thisDistance = cost;
+            }
+        }
 
-		numVisited++;
-	}
+        for(i = numOfCoords; i > insertPos; i--) {
+            tour[i] = tour[i - 1];
+        }
 
-	// result.tour = tour;
-	free(visited);
+        tour[insertPos] = nextNode;
+        visited[nextNode] = true;
+        tourLength++;
+        totalDistance += thisDistance;
 
-	return tour;
+        numVisited++;
+    }
+
+    free(visited);
+
+    return tour;
 }
 
 // double getDistance_FarthestInsertion(double **dMatrix, int numOfCoords, int pointOfStartEnd)
@@ -230,7 +213,7 @@ int *getTour_FarthestInsertion(double **dMatrix, int numOfCoords, int pointOfSta
 //         {
 
 //             // Point 1: Thread only accesses its memory location in the shared array.
-//             threadMinCosts[threadID * 8] = ______DBL_MAX______;
+//             threadMinCosts[threadID * 8] = ________DBL_MAX________;
 //             threadMaxCosts[threadID * 8] = 0;
 //             threadNextNode[threadID * 8] = -1;
 //             threadInsertPos[threadID * 8] = -1;
@@ -285,7 +268,7 @@ int *getTour_FarthestInsertion(double **dMatrix, int numOfCoords, int pointOfSta
 // #pragma omp single
 //             {
 //                 int bestInsertPos = -1;
-//                 double minCost = ______DBL_MAX______;
+//                 double minCost = ________DBL_MAX________;
 
 //                 // Single thread loops through every thread's answer and chooses the cheapest one.
 //                 for (int i = 0; i < numThreads; i++)
@@ -384,7 +367,7 @@ int *getTour_FarthestInsertion(double **dMatrix, int numOfCoords, int pointOfSta
 //         {
 
 //             // Point 1: Thread only accesses its memory location in the shared array.
-//             threadMinCosts[threadID * 8] = ______DBL_MAX______;
+//             threadMinCosts[threadID * 8] = ________DBL_MAX________;
 //             threadMaxCosts[threadID * 8] = 0;
 //             threadNextNode[threadID * 8] = -1;
 //             threadInsertPos[threadID * 8] = -1;
@@ -439,7 +422,7 @@ int *getTour_FarthestInsertion(double **dMatrix, int numOfCoords, int pointOfSta
 // #pragma omp single
 //             {
 //                 int bestInsertPos = -1;
-//                 double minCost = ______DBL_MAX______;
+//                 double minCost = ________DBL_MAX________;
 
 //                 // Single thread loops through every thread's answer and chooses the cheapest one.
 //                 for (int i = 0; i < numThreads; i++)
