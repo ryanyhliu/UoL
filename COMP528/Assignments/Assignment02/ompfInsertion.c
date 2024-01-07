@@ -55,7 +55,7 @@ double getDistance_FarthestInsertion(double **dMatrix, int numOfCoords) {
         }
 
         // Find the position where the farthest node will be inserted
-        double minInsertionCost = DBL_MAX;
+        double minInsertionCost = __DBL_MAX__;
         int insertPosition = -1;
         for (int i = 0; i < tourLength; ++i) {
             int nextIndex = (i + 1) % tourLength;
@@ -147,7 +147,7 @@ int *getTour_FarthestInsertion(double **dMatrix, int numOfCoords) {
         }
 
         // Find the best insertion position for the farthest node
-        double minInsertionCost = DBL_MAX;
+        double minInsertionCost = __DBL_MAX__;
         int bestInsertPos = -1;
         for (int i = 0; i < tourLength; ++i) {
             int nextIndex = (i + 1) % tourLength;
