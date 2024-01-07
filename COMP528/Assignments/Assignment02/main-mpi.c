@@ -361,7 +361,12 @@ int main(int argc, char *argv[]) {
     double localMinDistanceFarthest = __DBL_MAX__;
     int localBestStartPointFarthest = -1;
 
+
+    bool hasAssignedTask = false;
+
     for (int i = world_rank; i < numOfCoords; i += world_size) {
+        hasAssignedTask = true;
+        // ... (计算最佳起点的循环) ...
         double distanceCheapest = getDistance_CheapestInsertion(dMatrix, numOfCoords, i);
         if (distanceCheapest < localMinCheapest.distance) {
             localMinCheapest.distance = distanceCheapest;
@@ -381,6 +386,14 @@ int main(int argc, char *argv[]) {
             localBestStartPointFarthest = i;
         }
     }
+
+    if (!hasAssignedTask) {
+        localMinCheapest.distance = __DBL_MAX__;
+        localMinNearest.distance = __DBL_MAX__;
+        localMinDistanceFarthest = __DBL_MAX__;
+        localBestStartPointFarthest = -1;
+    }
+
 
     // 汇总全局最佳起点
     DistanceIndex globalMinCheapest, globalMinNearest;
@@ -415,7 +428,14 @@ int main(int argc, char *argv[]) {
     }
 
     // 清理和MPI终止
+    for (int i = 0; i < numOfCoords; i++) {
+        free(coords[i]);
+    }
     free(coords);
+
+    for (int i = 0; i < numOfCoords; i++) {
+        free(dMatrix[i]);
+    }
     free(dMatrix);
 
     MPI_Finalize();
