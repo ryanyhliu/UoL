@@ -36,14 +36,20 @@ double getDistance_FarthestInsertion(double **dMatrix, int numOfCoords, int poin
         double maxCost = 0;
         int nextNode = -1;
 
-        // 寻找最远的未访问节点
+        // 使用 OpenMP 寻找最远的未访问节点
+        #pragma omp parallel for reduction(max:maxCost)
         for (int i = 0; i < numOfCoords; i++) {
             if (!visited[i]) {
                 for (int j = 0; j < tourLength; j++) {
                     double cost = dMatrix[tour[j]][i];
                     if (cost > maxCost) {
-                        maxCost = cost;
-                        nextNode = i;
+                        #pragma omp critical
+                        {
+                            if (cost > maxCost) {
+                                maxCost = cost;
+                                nextNode = i;
+                            }
+                        }
                     }
                 }
             }
@@ -52,13 +58,19 @@ double getDistance_FarthestInsertion(double **dMatrix, int numOfCoords, int poin
         double minCost = __DBL_MAX__;
         int insertPos = -1;
 
-        // 寻找插入最远节点的最佳位置
+        // 使用 OpenMP 寻找插入最远节点的最佳位置
+        #pragma omp parallel for reduction(min:minCost)
         for (int i = 0; i < tourLength; i++) {
             int k = (i + 1) % tourLength;
             double cost = dMatrix[tour[i]][nextNode] + dMatrix[nextNode][tour[k]] - dMatrix[tour[i]][tour[k]];
             if (cost < minCost - tolerance) {
-                minCost = cost;
-                insertPos = i + 1;
+                #pragma omp critical
+                {
+                    if (cost < minCost - tolerance) {
+                        minCost = cost;
+                        insertPos = i + 1;
+                    }
+                }
             }
         }
 
@@ -76,6 +88,8 @@ double getDistance_FarthestInsertion(double **dMatrix, int numOfCoords, int poin
     tour[numOfCoords] = pointOfStartEnd;
 
     free(visited);
+    free(tour);
+
     return totalDistance;
 }
 
@@ -103,14 +117,20 @@ int *getTour_FarthestInsertion(double **dMatrix, int numOfCoords, int pointOfSta
         double maxCost = 0;
         int nextNode = -1;
 
-        // 寻找最远的未访问节点
+        // 使用 OpenMP 寻找最远的未访问节点
+        #pragma omp parallel for reduction(max:maxCost)
         for (int i = 0; i < numOfCoords; i++) {
             if (!visited[i]) {
                 for (int j = 0; j < tourLength; j++) {
                     double cost = dMatrix[tour[j]][i];
                     if (cost > maxCost) {
-                        maxCost = cost;
-                        nextNode = i;
+                        #pragma omp critical
+                        {
+                            if (cost > maxCost) {
+                                maxCost = cost;
+                                nextNode = i;
+                            }
+                        }
                     }
                 }
             }
@@ -119,13 +139,19 @@ int *getTour_FarthestInsertion(double **dMatrix, int numOfCoords, int pointOfSta
         double minCost = __DBL_MAX__;
         int insertPos = -1;
 
-        // 寻找插入最远节点的最佳位置
+        // 使用 OpenMP 寻找插入最远节点的最佳位置
+        #pragma omp parallel for reduction(min:minCost)
         for (int i = 0; i < tourLength; i++) {
             int k = (i + 1) % tourLength;
             double cost = dMatrix[tour[i]][nextNode] + dMatrix[nextNode][tour[k]] - dMatrix[tour[i]][tour[k]];
             if (cost < minCost - tolerance) {
-                minCost = cost;
-                insertPos = i + 1;
+                #pragma omp critical
+                {
+                    if (cost < minCost - tolerance) {
+                        minCost = cost;
+                        insertPos = i + 1;
+                    }
+                }
             }
         }
 
