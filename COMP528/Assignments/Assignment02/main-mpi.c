@@ -350,6 +350,8 @@ int main(int argc, char *argv[]) {
     strcpy(outFileName_Farthest, argv[3]);
     strcpy(outFileName_Nearest, argv[4]);
 
+    double tolerance = 1e-9;
+
     int numOfCoords = readNumOfCoords(filename);
     double **coords = readCoords(filename, numOfCoords);
     double **dMatrix = createDistanceMatrix(coords, numOfCoords);
@@ -371,20 +373,20 @@ int main(int argc, char *argv[]) {
 
         // ... (计算最佳起点的循环) ...
         double distanceCheapest = getDistance_CheapestInsertion(dMatrix, numOfCoords, i);
-        if (distanceCheapest < localMinCheapest.distance) {
+        if (distanceCheapest < localMinCheapest.distance - tolerance) {
             localMinCheapest.distance = distanceCheapest;
             localMinCheapest.index = i;
         }
 
         double distanceNearest = getDistance_NearestAddition(dMatrix, numOfCoords, i);
-        if (distanceNearest < localMinNearest.distance) {
+        if (distanceNearest < localMinNearest.distance - tolerance) {
             localMinNearest.distance = distanceNearest;
             localMinNearest.index = i;
         }
 
         // 保持原有FarthestInsertion逻辑
         double distanceFarthest = getDistance_FarthestInsertion(dMatrix, numOfCoords, i);
-        if (distanceFarthest < localMinDistanceFarthest) {
+        if (distanceFarthest < localMinDistanceFarthest - tolerance) {
             localMinDistanceFarthest = distanceFarthest;
             localBestStartPointFarthest = i;
         }
@@ -402,19 +404,19 @@ int main(int argc, char *argv[]) {
 
             // 再次执行相同的计算，对于这些剩余的坐标
             double distanceCheapest = getDistance_CheapestInsertion(dMatrix, numOfCoords, i);
-            if (distanceCheapest < localMinCheapest.distance) {
+            if (distanceCheapest < localMinCheapest.distance - tolerance) {
                 localMinCheapest.distance = distanceCheapest;
                 localMinCheapest.index = i;
             }
 
             double distanceNearest = getDistance_NearestAddition(dMatrix, numOfCoords, i);
-            if (distanceNearest < localMinNearest.distance) {
+            if (distanceNearest < localMinNearest.distance - tolerance) {
                 localMinNearest.distance = distanceNearest;
                 localMinNearest.index = i;
             }
 
             double distanceFarthest = getDistance_FarthestInsertion(dMatrix, numOfCoords, i);
-            if (distanceFarthest < localMinDistanceFarthest) {
+            if (distanceFarthest < localMinDistanceFarthest - tolerance) {
                 localMinDistanceFarthest = distanceFarthest;
                 localBestStartPointFarthest = i;
             }
