@@ -14,6 +14,8 @@
 
 double getDistance_FarthestInsertion(double **dMatrix, int numOfCoords, int pointOfStartEnd)
 {
+    double tolerance = 1e-9;
+
     double totalDistance = 0.0;
     // TourResult result;
     // result.tour = (int *)malloc((numOfCoords + 1) * sizeof(int)); 
@@ -64,7 +66,7 @@ double getDistance_FarthestInsertion(double **dMatrix, int numOfCoords, int poin
 		/*Add that farthest vertex into a position in the tour such that the increased cost is minimum*/
 		for(k = 0; k < tourLength - 1; k ++){
 			double cost = dMatrix[tour[k]][nextNode] + dMatrix[nextNode][tour[k + 1]] - dMatrix[tour[k]][tour[k + 1]];
-			if(cost < minCost){
+			if(cost < minCost - tolerance){
 				minCost = cost;
 				insertPos = k + 1;
 				thisDistance = cost; // 增加的路径长度
@@ -92,6 +94,7 @@ double getDistance_FarthestInsertion(double **dMatrix, int numOfCoords, int poin
 
 int *getTour_FarthestInsertion(double **dMatrix, int numOfCoords, int pointOfStartEnd)
 {
+    double tolerance = 1e-9;
     double totalDistance = 0.0;
     // TourResult result;
     // result.tour = (int *)malloc((numOfCoords + 1) * sizeof(int)); 
@@ -142,7 +145,7 @@ int *getTour_FarthestInsertion(double **dMatrix, int numOfCoords, int pointOfSta
 		/*Add that farthest vertex into a position in the tour such that the increased cost is minimum*/
 		for(k = 0; k < tourLength - 1; k ++){
 			double cost = dMatrix[tour[k]][nextNode] + dMatrix[nextNode][tour[k + 1]] - dMatrix[tour[k]][tour[k + 1]];
-			if(cost < minCost){
+			if(cost < minCost - tolerance){
 				minCost = cost;
 				insertPos = k + 1;
 				thisDistance = cost; // 增加的路径长度
