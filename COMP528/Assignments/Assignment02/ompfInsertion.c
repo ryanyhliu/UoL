@@ -10,256 +10,182 @@
 //     double totalDistance;
 // } TourResult;
 
-
-double getDistance_FarthestInsertion(double **dMatrix, int numOfCoords, int pointOfStartEnd) {
+double getDistance_FarthestInsertion(double **dMatrix, int numOfCoords, int pointOfStartEnd)
+{
     double totalDistance = 0.0;
 
-    // 设置变量
-    int nextNode, insertPos;
+    // 为路径和访问状态分配内存
+    int *path = (int *)malloc((numOfCoords + 1) * sizeof(int));
+    path[0] = pointOfStartEnd;
+    int pathLen = 1;
 
-    // 为巡回路径和访问状态数组分配内存
-    int *tour = (int *)malloc((1 + numOfCoords) * sizeof(int));
-    bool *visited = (bool *)calloc(numOfCoords, sizeof(bool));
+    int *visited = (int *)calloc(numOfCoords, sizeof(int));
+    visited[pointOfStartEnd] = 1;
 
-    // 初始化巡回路径为-1
-    for (int i = 0; i < numOfCoords; i++) {
-        tour[i] = -1;
-    }
-
-    // 巡回路径始终以起点开始
-    tour[0] = pointOfStartEnd;
-    visited[pointOfStartEnd] = true;
-
-    int numVisited = 1;
-    int tourLength = 1;
-
-    // 获取最大线程数
-    int numThreads = omp_get_max_threads();
-
-    // 为每个线程设置最小成本、最远节点和插入位置数组
-    double *threadMinCosts = (double *)malloc(numThreads * 8 * sizeof(double));
-    double *threadMaxCosts = (double *)malloc(numThreads * 8 * sizeof(double));
-    int *threadNextNode = (int *)malloc(numThreads * 8 * sizeof(int));
-    int *threadInsertPos = (int *)malloc(numThreads * 8 * sizeof(int));
-
-    int bestNextNode = -1;
-
-    // 开始并行区域
-    #pragma omp parallel
+    while (pathLen < numOfCoords)
     {
-        int threadID = omp_get_thread_num();
+        int allMaxIndex = -1;
+        double allMax = -1;
+        int allInsertIndex = -1;
+        double allMin = __DBL_MAX__;
 
-        while (numVisited < numOfCoords) {
-            threadMinCosts[threadID * 8] = __DBL_MAX__;
-            threadMaxCosts[threadID * 8] = 0;
-            threadNextNode[threadID * 8] = -1;
-            threadInsertPos[threadID * 8] = -1;
+#pragma omp parallel
+        {
+            int currentMaxIndex = -1;
+            double currentMax = -1;
 
-            // 寻找最远未访问顶点
-            #pragma omp for collapse(2)
-            for (int i = 0; i < numOfCoords; i++) {
-                for (int j = 0; j < numOfCoords; j++) {
-                    if (!visited[j]) {
-                        double cost = dMatrix[i][j];
-                        if (cost > threadMaxCosts[threadID * 8]) {
-                            threadMaxCosts[threadID * 8] = cost;
-                            threadNextNode[threadID * 8] = j;
+#pragma omp for nowait
+            for (int i = 0; i < numOfCoords; i++)
+            {
+                if (!visited[i])
+                { // 未使用的点
+                    for (int j = 0; j < pathLen; j++)
+                    {
+                        double currentDist = dMatrix[i][path[j]];
+                        if (currentDist > currentMax)
+                        {
+                            currentMaxIndex = i;
+                            currentMax = currentDist;
                         }
                     }
                 }
             }
 
-            // 单线程选择最远节点
-            #pragma omp single
+#pragma omp critical
             {
-                double maxCost = 0;
-                for (int i = 0; i < numThreads; i++) {
-                    if (threadMaxCosts[i * 8] > maxCost) {
-                        maxCost = threadMaxCosts[i * 8];
-                        bestNextNode = threadNextNode[i * 8];
-                    }
+                if (currentMax > allMax)
+                {
+                    allMaxIndex = currentMaxIndex;
+                    allMax = currentMax;
                 }
-            }
-
-            // 为最远节点寻找最佳插入位置
-            #pragma omp for
-            for (int k = 0; k < tourLength; k++) {
-                double cost = dMatrix[tour[k]][bestNextNode] + dMatrix[bestNextNode][tour[(k + 1) % tourLength]] - dMatrix[tour[k]][tour[(k + 1) % tourLength]];
-                if (cost < threadMinCosts[threadID * 8]) {
-                    threadMinCosts[threadID * 8] = cost;
-                    threadInsertPos[threadID * 8] = k + 1;
-                }
-            }
-
-            // 单线程插入最佳位置
-            #pragma omp single
-            {
-                double minCost = __DBL_MAX__;
-                int bestInsertPos = -1;
-                for (int i = 0; i < numThreads; i++) {
-                    if (threadMinCosts[i * 8] < minCost) {
-                        minCost = threadMinCosts[i * 8];
-                        bestInsertPos = threadInsertPos[i * 8];
-                    }
-                }
-
-                // 插入最远节点
-                for (int i = tourLength; i >= bestInsertPos; i--) {
-                    tour[i] = tour[i - 1];
-                }
-                tour[bestInsertPos] = bestNextNode;
-                visited[bestNextNode] = true;
-
-                tourLength++;
-                numVisited++;
-                totalDistance += minCost;
             }
         }
+
+        for (int i = 0; i < pathLen; i++)
+        {
+            int k = (i + 1) % pathLen;
+            double tempDist = dMatrix[path[i]][allMaxIndex] + dMatrix[allMaxIndex][path[k]] - dMatrix[path[i]][path[k]];
+            if (tempDist < allMin)
+            {
+                allMin = tempDist;
+                allInsertIndex = i + 1;
+            }
+        }
+
+        for (int i = pathLen; i >= allInsertIndex; i--)
+        {
+            path[i] = path[i - 1];
+        }
+        visited[allMaxIndex] = 1;
+        path[allInsertIndex] = allMaxIndex;
+
+        pathLen++;
+        totalDistance += allMin;
     }
 
-    // 清理内存
+    // 将起始点添加到路径末尾，形成闭环
+    path[numOfCoords] = path[0];
+
+    // 计算并返回总距离
+    for (int i = 0; i < numOfCoords; i++)
+    {
+        totalDistance += dMatrix[path[i]][path[i + 1]];
+    }
+
     free(visited);
-    free(threadMinCosts);
-    free(threadNextNode);
-    free(threadInsertPos);
-    free(threadMaxCosts);
-    free(tour);
+    free(path);
 
     return totalDistance;
 }
 
-int *getTour_FarthestInsertion(double **dMatrix, int numOfCoords, int pointOfStartEnd) {
+int *getTour_FarthestInsertion(double **dMatrix, int numOfCoords, int pointOfStartEnd)
+{
+
     double totalDistance = 0.0;
 
-    // 设置变量
-    int nextNode, insertPos;
+    // 为路径和访问状态分配内存
+    int *path = (int *)malloc((numOfCoords + 1) * sizeof(int));
+    path[0] = pointOfStartEnd;
+    int pathLen = 1;
 
-    // 为巡回路径和访问状态数组分配内存
-    int *tour = (int *)malloc((1 + numOfCoords) * sizeof(int));
-    bool *visited = (bool *)calloc(numOfCoords, sizeof(bool));
+    int *visited = (int *)calloc(numOfCoords, sizeof(int));
+    visited[pointOfStartEnd] = 1;
 
-    // 初始化巡回路径为-1
-    for (int i = 0; i < numOfCoords; i++) {
-        tour[i] = -1;
-    }
-
-    // 巡回路径始终以起点开始
-    tour[0] = pointOfStartEnd;
-    visited[pointOfStartEnd] = true;
-
-    int numVisited = 1;
-    int tourLength = 1;
-
-    // 获取最大线程数
-    int numThreads = omp_get_max_threads();
-
-    // 为每个线程设置最小成本、最远节点和插入位置数组
-    double *threadMinCosts = (double *)malloc(numThreads * 8 * sizeof(double));
-    double *threadMaxCosts = (double *)malloc(numThreads * 8 * sizeof(double));
-    int *threadNextNode = (int *)malloc(numThreads * 8 * sizeof(int));
-    int *threadInsertPos = (int *)malloc(numThreads * 8 * sizeof(int));
-
-    int bestNextNode = -1;
-
-    // 开始并行区域
-    #pragma omp parallel
+    while (pathLen < numOfCoords)
     {
-        int threadID = omp_get_thread_num();
+        int allMaxIndex = -1;
+        double allMax = -1;
+        int allInsertIndex = -1;
+        double allMin = __DBL_MAX__;
 
-        while (numVisited < numOfCoords) {
-            threadMinCosts[threadID * 8] = __DBL_MAX__;
-            threadMaxCosts[threadID * 8] = 0;
-            threadNextNode[threadID * 8] = -1;
-            threadInsertPos[threadID * 8] = -1;
+#pragma omp parallel
+        {
+            int currentMaxIndex = -1;
+            double currentMax = -1;
 
-            // 寻找最远未访问顶点
-            #pragma omp for collapse(2)
-            for (int i = 0; i < numOfCoords; i++) {
-                for (int j = 0; j < numOfCoords; j++) {
-                    if (!visited[j]) {
-                        double cost = dMatrix[i][j];
-                        if (cost > threadMaxCosts[threadID * 8]) {
-                            threadMaxCosts[threadID * 8] = cost;
-                            threadNextNode[threadID * 8] = j;
+#pragma omp for nowait
+            for (int i = 0; i < numOfCoords; i++)
+            {
+                if (!visited[i])
+                { // 未使用的点
+                    for (int j = 0; j < pathLen; j++)
+                    {
+                        double currentDist = dMatrix[i][path[j]];
+                        if (currentDist > currentMax)
+                        {
+                            currentMaxIndex = i;
+                            currentMax = currentDist;
                         }
                     }
                 }
             }
 
-            // 单线程选择最远节点
-            #pragma omp single
+#pragma omp critical
             {
-                double maxCost = 0;
-                for (int i = 0; i < numThreads; i++) {
-                    if (threadMaxCosts[i * 8] > maxCost) {
-                        maxCost = threadMaxCosts[i * 8];
-                        bestNextNode = threadNextNode[i * 8];
-                    }
+                if (currentMax > allMax)
+                {
+                    allMaxIndex = currentMaxIndex;
+                    allMax = currentMax;
                 }
-            }
-
-            // 为最远节点寻找最佳插入位置
-            #pragma omp for
-            for (int k = 0; k < tourLength; k++) {
-                double cost = dMatrix[tour[k]][bestNextNode] + dMatrix[bestNextNode][tour[(k + 1) % tourLength]] - dMatrix[tour[k]][tour[(k + 1) % tourLength]];
-                if (cost < threadMinCosts[threadID * 8]) {
-                    threadMinCosts[threadID * 8] = cost;
-                    threadInsertPos[threadID * 8] = k + 1;
-                }
-            }
-
-            // 单线程插入最佳位置
-            #pragma omp single
-            {
-                double minCost = __DBL_MAX__;
-                int bestInsertPos = -1;
-                for (int i = 0; i < numThreads; i++) {
-                    if (threadMinCosts[i * 8] < minCost) {
-                        minCost = threadMinCosts[i * 8];
-                        bestInsertPos = threadInsertPos[i * 8];
-                    }
-                }
-
-                // 插入最远节点
-                for (int i = tourLength; i >= bestInsertPos; i--) {
-                    tour[i] = tour[i - 1];
-                }
-                tour[bestInsertPos] = bestNextNode;
-                visited[bestNextNode] = true;
-
-                tourLength++;
-                numVisited++;
-                totalDistance += minCost;
             }
         }
+
+        for (int i = 0; i < pathLen; i++)
+        {
+            int k = (i + 1) % pathLen;
+            double tempDist = dMatrix[path[i]][allMaxIndex] + dMatrix[allMaxIndex][path[k]] - dMatrix[path[i]][path[k]];
+            if (tempDist < allMin)
+            {
+                allMin = tempDist;
+                allInsertIndex = i + 1;
+            }
+        }
+
+        for (int i = pathLen; i >= allInsertIndex; i--)
+        {
+            path[i] = path[i - 1];
+        }
+        visited[allMaxIndex] = 1;
+        path[allInsertIndex] = allMaxIndex;
+
+        pathLen++;
+        totalDistance += allMin;
     }
 
-    // 清理内存
+    // 将起始点添加到路径末尾，形成闭环
+    path[numOfCoords] = path[0];
+
+    // 计算并返回总距离
+    for (int i = 0; i < numOfCoords; i++)
+    {
+        totalDistance += dMatrix[path[i]][path[i + 1]];
+    }
+
     free(visited);
-    free(threadMinCosts);
-    free(threadNextNode);
-    free(threadInsertPos);
-    free(threadMaxCosts);
-    // free(tour);
+    // free(path);
 
-    return tour;
+    return path;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // double getDistance_FarthestInsertion(double **dMatrix, int numOfCoords, int pointOfStartEnd)
 // {
@@ -321,7 +247,7 @@ int *getTour_FarthestInsertion(double **dMatrix, int numOfCoords, int pointOfSta
 //         {
 
 //             // Point 1: Thread only accesses its memory location in the shared array.
-//             threadMinCosts[threadID * 8] = ____DBL_MAX____;
+//             threadMinCosts[threadID * 8] = ______DBL_MAX______;
 //             threadMaxCosts[threadID * 8] = 0;
 //             threadNextNode[threadID * 8] = -1;
 //             threadInsertPos[threadID * 8] = -1;
@@ -376,7 +302,7 @@ int *getTour_FarthestInsertion(double **dMatrix, int numOfCoords, int pointOfSta
 // #pragma omp single
 //             {
 //                 int bestInsertPos = -1;
-//                 double minCost = ____DBL_MAX____;
+//                 double minCost = ______DBL_MAX______;
 
 //                 // Single thread loops through every thread's answer and chooses the cheapest one.
 //                 for (int i = 0; i < numThreads; i++)
@@ -416,10 +342,6 @@ int *getTour_FarthestInsertion(double **dMatrix, int numOfCoords, int pointOfSta
 
 //     return totalDistance;
 // }
-
-
-
-
 
 // int *getTour_FarthestInsertion(double **dMatrix, int numOfCoords, int pointOfStartEnd)
 // {
@@ -479,7 +401,7 @@ int *getTour_FarthestInsertion(double **dMatrix, int numOfCoords, int pointOfSta
 //         {
 
 //             // Point 1: Thread only accesses its memory location in the shared array.
-//             threadMinCosts[threadID * 8] = ____DBL_MAX____;
+//             threadMinCosts[threadID * 8] = ______DBL_MAX______;
 //             threadMaxCosts[threadID * 8] = 0;
 //             threadNextNode[threadID * 8] = -1;
 //             threadInsertPos[threadID * 8] = -1;
@@ -534,7 +456,7 @@ int *getTour_FarthestInsertion(double **dMatrix, int numOfCoords, int pointOfSta
 // #pragma omp single
 //             {
 //                 int bestInsertPos = -1;
-//                 double minCost = ____DBL_MAX____;
+//                 double minCost = ______DBL_MAX______;
 
 //                 // Single thread loops through every thread's answer and chooses the cheapest one.
 //                 for (int i = 0; i < numThreads; i++)
