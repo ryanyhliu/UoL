@@ -116,9 +116,9 @@ double getDistance_FarthestInsertion(double **dMatrix, int numOfCoords) {
 
 
 int *getTour_FarthestInsertion(double **dMatrix, int numOfCoords) {
-    if (numOfCoords <= 0) {
-        return 0.0;  // No distance to calculate for empty or invalid input.
-    }
+    // if (numOfCoords <= 0) {
+    //     return 0.0;  // No distance to calculate for empty or invalid input.
+    // }
 
     int *tour = malloc((numOfCoords + 1) * sizeof(int));  // +1 for returning to the start
     if (!tour) {
