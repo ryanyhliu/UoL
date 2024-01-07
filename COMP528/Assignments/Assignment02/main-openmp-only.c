@@ -72,11 +72,40 @@ int main(int argc, char *argv[]){
             bestStartPointCheapest = i;
         }
 
-        double distanceFarthest = getDistance_FarthestInsertion(dMatrix, numOfCoords, i);
-        if (distanceFarthest < minDistanceFarthest) {
-            minDistanceFarthest = distanceFarthest;
-            bestStartPointFarthest = i;
-        }
+        // double distanceFarthest = getDistance_FarthestInsertion(dMatrix, numOfCoords, i);
+        // if (distanceFarthest < minDistanceFarthest) {
+        //     minDistanceFarthest = distanceFarthest;
+        //     bestStartPointFarthest = i;
+        // }
+
+		double minDistanceFarthest = __DBL_MAX__;
+		int bestStartPointFarthest;
+
+		#pragma omp parallel
+		{
+			double localMinDistanceFarthest = __DBL_MAX__;
+			int localBestStartPointFarthest;
+
+			#pragma omp for nowait
+			for (int i = 0; i < numOfCoords; i++) {
+				double distanceFarthest = getDistance_FarthestInsertion(dMatrix, numOfCoords, i);
+				if (distanceFarthest < localMinDistanceFarthest) {
+					localMinDistanceFarthest = distanceFarthest;
+					localBestStartPointFarthest = i;
+				}
+			}
+
+			#pragma omp critical
+			{
+				if (localMinDistanceFarthest < minDistanceFarthest) {
+					minDistanceFarthest = localMinDistanceFarthest;
+					bestStartPointFarthest = localBestStartPointFarthest;
+				}
+			}
+
+
+
+
 
         double distanceNearest = getDistance_NearestAddition(dMatrix, numOfCoords, i);
         if (distanceNearest < minDistanceNearest) {
