@@ -363,9 +363,12 @@ int main(int argc, char *argv[]) {
 
 
     bool hasAssignedTask = false;
+    // int processedCoords = 0;  // 新增变量，记录分配的任务总数
 
     for (int i = world_rank; i < numOfCoords; i += world_size) {
         hasAssignedTask = true;
+        // processedCoords++;  // 为每个处理的坐标增加计数
+
         // ... (计算最佳起点的循环) ...
         double distanceCheapest = getDistance_CheapestInsertion(dMatrix, numOfCoords, i);
         if (distanceCheapest < localMinCheapest.distance) {
@@ -387,11 +390,35 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    // 重新计算processedCoords，确保它包含实际处理的坐标数
+    // processedCoords = (numOfCoords / world_size) + (numOfCoords % world_size > world_rank ? 1 : 0);
+
+    
+
     if (!hasAssignedTask) {
-        localMinCheapest.distance = __DBL_MAX__;
-        localMinNearest.distance = __DBL_MAX__;
-        localMinDistanceFarthest = __DBL_MAX__;
-        localBestStartPointFarthest = -1;
+        // 处理剩余的坐标
+        for (int i = world_rank; i < numOfCoords; i += world_size) {
+            // 注意，这里的循环开始点和步长与主循环相同，但是起始索引进行了调整
+
+            // 再次执行相同的计算，对于这些剩余的坐标
+            double distanceCheapest = getDistance_CheapestInsertion(dMatrix, numOfCoords, i);
+            if (distanceCheapest < localMinCheapest.distance) {
+                localMinCheapest.distance = distanceCheapest;
+                localMinCheapest.index = i;
+            }
+
+            double distanceNearest = getDistance_NearestAddition(dMatrix, numOfCoords, i);
+            if (distanceNearest < localMinNearest.distance) {
+                localMinNearest.distance = distanceNearest;
+                localMinNearest.index = i;
+            }
+
+            double distanceFarthest = getDistance_FarthestInsertion(dMatrix, numOfCoords, i);
+            if (distanceFarthest < localMinDistanceFarthest) {
+                localMinDistanceFarthest = distanceFarthest;
+                localBestStartPointFarthest = i;
+            }
+        }
     }
 
 
