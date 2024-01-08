@@ -321,6 +321,9 @@ int main(int argc, char *argv[]) {
     strcpy(outFileName_Farthest, argv[3]);
     strcpy(outFileName_Nearest, argv[4]);
 
+    // 记录开始时间
+    double start_time = MPI_Wtime();
+
     double tolerance = 1e-9;
 
     int numOfCoords = readNumOfCoords(filename);
@@ -409,6 +412,15 @@ int main(int argc, char *argv[]) {
 		int *tourCheapest = getTour_CheapestInsertion(dMatrix, numOfCoords, globalIndexCheapest);
 		int *tourNearest = getTour_NearestAddition(dMatrix, numOfCoords, globalIndexNearest);
 		int *tourFarthest = getTour_FarthestInsertion(dMatrix, numOfCoords, globalIndexFarthest);
+
+
+
+        // 记录结束时间
+        double end_time = MPI_Wtime();
+        // 计算并打印运行时间
+        double runtime = end_time - start_time;
+        printf("Total Runtime: %f seconds\n", runtime);
+
 
 		writeTourToFile(tourCheapest, numOfCoords + 1, outFileName_Cheapest);
 		writeTourToFile(tourNearest, numOfCoords + 1, outFileName_Nearest);
