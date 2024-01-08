@@ -327,12 +327,6 @@ int main(int argc, char *argv[]) {
     double **coords = readCoords(filename, numOfCoords);
     double **dMatrix = createDistanceMatrix(coords, numOfCoords);
 
-    double localMinDistanceCheapest = __DBL_MAX__;
-    int localIndexCheapest = -1;
-    double localMinDistanceNearest = __DBL_MAX__;
-    int localIndexNearest = -1;
-    double localMinDistanceFarthest = __DBL_MAX__;
-    int localIndexFarthest = -1;
 
     // ...计算最佳起点的循环...
 	// 分布式计算最佳起点
