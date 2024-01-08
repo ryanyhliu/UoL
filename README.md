@@ -34,17 +34,17 @@ sbatch -N 16 -n 32 -c 8 OpenMP_batch.sh gcomplete 512_coords.coord my_512_cout.d
 
 
 
-sbatch -N 1 -n 1 -c 1 -t 10 0penMP_batch.sh gcomplete 512_coords.coord my_512_cout.dat my_512_fout.dat my_512_nout.dat
-sbatch -N 1 -n 1 -c 2 -t 10 0penMP_batch.sh gcomplete 512_coords.coord my_512_cout.dat my_512_fout.dat my_512_nout.dat
-sbatch -N 1 -n 1 -c 4 -t 10 0penMP_batch.sh gcomplete 512_coords.coord my_512_cout.dat my_512_fout.dat my_512_nout.dat 
-sbatch -N 1 -n 1 -c 8 -t 10 0penMP_batch.sh gcomplete 512_coords.coord my_512_cout.dat my_512_fout.dat my_512_nout.dat 
-sbatch -N 1 -n 1 -c 16 -t 10 0penMP_batch.sh gcomplete 512_coords.coord my_512_cout.dat my_512_fout.dat my_512_nout.dat
-sbatch -N 1 -n 1 -c 32 -t 10 0penMP_batch.sh gcomplete 512_coords.coord my_512_cout.dat my_512_fout.dat my_512_nout.dat
+sbatch -N 1 -n 1 -c 1 -t 10 OMPandMPI.sh gcomplete 512_coords.coord my_512_cout.dat my_512_fout.dat my_512_nout.dat
+sbatch -N 1 -n 1 -c 2 -t 10 OMPandMPI.sh gcomplete 512_coords.coord my_512_cout.dat my_512_fout.dat my_512_nout.dat
+sbatch -N 1 -n 1 -c 4 -t 10 OMPandMPI.sh gcomplete 512_coords.coord my_512_cout.dat my_512_fout.dat my_512_nout.dat 
+sbatch -N 1 -n 1 -c 8 -t 10 OMPandMPI.sh gcomplete 512_coords.coord my_512_cout.dat my_512_fout.dat my_512_nout.dat 
+sbatch -N 1 -n 1 -c 16 -t 10 OMPandMPI.sh gcomplete 512_coords.coord my_512_cout.dat my_512_fout.dat my_512_nout.dat
+sbatch -N 1 -n 1 -c 32 -t 10 OMPandMPI.sh gcomplete 512_coords.coord my_512_cout.dat my_512_fout.dat my_512_nout.dat
 
-sbatch -N 1 -n 1 -c 1 -t 10 0penMP_batch.sh gcomplete 512_coords.coord my_512_cout.dat my_512_fout.dat my_512_nout.dat
-sbatch -N 1 -n 2 -c 1 -t 10 0penMP_batch.sh gcomplete 512_coords.coord my_512_cout.dat my_512_fout.dat my_512_nout.dat
-sbatch -N 1 -n 4 -c 1 -t 10 0penMP_batch.sh gcomplete 512_coords.coord my_512_cout.dat my_512_fout.dat my_512_nout.dat
-sbatch -N 1 -n 8 -c 1 -t 10 0penMP_batch.sh gcomplete 512_coords.coord my_512_cout.dat my_512_fout.dat my_512_nout.dat
-sbatch -N 1 -n 16 -c 1 -t 10 0penMP_batch.sh gcomplete 512_coords.coord my_512_cout.dat my_512_fout.dat my_512_nout.dat
-sbatch -N 1 -n 32 -c 1 -t 10 0penMP_batch.sh gcomplete 512_coords.coord my_512_cout.dat my_512_fout.dat my_512_nout.dat
+sbatch -N 1 -n 1 -c 1 -t 10 OMPandMPI.sh gcomplete 512_coords.coord my_512_cout.dat my_512_fout.dat my_512_nout.dat
+sbatch -N 1 -n 2 -c 1 -t 10 OMPandMPI.sh gcomplete 512_coords.coord my_512_cout.dat my_512_fout.dat my_512_nout.dat
+sbatch -N 1 -n 4 -c 1 -t 10 OMPandMPI.sh gcomplete 512_coords.coord my_512_cout.dat my_512_fout.dat my_512_nout.dat
+sbatch -N 1 -n 8 -c 1 -t 10 OMPandMPI.sh gcomplete 512_coords.coord my_512_cout.dat my_512_fout.dat my_512_nout.dat
+sbatch -N 1 -n 16 -c 1 -t 10 OMPandMPI.sh gcomplete 512_coords.coord my_512_cout.dat my_512_fout.dat my_512_nout.dat
+sbatch -N 1 -n 32 -c 1 -t 10 OMPandMPI.sh gcomplete 512_coords.coord my_512_cout.dat my_512_fout.dat my_512_nout.dat
 
