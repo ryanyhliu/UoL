@@ -345,7 +345,7 @@ int main(int argc, char *argv[]) {
 		}
 
 		double distanceNearest = getDistance_NearestAddition(dMatrix, numOfCoords, i);
-		if (distanceNearest < localMinDistanceNearest - tolerance) {
+		if (distanceNearest < localMinDistanceNearest) {
 			localMinDistanceNearest = distanceNearest;
 			localIndexNearest = i;
 		}
@@ -395,7 +395,7 @@ int main(int argc, char *argv[]) {
 				globalMinDistanceCheapest = allMinDistancesCheapest[i];
 				globalIndexCheapest = allIndicesCheapest[i];
 			}
-			if (allMinDistancesNearest[i] < globalMinDistanceNearest - tolerance) {
+			if (allMinDistancesNearest[i] < globalMinDistanceNearest) {
 				globalMinDistanceNearest = allMinDistancesNearest[i];
 				globalIndexNearest = allIndicesNearest[i];
 			}
