@@ -276,21 +276,6 @@
 
 
 
-// 定义一个结构体来存储距离和对应的索引
-typedef struct {
-    double distance;
-    int index;
-} DistanceIndex;
-
-
-
-
-
-
-
-
-
-
 
 int readNumOfCoords(char *filename);
 double **readCoords(char *filename, int numOfCoords);
@@ -310,8 +295,6 @@ int *getTour_NearestAddition(double **dMatrix, int numOfCoords, int pointOfStart
 
 
 
-
-// 程序入口点
 int main(int argc, char *argv[]) {
     MPI_Init(&argc, &argv);
 
@@ -327,8 +310,8 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // ...省略文件和数据读取的代码...
-	char filename[500];
+    // ...初始化和数据读取...
+    char filename[500];
     char outFileName_Cheapest[500];
     char outFileName_Farthest[500];
     char outFileName_Nearest[500];
@@ -339,86 +322,99 @@ int main(int argc, char *argv[]) {
     strcpy(outFileName_Nearest, argv[4]);
 
     double tolerance = 1e-9;
-    int numOfCoords = readNumOfCoords(argv[1]);
-    double **coords = readCoords(argv[1], numOfCoords);
+
+    int numOfCoords = readNumOfCoords(filename);
+    double **coords = readCoords(filename, numOfCoords);
     double **dMatrix = createDistanceMatrix(coords, numOfCoords);
 
-    // 计算每个进程的局部最佳
-    DistanceIndex localMinCheapest = {__DBL_MAX__, -1};
-    DistanceIndex localMinNearest = {__DBL_MAX__, -1};
+    double localMinDistanceCheapest = __DBL_MAX__;
+    int localIndexCheapest = -1;
+    double localMinDistanceNearest = __DBL_MAX__;
+    int localIndexNearest = -1;
     double localMinDistanceFarthest = __DBL_MAX__;
-    int localBestStartPointFarthest = -1;
+    int localIndexFarthest = -1;
 
-    for (int i = world_rank; i < numOfCoords; i += world_size) {
+    // ...计算最佳起点的循环...
+	// 分布式计算最佳起点
+	double localMinDistanceCheapest = __DBL_MAX__;
+	int localIndexCheapest = -1;
+	double localMinDistanceNearest = __DBL_MAX__;
+	int localIndexNearest = -1;
+	double localMinDistanceFarthest = __DBL_MAX__;
+	int localIndexFarthest = -1;
+
+	for (int i = world_rank; i < numOfCoords; i += world_size) {
 		double distanceCheapest = getDistance_CheapestInsertion(dMatrix, numOfCoords, i);
-		if (distanceCheapest < localMinCheapest.distance - tolerance) {
-			localMinCheapest.distance = distanceCheapest;
-			localMinCheapest.index = i;
+		if (distanceCheapest < localMinDistanceCheapest - tolerance) {
+			localMinDistanceCheapest = distanceCheapest;
+			localIndexCheapest = i;
 		}
 
 		double distanceNearest = getDistance_NearestAddition(dMatrix, numOfCoords, i);
-		if (distanceNearest < localMinNearest.distance - tolerance) {
-			localMinNearest.distance = distanceNearest;
-			localMinNearest.index = i;
+		if (distanceNearest < localMinDistanceNearest - tolerance) {
+			localMinDistanceNearest = distanceNearest;
+			localIndexNearest = i;
 		}
 
 		double distanceFarthest = getDistance_FarthestInsertion(dMatrix, numOfCoords, i);
 		if (distanceFarthest < localMinDistanceFarthest - tolerance) {
 			localMinDistanceFarthest = distanceFarthest;
-			localBestStartPointFarthest = i;
+			localIndexFarthest = i;
 		}
 	}
 
-    // 使用结构体来存储每个进程的结果
-    struct {
-        DistanceIndex cheapest;
-        DistanceIndex nearest;
-        double distanceFarthest;
-        int startPointFarthest;
-    } localResults, *globalResults;
+    // 在主进程中定义用于汇总的数组
+    double allMinDistancesCheapest[world_size];
+    int allIndicesCheapest[world_size];
+    double allMinDistancesNearest[world_size];
+    int allIndicesNearest[world_size];
+    double allMinDistancesFarthest[world_size];
+    int allIndicesFarthest[world_size];
 
-    localResults.cheapest = localMinCheapest;
-    localResults.nearest = localMinNearest;
-    localResults.distanceFarthest = localMinDistanceFarthest;
-    localResults.startPointFarthest = localBestStartPointFarthest;
-
-    if (world_rank == 0) {
-        globalResults = malloc(world_size * sizeof(*globalResults));
+    // 使用 MPI_Gatherv 收集所有进程的结果
+    int recvcounts[world_size];
+    int displs[world_size];
+    for (int i = 0; i < world_size; ++i) {
+        recvcounts[i] = 1; // 每个进程贡献一个元素
+        displs[i] = i;     // 位移
     }
 
-    // 定义自定义数据类型
-    MPI_Datatype MPI_Result_type;
-    MPI_Type_contiguous(4, MPI_DOUBLE, &MPI_Result_type);
-    MPI_Type_commit(&MPI_Result_type);
+    MPI_Gatherv(&localMinDistanceCheapest, 1, MPI_DOUBLE, allMinDistancesCheapest, recvcounts, displs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    MPI_Gatherv(&localIndexCheapest, 1, MPI_INT, allIndicesCheapest, recvcounts, displs, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Gatherv(&localMinDistanceNearest, 1, MPI_DOUBLE, allMinDistancesNearest, recvcounts, displs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    MPI_Gatherv(&localIndexNearest, 1, MPI_INT, allIndicesNearest, recvcounts, displs, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Gatherv(&localMinDistanceFarthest, 1, MPI_DOUBLE, allMinDistancesFarthest, recvcounts, displs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    MPI_Gatherv(&localIndexFarthest, 1, MPI_INT, allIndicesFarthest, recvcounts, displs, MPI_INT, 0, MPI_COMM_WORLD);
 
-    // 收集所有进程的结果
-    MPI_Gather(&localResults, 1, MPI_Result_type, globalResults, 1, MPI_Result_type, 0, MPI_COMM_WORLD);
+    // ...主进程处理汇总数据...
+	// 主进程处理汇总数据
+	if (world_rank == 0) {
+		double globalMinDistanceCheapest = __DBL_MAX__;
+		int globalIndexCheapest = -1;
+		double globalMinDistanceNearest = __DBL_MAX__;
+		int globalIndexNearest = -1;
+		double globalMinDistanceFarthest = __DBL_MAX__;
+		int globalIndexFarthest = -1;
 
-    // 主进程处理
-    if (world_rank == 0) {
-        DistanceIndex globalMinCheapest = {__DBL_MAX__, -1};
-        DistanceIndex globalMinNearest = {__DBL_MAX__, -1};
-        double globalMinDistanceFarthest = __DBL_MAX__;
-        int globalBestStartPointFarthest = -1;
+		for (int i = 0; i < world_size; i++) {
+			if (allMinDistancesCheapest[i] < globalMinDistanceCheapest - tolerance) {
+				globalMinDistanceCheapest = allMinDistancesCheapest[i];
+				globalIndexCheapest = allIndicesCheapest[i];
+			}
+			if (allMinDistancesNearest[i] < globalMinDistanceNearest - tolerance) {
+				globalMinDistanceNearest = allMinDistancesNearest[i];
+				globalIndexNearest = allIndicesNearest[i];
+			}
+			if (allMinDistancesFarthest[i] < globalMinDistanceFarthest - tolerance) {
+				globalMinDistanceFarthest = allMinDistancesFarthest[i];
+				globalIndexFarthest = allIndicesFarthest[i];
+			}
+		}
 
-        for (int i = 0; i < world_size; i++) {
-            if (globalResults[i].cheapest.distance < globalMinCheapest.distance - tolerance) {
-                globalMinCheapest = globalResults[i].cheapest;
-            }
-            if (globalResults[i].nearest.distance < globalMinNearest.distance - tolerance) {
-                globalMinNearest = globalResults[i].nearest;
-            }
-            if (globalResults[i].distanceFarthest < globalMinDistanceFarthest - tolerance) {
-                globalMinDistanceFarthest = globalResults[i].distanceFarthest;
-                globalBestStartPointFarthest = globalResults[i].startPointFarthest;
-            }
-        }
-
-        // ...省略使用全局最佳结果获取完整路径并输出的代码...
 		// 使用全局最佳起点获取完整路径并输出
-		int *tourCheapest = getTour_CheapestInsertion(dMatrix, numOfCoords, globalMinCheapest.index);
-		int *tourNearest = getTour_NearestAddition(dMatrix, numOfCoords, globalMinNearest.index);
-		int *tourFarthest = getTour_FarthestInsertion(dMatrix, numOfCoords, globalBestStartPointFarthest);
+		int *tourCheapest = getTour_CheapestInsertion(dMatrix, numOfCoords, globalIndexCheapest);
+		int *tourNearest = getTour_NearestAddition(dMatrix, numOfCoords, globalIndexNearest);
+		int *tourFarthest = getTour_FarthestInsertion(dMatrix, numOfCoords, globalIndexFarthest);
 
 		writeTourToFile(tourCheapest, numOfCoords + 1, outFileName_Cheapest);
 		writeTourToFile(tourNearest, numOfCoords + 1, outFileName_Nearest);
@@ -427,14 +423,9 @@ int main(int argc, char *argv[]) {
 		free(tourCheapest);
 		free(tourNearest);
 		free(tourFarthest);
-		
+	}
 
-        free(globalResults);
-    }
-
-    // 清理和MPI终止
-    MPI_Type_free(&MPI_Result_type);
-    // ...省略清理资源的代码...
+    // ...清理和MPI终止...
 	for (int i = 0; i < numOfCoords; i++) {
         free(coords[i]);
     }
@@ -448,166 +439,6 @@ int main(int argc, char *argv[]) {
     MPI_Finalize();
     return 0;
 }
-
-
-
-// 自定义的归约操作，用于同时更新距离和索引
-// void minDistanceIndex(DistanceIndex *in, DistanceIndex *inout, int *len, MPI_Datatype *datatype) {
-//     for (int i = 0; i < *len; ++i) {
-//         if (in[i].distance < inout[i].distance) {
-//             inout[i].distance = in[i].distance;
-//             inout[i].index = in[i].index;
-//         }
-//     }
-// }
-
-
-// int main(int argc, char *argv[]) {
-//     MPI_Init(&argc, &argv);
-
-//     int world_size, world_rank;
-//     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
-//     MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
-
-//     if (argc < 5) {
-//         if (world_rank == 0) {
-//             fprintf(stderr, "Usage: %s <input file> <output file 1> <output file 2> <output file 3>\n", argv[0]);
-//         }
-//         MPI_Abort(MPI_COMM_WORLD, 1);
-//         return 1;
-//     }
-
-//     char filename[500];
-//     char outFileName_Cheapest[500];
-//     char outFileName_Farthest[500];
-//     char outFileName_Nearest[500];
-
-//     strcpy(filename, argv[1]);
-//     strcpy(outFileName_Cheapest, argv[2]);
-//     strcpy(outFileName_Farthest, argv[3]);
-//     strcpy(outFileName_Nearest, argv[4]);
-
-//     double tolerance = 1e-9;
-
-//     int numOfCoords = readNumOfCoords(filename);
-//     double **coords = readCoords(filename, numOfCoords);
-//     double **dMatrix = createDistanceMatrix(coords, numOfCoords);
-
-//     // 分布式计算最佳起点
-//     DistanceIndex localMinCheapest = {__DBL_MAX__, -1};
-//     DistanceIndex localMinNearest = {__DBL_MAX__, -1};
-    
-//     double localMinDistanceFarthest = __DBL_MAX__;
-//     int localBestStartPointFarthest = -1;
-
-
-//     bool hasAssignedTask = false;
-//     // int processedCoords = 0;  // 新增变量，记录分配的任务总数
-
-//     for (int i = world_rank; i < numOfCoords; i += world_size) {
-//         hasAssignedTask = true;
-//         // processedCoords++;  // 为每个处理的坐标增加计数
-
-//         // ... (计算最佳起点的循环) ...
-//         double distanceCheapest = getDistance_CheapestInsertion(dMatrix, numOfCoords, i);
-//         if (distanceCheapest < localMinCheapest.distance - tolerance) {
-//             localMinCheapest.distance = distanceCheapest;
-//             localMinCheapest.index = i;
-//         }
-
-//         double distanceNearest = getDistance_NearestAddition(dMatrix, numOfCoords, i);
-//         if (distanceNearest < localMinNearest.distance - tolerance) {
-//             localMinNearest.distance = distanceNearest;
-//             localMinNearest.index = i;
-//         }
-
-//         // 保持原有FarthestInsertion逻辑
-//         double distanceFarthest = getDistance_FarthestInsertion(dMatrix, numOfCoords, i);
-//         if (distanceFarthest < localMinDistanceFarthest - tolerance) {
-//             localMinDistanceFarthest = distanceFarthest;
-//             localBestStartPointFarthest = i;
-//         }
-//     }
-
-//     // 重新计算processedCoords，确保它包含实际处理的坐标数
-//     // processedCoords = (numOfCoords / world_size) + (numOfCoords % world_size > world_rank ? 1 : 0);
-
-    
-
-//     if (!hasAssignedTask) {
-//         // 处理剩余的坐标
-//         for (int i = world_rank; i < numOfCoords; i += world_size) {
-//             // 注意，这里的循环开始点和步长与主循环相同，但是起始索引进行了调整
-
-//             // 再次执行相同的计算，对于这些剩余的坐标
-//             double distanceCheapest = getDistance_CheapestInsertion(dMatrix, numOfCoords, i);
-//             if (distanceCheapest < localMinCheapest.distance - tolerance) {
-//                 localMinCheapest.distance = distanceCheapest;
-//                 localMinCheapest.index = i;
-//             }
-
-//             double distanceNearest = getDistance_NearestAddition(dMatrix, numOfCoords, i);
-//             if (distanceNearest < localMinNearest.distance - tolerance) {
-//                 localMinNearest.distance = distanceNearest;
-//                 localMinNearest.index = i;
-//             }
-
-//             double distanceFarthest = getDistance_FarthestInsertion(dMatrix, numOfCoords, i);
-//             if (distanceFarthest < localMinDistanceFarthest - tolerance) {
-//                 localMinDistanceFarthest = distanceFarthest;
-//                 localBestStartPointFarthest = i;
-//             }
-//         }
-//     }
-
-
-//     // 汇总全局最佳起点
-//     DistanceIndex globalMinCheapest, globalMinNearest;
-//     double globalMinDistanceFarthest;
-//     int globalBestStartPointFarthest;
-
-//     MPI_Op customOp;
-//     MPI_Op_create((MPI_User_function *)minDistanceIndex, 1, &customOp);
-
-//     MPI_Allreduce(&localMinCheapest, &globalMinCheapest, 1, MPI_DOUBLE_INT, customOp, MPI_COMM_WORLD);
-//     MPI_Allreduce(&localMinNearest, &globalMinNearest, 1, MPI_DOUBLE_INT, customOp, MPI_COMM_WORLD);
-
-//     // 使用原始的MPI逻辑对FarthestInsertion进行汇总
-//     MPI_Allreduce(&localMinDistanceFarthest, &globalMinDistanceFarthest, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
-//     MPI_Allreduce(&localBestStartPointFarthest, &globalBestStartPointFarthest, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD);
-
-//     MPI_Op_free(&customOp);
-
-//     // 主进程使用最佳起点获取完整路径并输出
-//     if (world_rank == 0) {
-//         int *tourCheapest = getTour_CheapestInsertion(dMatrix, numOfCoords, globalMinCheapest.index);
-//         int *tourFarthest = getTour_FarthestInsertion(dMatrix, numOfCoords, globalBestStartPointFarthest);
-//         int *tourNearest = getTour_NearestAddition(dMatrix, numOfCoords, globalMinNearest.index);
-
-//         writeTourToFile(tourCheapest, numOfCoords + 1, outFileName_Cheapest);
-//         writeTourToFile(tourFarthest, numOfCoords + 1, outFileName_Farthest);
-//         writeTourToFile(tourNearest, numOfCoords + 1, outFileName_Nearest);
-
-//         free(tourCheapest);
-//         free(tourFarthest);
-//         free(tourNearest);
-//     }
-
-//     // 清理和MPI终止
-//     for (int i = 0; i < numOfCoords; i++) {
-//         free(coords[i]);
-//     }
-//     free(coords);
-
-//     for (int i = 0; i < numOfCoords; i++) {
-//         free(dMatrix[i]);
-//     }
-//     free(dMatrix);
-
-//     MPI_Finalize();
-//     return 0;
-// }
-
 
 
 
