@@ -67,7 +67,7 @@ int main(int argc, char *argv[]){
     // 寻找最佳起点并生成对应路径
     for (int i = 0; i < numOfCoords; i++) {
         int *tempTourCheapest = getTour_CheapestInsertion(dMatrix, numOfCoords, i);
-        double distanceCheapest = getDistance_CheapestInsertion(dMatrix, numOfCoords, i); // 或使用您的成本计算函数
+        double distanceCheapest = getDistance_CheapestInsertion(dMatrix, numOfCoords, i); 
         if (distanceCheapest < minDistanceCheapest  - tolerance) {
             minDistanceCheapest = distanceCheapest;
             free(tourCheapest);  // 释放旧路径
@@ -77,7 +77,7 @@ int main(int argc, char *argv[]){
         }
 
         int *tempTourFarthest = getTour_FarthestInsertion(dMatrix, numOfCoords, i);
-        double distanceFarthest = getDistance_FarthestInsertion(dMatrix, numOfCoords, i); // 或使用您的成本计算函数
+        double distanceFarthest = getDistance_FarthestInsertion(dMatrix, numOfCoords, i); 
         if (distanceFarthest < minDistanceFarthest  - tolerance) {
             minDistanceFarthest = distanceFarthest;
             free(tourFarthest);  // 释放旧路径
@@ -87,7 +87,7 @@ int main(int argc, char *argv[]){
         }
 
         int *tempTourNearest = getTour_NearestAddition(dMatrix, numOfCoords, i);
-        double distanceNearest = getDistance_NearestAddition(dMatrix, numOfCoords, i); // 或使用您的成本计算函数
+        double distanceNearest = getDistance_NearestAddition(dMatrix, numOfCoords, i); 
         if (distanceNearest < minDistanceNearest  - tolerance) {
             minDistanceNearest = distanceNearest;
             free(tourNearest);  // 释放旧路径

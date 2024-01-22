@@ -310,7 +310,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // ...初始化和数据读取...
+    // 初始化和数据读取
     char filename[500];
     char outFileName_Cheapest[500];
     char outFileName_Farthest[500];
@@ -331,8 +331,7 @@ int main(int argc, char *argv[]) {
     double **dMatrix = createDistanceMatrix(coords, numOfCoords);
 
 
-    // ...计算最佳起点的循环...
-	// 分布式计算最佳起点
+	// Calculate starting point
 	double localMinDistanceCheapest = __DBL_MAX__;
 	int localIndexCheapest = -1;
 	double localMinDistanceNearest = __DBL_MAX__;
@@ -360,7 +359,7 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-    // 在主进程中定义用于汇总的数组
+    // Array used for summarization
     double allMinDistancesCheapest[world_size];
     int allIndicesCheapest[world_size];
     double allMinDistancesNearest[world_size];
@@ -368,13 +367,14 @@ int main(int argc, char *argv[]) {
     double allMinDistancesFarthest[world_size];
     int allIndicesFarthest[world_size];
 
-    // 使用 MPI_Gatherv 收集所有进程的结果
+    // Define Gatherv
     int recvcounts[world_size];
     int displs[world_size];
     for (int i = 0; i < world_size; ++i) {
-        recvcounts[i] = 1; // 每个进程贡献一个元素
-        displs[i] = i;     // 位移
+        recvcounts[i] = 1; // 1 elements each process
+        displs[i] = i;     // offset
     }
+
 
     MPI_Gatherv(&localMinDistanceCheapest, 1, MPI_DOUBLE, allMinDistancesCheapest, recvcounts, displs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
     MPI_Gatherv(&localIndexCheapest, 1, MPI_INT, allIndicesCheapest, recvcounts, displs, MPI_INT, 0, MPI_COMM_WORLD);
@@ -383,8 +383,8 @@ int main(int argc, char *argv[]) {
     MPI_Gatherv(&localMinDistanceFarthest, 1, MPI_DOUBLE, allMinDistancesFarthest, recvcounts, displs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
     MPI_Gatherv(&localIndexFarthest, 1, MPI_INT, allIndicesFarthest, recvcounts, displs, MPI_INT, 0, MPI_COMM_WORLD);
 
-    // ...主进程处理汇总数据...
-	// 主进程处理汇总数据
+
+	// Main process handles the summary data
 	if (world_rank == 0) {
 		double globalMinDistanceCheapest = __DBL_MAX__;
 		int globalIndexCheapest = -1;
@@ -408,7 +408,7 @@ int main(int argc, char *argv[]) {
 			}
 		}
 
-		// 使用全局最佳起点获取完整路径并输出
+		// Using the global best starting point -> Getting complete path
 		int *tourCheapest = getTour_CheapestInsertion(dMatrix, numOfCoords, globalIndexCheapest);
 		int *tourNearest = getTour_NearestAddition(dMatrix, numOfCoords, globalIndexNearest);
 		int *tourFarthest = getTour_FarthestInsertion(dMatrix, numOfCoords, globalIndexFarthest);
@@ -431,7 +431,7 @@ int main(int argc, char *argv[]) {
 		free(tourFarthest);
 	}
 
-    // ...清理和MPI终止...
+    // 
 	for (int i = 0; i < numOfCoords; i++) {
         free(coords[i]);
     }

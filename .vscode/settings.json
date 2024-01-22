@@ -5,7 +5,8 @@
         "stdio.h": "c",
         "time.h": "c",
         "omp.h": "c",
-        "cmath": "c"
+        "cmath": "c",
+        "string.h": "c"
     },
     "cSpell.words": [
         "Hmac",
