@@ -2,34 +2,22 @@ const fs = require('fs'); // 引入文件系统模块
 const path = require('path'); // 引入路径模块
 
 class Data_Processing {
+
     constructor() { // 构造函数
         // 定义全局变量
         this.raw_user_data = []; // 用于存储原始用户数据的数组
         this.formatted_user_data = []; // 用于存储格式化后的用户数据的数组
-        this.emailCounter = {}; // 用于存储电子邮件地址计数的对象
         this.cleaned_user_data = []; // 用于存储清理后的用户数据的数组
+        this.emailCounter = {}; // 用于存储电子邮件地址计数的对象
     }
 
     load_CSV(filename) {
-        // 使用__dirname和path.join构建文件的绝对路径
-        const filePath = path.join(__dirname, filename);
-
-        // 读取CSV文件内容
-        const data = fs.readFileSync(filePath, 'utf8');
-
-        // 按行分割数据
-        const rows = data.split('\n');
-
-        // 遍历每行数据
-        rows.forEach(row => {
-            if(row.trim()) { // 确保跳过空行
-                const values = row.split(','); // 按逗号分割每行数据
-                this.raw_user_data.push(values); // 将分割后的数据添加到数组中
-            }
-        });
+        this.raw_user_data = fs.readFileSync(filename+".csv", 'utf8');
     }
+    
+    
 
-    processName(fullName) {
+    format_name(fullName) {
         let nameParts = fullName.trim().split(/\s+/); // 根据空白字符分割姓名
         let title = "", firstName = "", middleName = "", surname = ""; 
 
@@ -66,38 +54,44 @@ class Data_Processing {
         return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
     }
 
-    normalizeDate(dateOfBirthStr) {
-        // 检测日期格式并转换为 yyyy-MM-dd
+    format_age(age) {
+        return parseInt(age, 10); // 直接转换年龄为整数
+    }
+
+    format_dateOfBirth(dateOfBirthStr) {
         let normalizedDate;
         if (dateOfBirthStr.includes('/')) {
             const parts = dateOfBirthStr.split('/');
+            // 直接处理为 DD/MM/YYYY，考虑到输入可能已是此格式或为 DD/MM/YY
             if (parts.length === 3) {
-                normalizedDate = `${parts[2]}-${parts[1]}-${parts[0]}`; // 转换为 yyyy-MM-dd
+                const year = parts[2].length === 2 ? `19${parts[2]}` : parts[2]; // 假设是19XX年代的年份
+                normalizedDate = `${parts[0].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${year}`;
             }
         } else {
             // 处理其他格式，例如 "10 April 1963"
             const dateParts = dateOfBirthStr.split(' ');
             if (dateParts.length === 3) {
-                normalizedDate = `${dateParts[2]}-${this.monthToNumber(dateParts[1])}-${dateParts[0]}`;
+                normalizedDate = `${dateParts[0].padStart(2, '0')}/${this.monthToNumber(dateParts[1])}/${dateParts[2]}`;
             }
         }
-
+    
         return normalizedDate;
     }
-
+    
     monthToNumber(month) {
         const months = ["January", "February", "March", "April", "May", "June",
                         "July", "August", "September", "October", "November", "December"];
         const monthIndex = months.indexOf(month) + 1;
-        return monthIndex < 10 ? `0${monthIndex}` : String(monthIndex);
+        return monthIndex < 10 ? `0${monthIndex}` : `${monthIndex}`;
     }
+    
 
     
     calculateAge(dateOfBirthStr) {
-        convertedDateOfBirth = this.normalizeDate(dateOfBirthStr);
+        const convertedDateOfBirth = this.format_dateOfBirth(dateOfBirthStr);
     
         if (!convertedDateOfBirth) {
-            throw new Error('Unsupported date format');
+            throw new Error('Unsupported date format:' + dateOfBirthStr);
         }
     
         const collectionDate = new Date('2024-02-26'); // 数据收集日期：2024年2月26日
@@ -160,37 +154,44 @@ class Data_Processing {
     }
     
     
-    format_Data() {
-        this.formatted_user_data = this.raw_user_data.map(row => {
-            // 假设每行数据格式为 [全名, 出生日期, 年龄, 电子邮件]
-            const [fullName, dob, age, email] = row;
-
-            // 处理名字
-            const nameParts = this.processName(fullName);
-            
-            // 格式化出生日期
-            const formattedDOB = this.normalizeDate(dob);
-
-            // 转换年龄为整数
-            const ageInt = parseInt(age, 10); // 假设年龄字段是直接可用的，不需要额外计算
-
-            // 生成电子邮件地址
-            const processedEmail = this.processEmail(nameParts.first_name, nameParts.surname, email);
-
-            // 返回格式化后的用户数据对象
-            return {
-                title: nameParts.title,
-                first_name: nameParts.first_name,
-                middle_name: nameParts.middle_name,
-                surname: nameParts.surname,
-                date_of_birth: formattedDOB,
-                age: ageInt,
-                email: processedEmail
-            };
-        });
+    format_data() {
+        const rows = this.raw_user_data.split('\n'); // 按行分割数据
+        // 初始化一个数组来存储所有格式化后的用户数据
+        this.formatted_user_data = rows.map(row => {
+            if (row.trim()) {
+                const values = row.split(','); // 按逗号分割每行数据
+                // 使用 values 进行解构
+                const [fullName, dob, age, email] = values;
+    
+                // 处理名字
+                const nameParts = this.format_name(fullName);
+    
+                // 格式化出生日期
+                const formattedDOB = this.format_dateOfBirth(dob);
+    
+                // 转换年龄为整数
+                const ageInt = this.format_age(age);
+    
+                // 生成电子邮件地址
+                const processedEmail = this.processEmail(nameParts.first_name, nameParts.surname, email);
+    
+                // 构建并返回格式化后的用户数据对象
+                return {
+                    title: nameParts.title,
+                    first_name: nameParts.first_name,
+                    middle_name: nameParts.middle_name,
+                    surname: nameParts.surname,
+                    date_of_birth: formattedDOB,
+                    age: ageInt,
+                    email: processedEmail
+                };
+            }
+            return null;
+        }).filter(user => user !== null); // 过滤掉任何未处理的行（即空行）
     }
+    
 
-    clean_Data() {
+    clean_data() {
         this.cleaned_user_data = this.formatted_user_data.map(user => {
             // 如果名字信息缺失，则尝试从电子邮件地址提取
             if (!user.first_name.trim() && !user.surname.trim() && user.email) {
@@ -323,9 +324,26 @@ class Data_Processing {
         return rounded;
     }
     
+    percentage_altered() {
+        let changes = 0;
+        const total = this.formatted_user_data.length * Object.keys(this.formatted_user_data[0]).length;
     
+        for (let i = 0; i < this.formatted_user_data.length; i++) { // 遍历每个用户的格式化数据
+            Object.keys(this.formatted_user_data[i]).forEach(key => {
+                if (this.formatted_user_data[i][key] !== this.cleaned_user_data[i][key]) {
+                    changes++;
+                }
+            });
+        }
     
-
-
+        const percentage = (changes / total) * 100;
+        return percentage.toFixed(2); // 返回修改的百分比，保留两位小数
+    }
+    
 }
 
+
+// const dataProcessor = new Data_Processing();
+// dataProcessor.load_CSV('Raw_User_Data.csv');
+// // 读取raw_user_data
+// console.log(dataProcessor.raw_user_data);
