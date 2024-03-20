@@ -8,7 +8,11 @@ class Data_Processing {
         this.raw_user_data = []; // 用于存储原始用户数据的数组
         this.formatted_user_data = []; // 用于存储格式化后的用户数据的数组
         this.cleaned_user_data = []; // 用于存储清理后的用户数据的数组
-        this.emailCounter = {}; // 用于存储电子邮件地址计数的对象
+
+        this.intermediateData = new Map(); // 用于存储中间数据的数组
+        this.emailCounts = {}; // 用于存储电子邮件地址计数的对象
+        this.emailMap = new Map(); // 用于存储电子邮件地址映射的Map
+        
     }
 
     load_CSV(filename) {
@@ -16,47 +20,65 @@ class Data_Processing {
     }
     
     
-
     format_name(fullName) {
         let nameParts = fullName.trim().split(/\s+/); // 根据空白字符分割姓名
         let title = "", firstName = "", middleName = "", surname = ""; 
-
-        // 检查首个词是否为常见的称谓，如果不是，则假设没有称谓
-        const titles = ["Mr", "Mrs", "Miss", "Ms", "Dr"];
-        if (titles.includes(nameParts[0])) { // 如果数组的第一个元素是称谓, 则移除并获取数组的第一个元素作为称谓
-            title = nameParts.shift(); 
+    
+        // 检查首个词是否为常见的称谓
+        const titles = ["Mr", "Mrs", "Miss", "Ms", "Dr", "Dr."];
+        if (titles.includes(nameParts[0])) {
+            title = nameParts.shift(); // 移除并获取称谓
         }
-
-        if (nameParts.length === 1) { // 如果数组只有一个元素, 则该元素可能是姓
-            surname = nameParts[0];
-        } else if (nameParts.length === 2) { // 如果数组有两个元素, 则第一个元素可能是名, 第二个元素可能是姓
+    
+        // 如果最后一个元素是空字符串，移除它
+        if (nameParts[nameParts.length - 1] === "") {
+            nameParts.pop();
+        }
+    
+        if (nameParts.length === 1) {
+            // 如果数组只有一个元素，且之前有称谓，我们假设它是名字
+            firstName = nameParts[0];
+        } else if (nameParts.length === 2) {
             firstName = nameParts[0];
             surname = nameParts[1];
-        } else if (nameParts.length > 2) { // 如果数组有三个或更多元素, 则第一个元素可能是名, 中间元素可能是中间名, 最后一个元素可能是姓
+        } else if (nameParts.length > 2) {
             firstName = nameParts[0];
-            middleName = nameParts.slice(1, nameParts.length - 1).join(' '); // 将中间名的数组元素连接为字符串
+            middleName = nameParts.slice(1, nameParts.length - 1).join(' ');
             surname = nameParts[nameParts.length - 1];
         }
-
+    
         return {
             title,
-            first_name: this.capitalize(firstName),
-            middle_name: this.capitalize(middleName, true),
-            surname: this.capitalize(surname)
+            first_name: firstName,
+            middle_name: middleName,
+            surname: surname
         };
     }
     
-    capitalize(text, hyphenated = false) {
-        if (!text) return "";
-        if (hyphenated) {
-            return text.split('-').map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()).join('-');
-        }
-        return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
-    }
 
     format_age(age) {
-        return parseInt(age, 10); // 直接转换年龄为整数
+        // 检查年龄是否已经是数字
+        if (!isNaN(parseInt(age, 10))) {
+            return parseInt(age, 10);
+        }
+    
+        // 英文数字到数字的映射
+        const numberWords = {
+            "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9, 
+            "eleven": 11, "twelve": 12, "thirteen": 13, "fourteen": 14, "fifteen": 15,  "sixteen": 16, "seventeen": 17, "eighteen": 18, "nineteen": 19, 
+            "ten": 10, "twenty": 20, "thirty": 30, "forty": 40, "fifty": 50, "sixty": 60, "seventy": 70, "eighty": 80, "ninety": 90
+        };
+    
+        // 将年龄字符串分割为单词，并使用映射表转换为数字
+        const words = age.toLowerCase().split(/-|\s/);
+        let total = 0;
+        words.forEach(word => {
+            total += numberWords[word] || 0;
+        });
+    
+        return total;
     }
+    
 
     format_dateOfBirth(dateOfBirthStr) {
         let normalizedDate;
@@ -64,7 +86,7 @@ class Data_Processing {
             const parts = dateOfBirthStr.split('/');
             // 直接处理为 DD/MM/YYYY，考虑到输入可能已是此格式或为 DD/MM/YY
             if (parts.length === 3) {
-                const year = parts[2].length === 2 ? `19${parts[2]}` : parts[2]; // 假设是19XX年代的年份
+                const year = parts[2].length === 2 ? (parseInt(parts[2]) >= 25 ? `19${parts[2]}` : `20${parts[2]}`) : parts[2]; // 假设是19XX年代的年份
                 normalizedDate = `${parts[0].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${year}`;
             }
         } else {
@@ -87,8 +109,10 @@ class Data_Processing {
     
 
     
-    calculateAge(dateOfBirthStr) {
-        const convertedDateOfBirth = this.format_dateOfBirth(dateOfBirthStr);
+    clean_getAgeByDOB(dateOfBirthStr) {
+        const parts = dateOfBirthStr.split("/");
+        // 转换日期字符串为YYYY-MM-DD格式
+        const convertedDateOfBirth = `${parts[2]}-${parts[1]}-${parts[0]}`;
     
         if (!convertedDateOfBirth) {
             throw new Error('Unsupported date format:' + dateOfBirthStr);
@@ -96,117 +120,134 @@ class Data_Processing {
     
         const collectionDate = new Date('2024-02-26'); // 数据收集日期：2024年2月26日
         const dateOfBirth = new Date(convertedDateOfBirth);
-        const ageDif = collectionDate - dateOfBirth;
-        const ageDate = new Date(ageDif);
+        const ageDifMs = collectionDate - dateOfBirth; // 得到毫秒数差
+        const ageDate = new Date(ageDifMs); 
         return Math.abs(ageDate.getUTCFullYear() - 1970);
     }
     
-
-    processEmail(firstName, surname, providedEmail) {
-        // 直接将名字和姓氏转换为小写，用于比较
-        firstName = firstName.toLowerCase();
-        surname = surname.toLowerCase();
     
-        // 检查提供的电子邮件是否有效且符合预期格式 (检查后缀)
-        const isSuffixValid = providedEmail && providedEmail.endsWith('@example.com');
 
-        // 检查电子邮件的前缀是否符合 firstName.surname 的格式 (检查前缀)
-        const expectedPrefix = `${firstName}.${surname}`;
-        const actualPrefix = providedEmail.substring(0, providedEmail.indexOf('@'));
-        const isPrefixValid = actualPrefix === expectedPrefix;
-
-        // 检查电子邮件地址是否有效 (后缀 + 前缀)
-        const isValidEmail = isSuffixValid && isPrefixValid;
-    
-        // 如果电子邮件地址有效，则使用提供的电子邮件地址，否则生成一个电子邮件地址
-        let candidateEmail = isValidEmail ? providedEmail : `${expectedPrefix}@example.com`;
-    
-        // 检查候选电子邮件是否需要处理重复
-        const count = this.emailCounter[candidateEmail] || 0;
-        
-        // 如果这个地址已经出现过，则在本地部分添加一个数字来区分
-        if (count >= 1) {
-            // 如果候选电子邮件已存在，生成一个带数字的新地址
-            candidateEmail = `${expectedPrefix}${count}@example.com`;
-        }
-
-        this.emailCounter[candidateEmail] = count + 1;
-        
-        return candidateEmail;
+    clean_getEmailByName(firstName, surname) {
+        return `${firstName}.${surname}@example.com`;
     }
+    
 
-    extractNameFromEmail(email) {
-        const nameParts = email.split('@')[0].split('.'); // 在@符号前分割电子邮件地址，然后在.号前分割名字部分
+    clean_getNameByEmail(email) {
+        // 在@符号前分割电子邮件地址，然后在.号前分割名字部分
+        const nameParts = email.split('@')[0].split('.');
         let firstName = "", surname = "";
-    
-        if (nameParts.length >= 2) {
+        
+        // 由于电子邮件格式为firstname.surname，直接从nameParts分配
+        if (nameParts.length === 2) {
             firstName = nameParts[0];
-            surname = nameParts.slice(1).join(' '); // 假设姓可能由多个部分组成
-        } else {
-            firstName = nameParts[0]; // 如果电子邮件中只有一个名字部分
+            surname = nameParts[1];
         }
-    
-        // 将提取的名字部分标准化（首字母大写，其余小写）
-        firstName = this.capitalize(firstName);
-        surname = this.capitalize(surname);
     
         return { firstName, surname };
     }
     
-    
+    clean_removeTitleDots(user) {
+        user.title = user.title.replace(".", "");
+    }
+
     format_data() {
-        const rows = this.raw_user_data.split('\n'); // 按行分割数据
-        // 初始化一个数组来存储所有格式化后的用户数据
-        this.formatted_user_data = rows.map(row => {
+        const rows = this.raw_user_data.split('\n');
+        rows.forEach(row => {
             if (row.trim()) {
-                const values = row.split(','); // 按逗号分割每行数据
-                // 使用 values 进行解构
+                const values = row.split(',').map(item => item.trim());
                 const [fullName, dob, age, email] = values;
-    
-                // 处理名字
+
+                // 这里假设已经定义了format_name, format_dateOfBirth, 和 format_age方法
                 const nameParts = this.format_name(fullName);
-    
-                // 格式化出生日期
-                const formattedDOB = this.format_dateOfBirth(dob);
-    
-                // 转换年龄为整数
-                const ageInt = this.format_age(age);
-    
-                // 生成电子邮件地址
-                const processedEmail = this.processEmail(nameParts.first_name, nameParts.surname, email);
-    
-                // 构建并返回格式化后的用户数据对象
-                return {
+                const formatDOB = this.format_dateOfBirth(dob);
+                const formatAge = this.format_age(age);
+                const formatEmail = email.trim();
+
+                const user = {
                     title: nameParts.title,
                     first_name: nameParts.first_name,
                     middle_name: nameParts.middle_name,
                     surname: nameParts.surname,
-                    date_of_birth: formattedDOB,
-                    age: ageInt,
-                    email: processedEmail
+                    date_of_birth: formatDOB,
+                    age: formatAge,
+                    email: formatEmail
                 };
+
+                // 将处理后的数据添加到formatted_user_data
+                this.formatted_user_data.push(user);
+
+                let temp_date_of_birth = user.date_of_birth;
+                let temp_first_name = user.first_name;
+                let temp_surname = user.surname;
+                let temp_email = user.email;
+
+                // 信息补全: 从电子邮件提取姓名
+                if ((!temp_first_name || !temp_surname) && temp_email) {
+                    const temp_nameParts = this.clean_getNameByEmail(temp_email);
+                    temp_first_name = temp_nameParts.firstName;
+                    temp_surname = temp_nameParts.surname;
+                }
+
+                // 补全电子邮件
+                if (!temp_email || temp_email.trim() === "@example.com") {
+                    temp_email = this.clean_getEmailByName(temp_first_name, temp_surname);
+                } else if (!temp_email.endsWith('@example.com')) {
+                    temp_email = `${temp_email.split('@')[0]}@example.com`;
+                }
+
+                // 使用first_name, surname, 和 date_of_birth作为键进行去重
+                const uniqueKey = `${temp_first_name}|${temp_surname}|${temp_date_of_birth}`;
+                if (!this.intermediateData.has(uniqueKey)) {
+                    this.intermediateData.set(uniqueKey, user);
+
+                    // 在format_data方法中，统计每个电子邮件地址的出现次数
+                    const emailKey = temp_email;
+                    this.emailCounts[emailKey] = (this.emailCounts[emailKey] || 0) + 1;
+                }
+                
+                
             }
-            return null;
-        }).filter(user => user !== null); // 过滤掉任何未处理的行（即空行）
+        });
     }
-    
 
     clean_data() {
-        this.cleaned_user_data = this.formatted_user_data.map(user => {
-            // 如果名字信息缺失，则尝试从电子邮件地址提取
-            if (!user.first_name.trim() && !user.surname.trim() && user.email) {
-                const { firstName, surname } = this.extractNameFromEmail(user.email);
-                user.first_name = firstName;
-                user.surname = surname;
+        const emailSuffixCounter = {};
+
+        this.cleaned_user_data = Array.from(this.intermediateData.values()).map(user => {
+            
+            // 信息补全: 从电子邮件提取姓名
+            if ((!user.first_name || !user.surname) && user.email) {
+                const nameParts = this.clean_getNameByEmail(user.email);
+                user.first_name = nameParts.firstName;
+                user.surname = nameParts.surname;
             }
 
-            // 重新计算年龄
-            user.age = this.calculateAge(user.date_of_birth);
+            // 去除Title中的点
+            this.clean_removeTitleDots(user);
 
-            // 返回清理后的用户数据对象
+            // 重新计算年龄
+            user.age = this.clean_getAgeByDOB(user.date_of_birth);
+
+            // 补全电子邮件
+            if (!user.email || user.email.trim() === "@example.com") {
+                user.email = this.clean_getEmailByName(user.first_name, user.surname);
+            } else if (!user.email.endsWith('@example.com')) {
+                user.email = `${user.email.split('@')[0]}@example.com`;
+            }
+            
+
+            // 在clean_data方法中，为重复的电子邮件添加后缀
+            const emailKey = user.email;
+            if (this.emailCounts[emailKey] > 1) {
+                emailSuffixCounter[emailKey] = (emailSuffixCounter[emailKey] || 0) + 1;
+                user.email = `${user.email.split('@')[0]}${emailSuffixCounter[emailKey]}@${user.email.split('@')[1]}`;
+            }
+
             return user;
         });
     }
+
+    
 
     // 查询部分
 
@@ -222,12 +263,14 @@ class Data_Processing {
         });
 
         // 获取最常见的姓氏
-        let mostCommonSurname = "";
+        let mostCommonSurname = [];
         let maxCount = 0;
         for (const surname in surnameCounter) {
             if (surnameCounter[surname] > maxCount) {
                 mostCommonSurname = surname;
                 maxCount = surnameCounter[surname];
+            } else if (surnameCounter[surname] === maxCount) {
+                mostCommonSurname += `, ${surname}`;
             }
         }
 
@@ -242,10 +285,10 @@ class Data_Processing {
         // 累加所有用户的年龄
         const totalAge = this.cleaned_user_data.reduce((acc, user) => acc + user.age, 0);
         
-        // 计算平均年龄，结果保留三位小数
+        // 计算平均年龄，结果保留一位小数
         const avgAge = totalAge / this.cleaned_user_data.length;
         
-        return Number(avgAge.toFixed(3)); // 将字符串结果转换回数字
+        return Number(avgAge.toFixed(1)); // 将字符串结果转换回数字
     }
 
     youngest_dr() {
@@ -271,7 +314,7 @@ class Data_Processing {
     most_common_month() {
         const monthCounts = {};
         this.cleaned_user_data.forEach(user => {
-            const month = user.date_of_birth.split('-')[1]; // 获取月份
+            const month = user.date_of_birth.split('/')[1]; // 获取月份
             if (monthCounts[month]) {
                 monthCounts[month]++;
             } else {
@@ -289,6 +332,16 @@ class Data_Processing {
         }
     
         return mostCommonMonth; // 直接返回最常见的月份数字
+    }
+
+
+    // 银行家舍入
+    bankersRound(number) {
+        var rounded = Math.round(number);
+        if (Math.abs(number - rounded) === 0.5) {
+            return (rounded % 2 === 0) ? rounded : rounded - 1;
+        }
+        return rounded;
     }
     
     percentage_titles() {
@@ -314,15 +367,6 @@ class Data_Processing {
         return titlesPercentage;
     }
     
-
-    // 银行家舍入
-    bankersRound(number) {
-        var rounded = Math.round(number);
-        if (Math.abs(number - rounded) === 0.5) {
-            return (rounded % 2 === 0) ? rounded : rounded - 1;
-        }
-        return rounded;
-    }
     
     percentage_altered() {
         let changes = 0;
@@ -344,6 +388,10 @@ class Data_Processing {
 
 
 // const dataProcessor = new Data_Processing();
+
 // dataProcessor.load_CSV('Raw_User_Data.csv');
 // // 读取raw_user_data
 // console.log(dataProcessor.raw_user_data);
+
+// age = dataProcessor.calculateAge('11/01/1986');
+// console.log(age);
