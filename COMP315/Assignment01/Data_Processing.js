@@ -261,20 +261,20 @@ class Data_Processing {
                 surnameCounter[surname] = 1;
             }
         });
-
+    
         // 获取最常见的姓氏
-        let mostCommonSurname = [];
+        let mostCommonSurnames = [];
         let maxCount = 0;
         for (const surname in surnameCounter) {
             if (surnameCounter[surname] > maxCount) {
-                mostCommonSurname = surname;
+                mostCommonSurnames = [surname];
                 maxCount = surnameCounter[surname];
             } else if (surnameCounter[surname] === maxCount) {
-                mostCommonSurname += `, ${surname}`;
+                mostCommonSurnames.push(surname);
             }
         }
-
-        return mostCommonSurname;
+    
+        return mostCommonSurnames;
     }
 
     average_age() {
