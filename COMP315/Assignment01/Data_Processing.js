@@ -1,3 +1,4 @@
+const { log } = require('console');
 const fs = require('fs'); // 引入文件系统模块
 const path = require('path'); // 引入路径模块
 
@@ -176,10 +177,12 @@ class Data_Processing {
                 // 将处理后的数据添加到formatted_user_data
                 this.formatted_user_data.push(user);
 
-                let temp_date_of_birth = user.date_of_birth;
-                let temp_first_name = user.first_name;
-                let temp_surname = user.surname;
-                let temp_email = user.email;
+
+
+                let temp_date_of_birth = JSON.parse(JSON.stringify(user.date_of_birth));
+                let temp_first_name = JSON.parse(JSON.stringify(user.first_name));
+                let temp_surname = JSON.parse(JSON.stringify(user.surname));
+                let temp_email = JSON.parse(JSON.stringify(user.email));
 
                 // 信息补全: 从电子邮件提取姓名
                 if ((!temp_first_name || !temp_surname) && temp_email) {
@@ -211,6 +214,8 @@ class Data_Processing {
     }
 
     clean_data() {
+        const temp_formatted_user_data = JSON.parse(JSON.stringify(this.formatted_user_data));
+
         const emailSuffixCounter = {};
 
         this.cleaned_user_data = Array.from(this.intermediateData.values()).map(user => {
@@ -245,6 +250,8 @@ class Data_Processing {
 
             return user;
         });
+
+        this.formatted_user_data = temp_formatted_user_data;
     }
 
     
@@ -345,7 +352,7 @@ class Data_Processing {
     }
     
     percentage_titles() {
-        const titleCounts = {};
+        const titleCounts = {}; 
         let totalUsers = this.cleaned_user_data.length;
     
         // 统计每个标题的出现次数
@@ -354,40 +361,53 @@ class Data_Processing {
             titleCounts[title] = (titleCounts[title] || 0) + 1;
         });
     
-        // 计算标题百分比
-        const titlesPercentage = Object.keys(titleCounts).map(title => {
-            const count = titleCounts[title];
+        // 标题的顺序
+        const titleOrder = ['Mr', 'Mrs', 'Miss', 'Ms', 'Dr', 'blank'];
+    
+        // 按照特定的顺序计算标题百分比
+        const titlesPercentage = titleOrder.map(title => {
+            const count = titleCounts[title] || 0;
             const percentage = (count / totalUsers) * 100;
-            return {
-                title,
-                percentage: bankersRound(percentage) // 使用银行家舍入到最接近的整数
-            };
+            return this.bankersRound(percentage); // 使用银行家舍入到最接近的整数
         });
     
         return titlesPercentage;
     }
     
-    
+
     percentage_altered() {
         let changes = 0;
-        const total = this.formatted_user_data.length * Object.keys(this.formatted_user_data[0]).length;
-    
-        for (let i = 0; i < this.formatted_user_data.length; i++) { // 遍历每个用户的格式化数据
-            Object.keys(this.formatted_user_data[i]).forEach(key => {
-                if (this.formatted_user_data[i][key] !== this.cleaned_user_data[i][key]) {
-                    changes++;
-                }
-            });
+        const numOfKeys = 7;
+        const total = this.formatted_user_data.length * numOfKeys;
+
+        for (let i = 0; i < this.cleaned_user_data.length; i++) {
+            let found = false;
+            if (((this.cleaned_user_data[i].first_name === this.formatted_user_data[i].first_name &&
+                this.cleaned_user_data[i].surname === this.formatted_user_data[i].surname) ||
+                this.cleaned_user_data[i].email.split('@')[0].replace(/\d+$/, '') === this.formatted_user_data[i].email.split('@')[0].replace(/\d+$/, '')) && 
+                this.cleaned_user_data[i].date_of_birth === this.formatted_user_data[i].date_of_birth) {
+                found = true;
+                Object.keys(this.cleaned_user_data[i]).forEach(key => {
+                    if (this.cleaned_user_data[i][key] !== this.formatted_user_data[i][key]) {
+                        changes++;
+                    }
+                });
+            }
         }
-    
+
+        changes += numOfKeys * (this.formatted_user_data.length - this.cleaned_user_data.length);
+
+        
         const percentage = (changes / total) * 100;
-        return percentage.toFixed(2); // 返回修改的百分比，保留两位小数
+        return Number(percentage).toPrecision(3); // 返回修改的百分比，保留三位有效数字
     }
-    
+
+
+
 }
 
 
-// const dataProcessor = new Data_Processing();
+const dataProcessor = new Data_Processing();
 
 // dataProcessor.load_CSV('Raw_User_Data.csv');
 // // 读取raw_user_data
@@ -395,3 +415,16 @@ class Data_Processing {
 
 // age = dataProcessor.calculateAge('11/01/1986');
 // console.log(age);
+
+dataProcessor.load_CSV('Raw_User_Data');
+dataProcessor.format_data();
+dataProcessor.clean_data();
+
+dataProcessor.percentage_altered();
+console.log(dataProcessor.percentage_altered());
+
+// export cleaned_user_data (filename = 'Cleaned_User_Data')
+// fs.writeFileSync('Cleaned_User_Data.json', JSON.stringify(dataProcessor.cleaned_user_data, null, 2));
+
+// export formatted_user_data (filename = 'Formatted_User_Data')
+
