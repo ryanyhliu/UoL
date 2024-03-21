@@ -407,24 +407,24 @@ class Data_Processing {
 }
 
 
-const dataProcessor = new Data_Processing();
+// const dataProcessor = new Data_Processing();
 
-// dataProcessor.load_CSV('Raw_User_Data.csv');
-// // 读取raw_user_data
-// console.log(dataProcessor.raw_user_data);
+// // dataProcessor.load_CSV('Raw_User_Data.csv');
+// // // 读取raw_user_data
+// // console.log(dataProcessor.raw_user_data);
 
-// age = dataProcessor.calculateAge('11/01/1986');
-// console.log(age);
+// // age = dataProcessor.calculateAge('11/01/1986');
+// // console.log(age);
 
-dataProcessor.load_CSV('Raw_User_Data');
-dataProcessor.format_data();
-dataProcessor.clean_data();
+// dataProcessor.load_CSV('Raw_User_Data');
+// dataProcessor.format_data();
+// dataProcessor.clean_data();
 
-dataProcessor.percentage_altered();
-console.log(dataProcessor.percentage_altered());
+// dataProcessor.percentage_altered();
+// console.log(dataProcessor.percentage_altered());
 
-// export cleaned_user_data (filename = 'Cleaned_User_Data')
-// fs.writeFileSync('Cleaned_User_Data.json', JSON.stringify(dataProcessor.cleaned_user_data, null, 2));
+// // export cleaned_user_data (filename = 'Cleaned_User_Data')
+// // fs.writeFileSync('Cleaned_User_Data.json', JSON.stringify(dataProcessor.cleaned_user_data, null, 2));
 
-// export formatted_user_data (filename = 'Formatted_User_Data')
+// // export formatted_user_data (filename = 'Formatted_User_Data')
 
