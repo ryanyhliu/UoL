@@ -4,45 +4,47 @@ const path = require('path'); // 引入路径模块
 
 class Data_Processing {
 
-    constructor() { // 构造函数
-        // 定义全局变量
-        this.raw_user_data = []; // 用于存储原始用户数据的数组
-        this.formatted_user_data = []; // 用于存储格式化后的用户数据的数组
-        this.cleaned_user_data = []; // 用于存储清理后的用户数据的数组
+    constructor() { 
+        this.raw_user_data = []; 
+        this.formatted_user_data = []; 
+        this.cleaned_user_data = []; 
 
-        this.intermediateData = new Map(); // 用于存储中间数据的数组
-        this.emailCounts = {}; // 用于存储电子邮件地址计数的对象
-        this.emailMap = new Map(); // 用于存储电子邮件地址映射的Map
+        this.intermediateData = new Map(); // store intermediate data for duplicate removal
+        this.emailCounts = {}; // count the number of times each email appears (first pass)
+        this.emailMap = new Map(); // add suffixes to duplicate emails (second pass)
         
     }
 
     load_CSV(filename) {
-        this.raw_user_data = fs.readFileSync(filename+".csv", 'utf8');
+        this.raw_user_data = fs.readFileSync(filename + ".csv", 'utf8');
     }
     
     
     format_name(fullName) {
-        let nameParts = fullName.trim().split(/\s+/); // 根据空白字符分割姓名
-        let title = "", firstName = "", middleName = "", surname = ""; 
+        let nameParts = fullName.trim().split(" "); // spilt by space
+        let title = "";
+        let firstName = "";
+        let middleName = "";
+        let surname = ""; 
     
-        // 检查首个词是否为常见的称谓
+        // check if the first element is a title
         const titles = ["Mr", "Mrs", "Miss", "Ms", "Dr", "Dr."];
         if (titles.includes(nameParts[0])) {
-            title = nameParts.shift(); // 移除并获取称谓
+            title = nameParts.shift(); // remove the title from the array
         }
     
-        // 如果最后一个元素是空字符串，移除它
+        // remove any empty strings from the array
         if (nameParts[nameParts.length - 1] === "") {
             nameParts.pop();
         }
     
+        // assign the remaining parts to the correct variables
         if (nameParts.length === 1) {
-            // 如果数组只有一个元素，且之前有称谓，我们假设它是名字
             firstName = nameParts[0];
         } else if (nameParts.length === 2) {
             firstName = nameParts[0];
             surname = nameParts[1];
-        } else if (nameParts.length > 2) {
+        } else if (nameParts.length > 2) { // if more than 2 parts, assume the last part is the surname
             firstName = nameParts[0];
             middleName = nameParts.slice(1, nameParts.length - 1).join(' ');
             surname = nameParts[nameParts.length - 1];
@@ -58,47 +60,72 @@ class Data_Processing {
     
 
     format_age(age) {
-        // 检查年龄是否已经是数字
+        // check if the age is already a number
         if (!isNaN(parseInt(age, 10))) {
             return parseInt(age, 10);
         }
     
-        // 英文数字到数字的映射
+        // map of number words to their integer values
         const numberWords = {
             "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9, 
             "eleven": 11, "twelve": 12, "thirteen": 13, "fourteen": 14, "fifteen": 15,  "sixteen": 16, "seventeen": 17, "eighteen": 18, "nineteen": 19, 
             "ten": 10, "twenty": 20, "thirty": 30, "forty": 40, "fifty": 50, "sixty": 60, "seventy": 70, "eighty": 80, "ninety": 90
         };
     
-        // 将年龄字符串分割为单词，并使用映射表转换为数字
-        const words = age.toLowerCase().split(/-|\s/);
+        // split the age string into words and sum the values
+        const words = age.toLowerCase().split('-').join(' ').split(' '); // split by hyphen or space
         let total = 0;
         words.forEach(word => {
-            total += numberWords[word] || 0;
+            total += numberWords[word] || 0; // add the number value or 0 if not found
         });
     
         return total;
     }
     
 
-    format_dateOfBirth(dateOfBirthStr) {
-        let normalizedDate;
-        if (dateOfBirthStr.includes('/')) {
-            const parts = dateOfBirthStr.split('/');
-            // 直接处理为 DD/MM/YYYY，考虑到输入可能已是此格式或为 DD/MM/YY
+    format_dateOfBirth(str_DOB) {
+        let formattedDate;
+        if (str_DOB.includes('/')) {
+            const parts = str_DOB.split('/');
+            // date of format DD/MM/YYYY
             if (parts.length === 3) {
-                const year = parts[2].length === 2 ? (parseInt(parts[2]) >= 25 ? `19${parts[2]}` : `20${parts[2]}`) : parts[2]; // 假设是19XX年代的年份
-                normalizedDate = `${parts[0].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${year}`;
+                // Split the date into parts (assuming 'parts' is already defined as the date split into [day, month, year])
+                const isTwoDigitYear = parts[2].length === 2; // Check if the year part of the date has only two digits
+
+                let year;
+                if (isTwoDigitYear) {
+                const twoDigitYear = parseInt(parts[2]); // Convert the two-digit year to an integer
+                
+                
+                if (twoDigitYear >= 25) { // If the year is 25 or later, assume it's 19XX
+                    year = `19${parts[2]}`;
+                } else { // Otherwise, assume it's the 20XX
+                    year = `20${parts[2]}`;
+                }
+                } else {
+                year = parts[2]; // If the year is not two digits, use it as is
+                }
+
+                // Format the date components to ensure two digits for month and day
+                const monthPadded = parts[0].padStart(2, '0'); // Pad the month to ensure it has two digits
+                const dayPadded = parts[1].padStart(2, '0'); // Pad the day to ensure it has two digits
+
+                formattedDate = `${monthPadded}/${dayPadded}/${year}`;
+
             }
         } else {
-            // 处理其他格式，例如 "10 April 1963"
-            const dateParts = dateOfBirthStr.split(' ');
+            // deal with date of format "DD Month YYYY"
+            const dateParts = str_DOB.split(' ');
             if (dateParts.length === 3) {
-                normalizedDate = `${dateParts[0].padStart(2, '0')}/${this.monthToNumber(dateParts[1])}/${dateParts[2]}`;
+                const dayPadded = dateParts[0].padStart(2, '0');
+                const monthNumber = this.monthToNumber(dateParts[1]).toString().padStart(2, '0');
+                const year = dateParts[2];
+
+                formattedDate = `${dayPadded}/${monthNumber}/${year}`;
             }
         }
     
-        return normalizedDate;
+        return formattedDate;
     }
     
     monthToNumber(month) {
@@ -112,17 +139,17 @@ class Data_Processing {
     
     clean_getAgeByDOB(dateOfBirthStr) {
         const parts = dateOfBirthStr.split("/");
-        // 转换日期字符串为YYYY-MM-DD格式
+        // get the date of birth in the format YYYY-MM-DD
         const convertedDateOfBirth = `${parts[2]}-${parts[1]}-${parts[0]}`;
     
         if (!convertedDateOfBirth) {
             throw new Error('Unsupported date format:' + dateOfBirthStr);
         }
     
-        const collectionDate = new Date('2024-02-26'); // 数据收集日期：2024年2月26日
+        const collectionDate = new Date('2024-02-26'); 
         const dateOfBirth = new Date(convertedDateOfBirth);
-        const ageDifMs = collectionDate - dateOfBirth; // 得到毫秒数差
-        const ageDate = new Date(ageDifMs); 
+        const ageDiff = collectionDate - dateOfBirth;
+        const ageDate = new Date(ageDiff); 
         return Math.abs(ageDate.getUTCFullYear() - 1970);
     }
     
@@ -134,11 +161,11 @@ class Data_Processing {
     
 
     clean_getNameByEmail(email) {
-        // 在@符号前分割电子邮件地址，然后在.号前分割名字部分
+        // split with '@' and '.' to get the name parts, i.e. firstname.surname
         const nameParts = email.split('@')[0].split('.');
-        let firstName = "", surname = "";
+        let firstName = "";
+        let surname = "";
         
-        // 由于电子邮件格式为firstname.surname，直接从nameParts分配
         if (nameParts.length === 2) {
             firstName = nameParts[0];
             surname = nameParts[1];
@@ -155,10 +182,9 @@ class Data_Processing {
         const rows = this.raw_user_data.split('\n');
         rows.forEach(row => {
             if (row.trim()) {
-                const values = row.split(',').map(item => item.trim());
+                const values = row.split(',').map(item => item.trim()); // split by comma and remove space
                 const [fullName, dob, age, email] = values;
 
-                // 这里假设已经定义了format_name, format_dateOfBirth, 和 format_age方法
                 const nameParts = this.format_name(fullName);
                 const formatDOB = this.format_dateOfBirth(dob);
                 const formatAge = this.format_age(age);
@@ -178,32 +204,32 @@ class Data_Processing {
                 this.formatted_user_data.push(user);
 
 
-
-                let temp_date_of_birth = JSON.parse(JSON.stringify(user.date_of_birth));
+                // construct a unique key to remove duplicates and count email occurrences
+                let temp_date_of_birth = JSON.parse(JSON.stringify(user.date_of_birth)); // deep copy !!!
                 let temp_first_name = JSON.parse(JSON.stringify(user.first_name));
                 let temp_surname = JSON.parse(JSON.stringify(user.surname));
                 let temp_email = JSON.parse(JSON.stringify(user.email));
 
-                // 信息补全: 从电子邮件提取姓名
-                if ((!temp_first_name || !temp_surname) && temp_email) {
+                // extract name from email
+                if ((!temp_first_name || !temp_surname) && temp_email) { 
                     const temp_nameParts = this.clean_getNameByEmail(temp_email);
                     temp_first_name = temp_nameParts.firstName;
                     temp_surname = temp_nameParts.surname;
                 }
 
-                // 补全电子邮件
+                // complete email
                 if (!temp_email || temp_email.trim() === "@example.com") {
                     temp_email = this.clean_getEmailByName(temp_first_name, temp_surname);
                 } else if (!temp_email.endsWith('@example.com')) {
                     temp_email = `${temp_email.split('@')[0]}@example.com`;
                 }
 
-                // 使用first_name, surname, 和 date_of_birth作为键进行去重
+                // remove depulicates
                 const uniqueKey = `${temp_first_name}|${temp_surname}|${temp_date_of_birth}`;
                 if (!this.intermediateData.has(uniqueKey)) {
                     this.intermediateData.set(uniqueKey, user);
 
-                    // 在format_data方法中，统计每个电子邮件地址的出现次数
+                    // count email occurrences
                     const emailKey = temp_email;
                     this.emailCounts[emailKey] = (this.emailCounts[emailKey] || 0) + 1;
                 }
@@ -214,26 +240,26 @@ class Data_Processing {
     }
 
     clean_data() {
-        const temp_formatted_user_data = JSON.parse(JSON.stringify(this.formatted_user_data));
+        const temp_formatted_user_data = JSON.parse(JSON.stringify(this.formatted_user_data)); // deep copy
 
         const emailSuffixCounter = {};
 
         this.cleaned_user_data = Array.from(this.intermediateData.values()).map(user => {
             
-            // 信息补全: 从电子邮件提取姓名
+            // process the name
             if ((!user.first_name || !user.surname) && user.email) {
                 const nameParts = this.clean_getNameByEmail(user.email);
                 user.first_name = nameParts.firstName;
                 user.surname = nameParts.surname;
             }
 
-            // 去除Title中的点
+            // process the title
             this.clean_removeTitleDots(user);
 
-            // 重新计算年龄
+            // process the age
             user.age = this.clean_getAgeByDOB(user.date_of_birth);
 
-            // 补全电子邮件
+            // process the email (missing or incorrect email)
             if (!user.email || user.email.trim() === "@example.com") {
                 user.email = this.clean_getEmailByName(user.first_name, user.surname);
             } else if (!user.email.endsWith('@example.com')) {
@@ -241,7 +267,7 @@ class Data_Processing {
             }
             
 
-            // 在clean_data方法中，为重复的电子邮件添加后缀
+            // process duplicate emails
             const emailKey = user.email;
             if (this.emailCounts[emailKey] > 1) {
                 emailSuffixCounter[emailKey] = (emailSuffixCounter[emailKey] || 0) + 1;
@@ -256,10 +282,10 @@ class Data_Processing {
 
     
 
-    // 查询部分
+    //---------------------- Query Functions ----------------------
 
     most_common_surname() {
-        const surnameCounter = {}; // 用于存储姓氏计数的对象
+        const surnameCounter = {}; // store the count of each surname
         this.cleaned_user_data.forEach(user => {
             const surname = user.surname;
             if (surnameCounter[surname]) {
@@ -269,7 +295,7 @@ class Data_Processing {
             }
         });
     
-        // 获取最常见的姓氏
+        // get the most common surname
         let mostCommonSurnames = [];
         let maxCount = 0;
         for (const surname in surnameCounter) {
@@ -285,24 +311,21 @@ class Data_Processing {
     }
 
     average_age() {
-        if (this.cleaned_user_data.length === 0) {
-            return 0; // 如果没有数据，则平均年龄为0
-        }
+        let totalAge = 0;
+
+        this.cleaned_user_data.forEach(user => {
+            totalAge += user.age;
+        });
         
-        // 累加所有用户的年龄
-        const totalAge = this.cleaned_user_data.reduce((acc, user) => acc + user.age, 0);
-        
-        // 计算平均年龄，结果保留一位小数
         const avgAge = totalAge / this.cleaned_user_data.length;
         
-        return Number(avgAge.toFixed(1)); // 将字符串结果转换回数字
+        return Number(avgAge.toFixed(1)); 
     }
 
     youngest_dr() {
-        // 筛选出所有头衔为 "Dr." 的用户
+        // get all the doctors
         const doctors = this.cleaned_user_data.filter(user => user.title === "Dr");
 
-        // 如果没有博士，则返回空对象
         if (doctors.length === 0) {
             return null;
         }
@@ -321,7 +344,7 @@ class Data_Processing {
     most_common_month() {
         const monthCounts = {};
         this.cleaned_user_data.forEach(user => {
-            const month = user.date_of_birth.split('/')[1]; // 获取月份
+            const month = user.date_of_birth.split('/')[1]; // get month
             if (monthCounts[month]) {
                 monthCounts[month]++;
             } else {
@@ -338,11 +361,11 @@ class Data_Processing {
             }
         }
     
-        return mostCommonMonth; // 直接返回最常见的月份数字
+        return mostCommonMonth; 
     }
 
 
-    // 银行家舍入
+    // bankersRound: 银行家舍入法
     bankersRound(number) {
         var rounded = Math.round(number);
         if (Math.abs(number - rounded) === 0.5) {
@@ -355,20 +378,20 @@ class Data_Processing {
         const titleCounts = {}; 
         let totalUsers = this.cleaned_user_data.length;
     
-        // 统计每个标题的出现次数
+        // count the number of each title
         this.cleaned_user_data.forEach(user => {
-            const title = user.title || "blank"; // 对于缺失的标题使用"blank"
+            const title = user.title || "blank"; // use 'blank' if title is missing
             titleCounts[title] = (titleCounts[title] || 0) + 1;
         });
     
-        // 标题的顺序
+        // order of titles
         const titleOrder = ['Mr', 'Mrs', 'Miss', 'Ms', 'Dr', 'blank'];
     
-        // 按照特定的顺序计算标题百分比
+        // calculate the percentage of each title
         const titlesPercentage = titleOrder.map(title => {
             const count = titleCounts[title] || 0;
             const percentage = (count / totalUsers) * 100;
-            return this.bankersRound(percentage); // 使用银行家舍入到最接近的整数
+            return this.bankersRound(percentage); 
         });
     
         return titlesPercentage;
@@ -382,6 +405,7 @@ class Data_Processing {
 
         for (let i = 0; i < this.cleaned_user_data.length; i++) {
             let found = false;
+            // match the user in cleaned data and formatted data with the same name or email and date of birth
             if (((this.cleaned_user_data[i].first_name === this.formatted_user_data[i].first_name &&
                 this.cleaned_user_data[i].surname === this.formatted_user_data[i].surname) ||
                 this.cleaned_user_data[i].email.split('@')[0].replace(/\d+$/, '') === this.formatted_user_data[i].email.split('@')[0].replace(/\d+$/, '')) && 
@@ -395,11 +419,12 @@ class Data_Processing {
             }
         }
 
+        // calculate the removed duplicates
         changes += numOfKeys * (this.formatted_user_data.length - this.cleaned_user_data.length);
 
         
         const percentage = (changes / total) * 100;
-        return Number(percentage).toPrecision(3); // 返回修改的百分比，保留三位有效数字
+        return Number(percentage).toPrecision(3);
     }
 
 
