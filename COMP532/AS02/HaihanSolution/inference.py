@@ -4,7 +4,7 @@ import torch
 
 env = gym.make('LunarLander-v2', render_mode='human')
 env.reset()
-model_path = "models/11000.zip"
+model_path = "models/0.zip"
 model = PPO.load(model_path, env=env)
 vec_env = model.get_env()
 

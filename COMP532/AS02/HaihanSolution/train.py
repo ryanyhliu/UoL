@@ -20,3 +20,4 @@ while True:
     model.learn(total_timesteps=timesteps_per_iteration, reset_num_timesteps=False)
     if total_timesteps % 1000 == 0:
         model.save(f"{models_path}/{total_timesteps}")
+        
