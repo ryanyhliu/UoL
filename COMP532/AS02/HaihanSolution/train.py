@@ -3,7 +3,8 @@ from stable_baselines3 import PPO
 import torch
 import os
 
-models_path = "models"
+current_dir = os.path.dirname(__file__)
+models_path = os.path.join(current_dir, "models")
 if not os.path.exists(models_path):
     os.makedirs(models_path)
 

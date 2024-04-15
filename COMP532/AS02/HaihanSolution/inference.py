@@ -1,10 +1,12 @@
 import gymnasium as gym
 from stable_baselines3 import PPO
 import torch
+import os
 
 env = gym.make('LunarLander-v2', render_mode='human')
 env.reset()
-model_path = "models/0.zip"
+current_dir = os.path.dirname(__file__)
+model_path = os.path.join(current_dir, "models/0.zip") 
 model = PPO.load(model_path, env=env)
 vec_env = model.get_env()
 
