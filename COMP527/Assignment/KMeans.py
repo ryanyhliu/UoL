@@ -25,7 +25,7 @@ def load_dataset(filename='dataset'):
     data = pd.read_csv(filepath, sep=' ', header=None)
     # set the index to the first column
     data.set_index(0, inplace=True)
-    return data
+    return data.values # return Numpy
 
 
 def compute_distance(point1, point2):
@@ -40,9 +40,10 @@ def compute_distance(point1, point2):
         float: The Euclidean distance between the two points.
     """
     
-    return np.sqrt(np.sum((point1 - point2) ** 2))
+    # return np.sqrt(np.sum((point1 - point2) ** 2))
+    return np.linalg.norm(point1 - point2) # use the numpy function, improve the efficiency
 
-def initial_selection(data, k):
+def initial_selection(seed, data, k):
     """
     Randomly select k points from the data as the initial centroids.
     
@@ -54,9 +55,9 @@ def initial_selection(data, k):
         pandas.DataFrame: The initial centroids.
     """
     
-    random_seed = 42
-    random.seed(random_seed)
-    return data.sample(n=k, random_state = random_seed) # randomly select k points from the data as the initial centroids
+    np.random.seed(seed)  
+    indices = np.random.choice(data.shape[0], size=k, replace=False)  
+    return data[indices, :]
 
 def assign_cluster_IDs(data, centers):
     """
@@ -70,15 +71,12 @@ def assign_cluster_IDs(data, centers):
         cluster_IDs (list): The cluster ID of each point.
     """
     
-    cluster_IDs = [] # store the cluster ID of each point
-    for index, point in data.iterrows(): # iterrows() returns the index and the row of the DataFrame
-        distances = []
-        for center in centers: # calculate the distance between the point and each center
-            distance = compute_distance(point, center)
-            distances.append(distance)
-        
-        cluster_ID = np.argmin(distances) # get the index of the minimum distance, assign to the cluster ID
-        cluster_IDs.append(cluster_ID)
+    differences = data[:, np.newaxis] - centers # calculate the difference between each point and each center. np.newaxis is used to add a new axis
+    squared_distances = np.sum(differences ** 2, axis = 2) # calculate the squared distance between each point and each center
+    distances = np.sqrt(squared_distances) # calculate the Euclidean distance
+    
+    cluster_IDs = np.argmin(distances, axis = 1) # get the index of the minimum distance, assign to the cluster ID
+    
     return cluster_IDs
 
 def compute_cluster_representatives(data, cluster_IDs, k):
@@ -96,17 +94,15 @@ def compute_cluster_representatives(data, cluster_IDs, k):
     
     new_centers = [] # store the new centroids
     for i in range(k): # for each cluster k
-        members = data[np.array(cluster_IDs) == i] # all the points in the cluster i
-        if not members.empty: # if the cluster is not empty
-            new_center = members.mean(axis = 0) # calculate the mean of the points in the cluster, assign to the new center
-            new_centers.append(new_center) 
-        else: # if the cluster is empty
-            new_center = data.sample(n = 1).iloc[0] # randomly select a point from the data as the new center
-            new_centers.append(new_center)
+        cluster_points = data[cluster_IDs == i] # all the points in the cluster i
+        cluster_means = np.mean(cluster_points, axis = 0) # calculate the mean of the points in the cluster, assign to the new center
+        new_centers.append(cluster_means)
     
+    new_centers = np.array(new_centers) # convert the list to a numpy array
     return new_centers
+    
 
-def kmeans(data, k, max_iter = 100):
+def kmeans(seed, data, k, max_iter = 100):
     """
     Perform the k-means clustering algorithm.
     
@@ -120,7 +116,7 @@ def kmeans(data, k, max_iter = 100):
         centers (pandas.DataFrame): The centroids.
     """
     
-    centers = initial_selection(data, k) # randomly select k points from the data as the initial centroids
+    centers = initial_selection(seed, data, k) # randomly select k points from the data as the initial centroids
     for i in range(max_iter):
         cluster_IDs = assign_cluster_IDs(data, centers) # assign each point to the nearest centroid
         new_centers = compute_cluster_representatives(data, cluster_IDs, k) # compute the new centroids of the clusters
@@ -141,18 +137,18 @@ def compute_a(data, labels, i):
         mean_distance (float): The mean distance between the point i and all other points in the same cluster.
     """
     
-    same_cluster = data[labels == labels[i]]
-    if len(same_cluster) <= 1: # if there is only one point in the same cluster, return 0
+    same_cluster_indices = np.where(labels == labels[i])[0]  # 获取相同聚类的所有索引
+    if len(same_cluster_indices) <= 1:
         return 0
-    else: # if there are more than one point in the same cluster, calculate the mean distance
+    else:
         distances = []
-        for points in range(len(data)): # calculate the distance between the point i and each point in the same cluster
-            if labels[points] == labels[i] and points != i: # exclude the point i itself
-                #distance = compute_distance(data[i], data[points]) 
-                distance = compute_distance(data.iloc[i], data.iloc[points]) 
+        for point in same_cluster_indices:
+            if point != i:
+                distance = compute_distance(data[i], data[point])
                 distances.append(distance)
         mean_distance = np.mean(distances)
         return mean_distance
+
 
 def compute_b(data, labels, i):
     """
@@ -166,23 +162,23 @@ def compute_b(data, labels, i):
     Returns:
         min_distances (float): The minimum distance between the point i and all other points in the other clusters.
     """
-    
-    other_clusters = set(labels) - set([labels[i]]) # get the cluster IDs of other clusters
-    min_distances = float('inf') # store the minimum distance, initialize as infinity
-    for cluster in other_clusters:
-        other_clusters_points = data[labels == cluster] # all the points in the other clusters
-        
-        # calculate the mean distance between the point i and all the points in the other clusters
-        distances = []
-        for points in range(len(other_clusters_points)):
-            distance = compute_distance(data.iloc[i], other_clusters_points.iloc[points]) # iloc[] is used to access the row by index
-            distances.append(distance)
-        mean_distance = np.mean(distances)
 
-        if mean_distance < min_distances:
-            min_distances = mean_distance
+    min_distance = np.inf
+    for cluster in np.unique(labels): # get the unique cluster IDs
+        if cluster != labels[i]: # exclude the cluster of the point i itself
+            other_cluster_indices = np.where(labels == cluster)[0] # get the indices of the points in the other clusters
             
-    return min_distances
+            distances = []
+            for point in other_cluster_indices: # calculate the distance between the point i and each point in the other clusters
+                distance = compute_distance(data[i], data[point])
+                distances.append(distance)
+            cluster_distance = np.mean(distances)
+            
+            if cluster_distance < min_distance:
+                min_distance = cluster_distance
+                
+    return min_distance
+
 
 def calculate_silhouette(data, cluster_IDs):
     """
@@ -230,11 +226,13 @@ def plot_silhouette(range_k, silhouette_scores):
 
 def main():
     data = load_dataset()
-    range_k = range(2, 10) # begin with 2 clusters because 1 cluster is meaningless
+    seed = 99
+    range_k = range(1, 10) # begin with 2 clusters because 1 cluster is meaningless
     silhouette_scores = []
 
     for k in range_k:
-        cluster_IDs, centers = kmeans(data, k, max_iter = 100)
+        print("Current calculating k = ", k, "...")
+        cluster_IDs, centers = kmeans(seed, data, k, max_iter = 100)
         silhouette_score = calculate_silhouette(data, cluster_IDs)
         silhouette_scores.append(silhouette_score)
 
