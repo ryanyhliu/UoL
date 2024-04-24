@@ -19,8 +19,6 @@ def load_dataset(filename='dataset'):
     """
     # path of the current script
     script_dir = os.path.dirname(__file__)
-    # Rest of the code...
-    print(script_dir)
     # full path of the file
     filepath = os.path.join(script_dir, filename)
     # read the file, the separator is ' ', and the first row is not the header
@@ -56,7 +54,9 @@ def initial_selection(data, k):
         pandas.DataFrame: The initial centroids.
     """
     
-    return data.sample(n = k) # randomly select k points from the data as the initial centroids
+    random_seed = 42
+    random.seed(random_seed)
+    return data.sample(n=k, random_state = random_seed) # randomly select k points from the data as the initial centroids
 
 def assign_cluster_IDs(data, centers):
     """
@@ -73,7 +73,7 @@ def assign_cluster_IDs(data, centers):
     cluster_IDs = [] # store the cluster ID of each point
     for index, point in data.iterrows(): # iterrows() returns the index and the row of the DataFrame
         distances = []
-        for center in centers.values: # calculate the distance between the point and each center
+        for center in centers: # calculate the distance between the point and each center
             distance = compute_distance(point, center)
             distances.append(distance)
         
@@ -148,7 +148,8 @@ def compute_a(data, labels, i):
         distances = []
         for points in range(len(data)): # calculate the distance between the point i and each point in the same cluster
             if labels[points] == labels[i] and points != i: # exclude the point i itself
-                distance = compute_distance(data[i], data[points]) 
+                #distance = compute_distance(data[i], data[points]) 
+                distance = compute_distance(data.iloc[i], data.iloc[points]) 
                 distances.append(distance)
         mean_distance = np.mean(distances)
         return mean_distance
@@ -174,7 +175,7 @@ def compute_b(data, labels, i):
         # calculate the mean distance between the point i and all the points in the other clusters
         distances = []
         for points in range(len(other_clusters_points)):
-            distance = compute_distance(data[i], other_clusters_points.iloc[points]) # iloc[] is used to access the row by index
+            distance = compute_distance(data.iloc[i], other_clusters_points.iloc[points]) # iloc[] is used to access the row by index
             distances.append(distance)
         mean_distance = np.mean(distances)
 
@@ -207,6 +208,17 @@ def calculate_silhouette(data, cluster_IDs):
 
 
 def plot_silhouette(range_k, silhouette_scores):
+    """
+    Plot the silhouette score against the number of clusters.
+    
+    Args:
+        range_k (range): The range of the number of clusters.
+        silhouette_scores (list): The silhouette scores of the clustering results.
+        
+    Returns:
+        None
+    """
+    
     plt.figure(figsize=(10, 6))
     plt.plot(range_k, silhouette_scores, marker='o')
     plt.xlabel('Number of Clusters, k')
@@ -215,17 +227,18 @@ def plot_silhouette(range_k, silhouette_scores):
     plt.grid(True)
     plt.show()
 
+
 def main():
-    if __name__ == '__main__':
-        main()
-    
     data = load_dataset()
     range_k = range(2, 10) # begin with 2 clusters because 1 cluster is meaningless
     silhouette_scores = []
-    
+
     for k in range_k:
         cluster_IDs, centers = kmeans(data, k, max_iter = 100)
         silhouette_score = calculate_silhouette(data, cluster_IDs)
         silhouette_scores.append(silhouette_score)
-    
+
     plot_silhouette(range_k, silhouette_scores)
+
+if __name__ == '__main__':
+    main()
