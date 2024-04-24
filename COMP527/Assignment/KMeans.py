@@ -2,7 +2,6 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import random
 import os
 
 SEED = 47
@@ -17,14 +16,11 @@ def load_dataset(filename='dataset'):
     Returns:
         data (pandas.DataFrame): The dataset.
     """
-    # path of the current script
-    script_dir = os.path.dirname(__file__)
-    # full path of the file
-    filepath = os.path.join(script_dir, filename)
-    # read the file, the separator is ' ', and the first row is not the header
-    data = pd.read_csv(filepath, sep=' ', header=None)
-    # set the index to the first column
-    data.set_index(0, inplace=True)
+    
+    script_dir = os.path.dirname(__file__) # get the directory of the script
+    filepath = os.path.join(script_dir, filename) # get the path of the file
+    data = pd.read_csv(filepath, sep = ' ', header = None) # split the data by space, no header
+    data.set_index(0, inplace = True) # set the first column as the index
     return data.values # return Numpy
 
 
@@ -56,7 +52,7 @@ def initial_selection(data, k):
     """
     
     np.random.seed(SEED)  
-    indices = np.random.choice(data.shape[0], size=k, replace=False)  
+    indices = np.random.choice(data.shape[0], size=k, replace=False)   # randomly select k points from the data
     return data[indices, :]
 
 def assign_cluster_IDs(data, centers):
@@ -137,12 +133,12 @@ def compute_a(data, labels, i):
         mean_distance (float): The mean distance between the point i and all other points in the same cluster.
     """
     
-    same_cluster_indices = np.where(labels == labels[i])[0]  # 获取相同聚类的所有索引
+    same_cluster_indices = np.where(labels == labels[i])[0]  # get the indices of the points in the same cluster
     if len(same_cluster_indices) <= 1:
         return 0
-    else:
+    else: 
         distances = []
-        for point in same_cluster_indices:
+        for point in same_cluster_indices: # calculate the distance between the point i and each point in the same cluster
             if point != i:
                 distance = compute_distance(data[i], data[point])
                 distances.append(distance)
@@ -216,7 +212,7 @@ def plot_silhouette(range_k, silhouette_scores):
     """
     
     plt.figure(figsize=(10, 6))
-    plt.plot(range(1, len(range_k) + 1), silhouette_scores, marker='o')
+    plt.plot(range_k, silhouette_scores, marker='o')
     plt.xlabel('Number of Clusters, k')
     plt.ylabel('Silhouette Score')
     plt.title('Silhouette Score vs. Number of Clusters')
