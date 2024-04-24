@@ -120,20 +120,20 @@ def kmeans(data, k, max_iter = 100):
     return cluster_IDs, centers
 
 # implement the silhouette method
-def compute_a(data, labels, i):
+def compute_a(data, cluster_IDs, i):
     """
     Compute the mean distance between the point i and all other points in the same cluster. (a(i))
     
     Args:
         data (pandas.DataFrame): The dataset.
-        labels (list): The cluster ID of each point.
+        cluster_IDs (list): The cluster ID of each point.
         i (int): The index of the point.
     
     Returns:
         mean_distance (float): The mean distance between the point i and all other points in the same cluster.
     """
     
-    same_cluster_indices = np.where(labels == labels[i])[0]  # get the indices of the points in the same cluster
+    same_cluster_indices = np.where(cluster_IDs == cluster_IDs[i])[0]  # get the indices of the points in the same cluster
     if len(same_cluster_indices) <= 1:
         return 0
     else: 
@@ -146,13 +146,14 @@ def compute_a(data, labels, i):
         return mean_distance
 
 
-def compute_b(data, labels, i):
+def compute_b(data, cluster_IDs, i):
     """
-    Compute the mean distance between the point i and all other points in the other clusters. (b(i))
+    Find the closest cluster to the point i 
+    and compute the mean distance between the point i and all other points in that cluster. (b(i))
     
     Args:
         data (pandas.DataFrame): The dataset.
-        labels (list): The cluster ID of each point.
+        cluster_IDs (list): The cluster ID of each point.
         i (int): The index of the point.
         
     Returns:
@@ -160,9 +161,9 @@ def compute_b(data, labels, i):
     """
 
     min_distance = np.inf
-    for cluster in np.unique(labels): # get the unique cluster IDs
-        if cluster != labels[i]: # exclude the cluster of the point i itself
-            other_cluster_indices = np.where(labels == cluster)[0] # get the indices of the points in the other clusters
+    for cluster in np.unique(cluster_IDs): # get the unique cluster IDs
+        if cluster != cluster_IDs[i]: # exclude the cluster of the point i itself
+            other_cluster_indices = np.where(cluster_IDs == cluster)[0] # get the indices of the points in the other clusters
             
             distances = []
             for point in other_cluster_indices: # calculate the distance between the point i and each point in the other clusters
@@ -218,7 +219,6 @@ def plot_silhouette(range_k, silhouette_scores):
     plt.title('Silhouette Score vs. Number of Clusters')
     plt.grid(True)
     plt.show()
-
 
 def main():
     data = load_dataset()
