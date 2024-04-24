@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import random
 import os
 
-
+SEED = 47
 
 def load_dataset(filename='dataset'):
     """
@@ -43,7 +43,7 @@ def compute_distance(point1, point2):
     # return np.sqrt(np.sum((point1 - point2) ** 2))
     return np.linalg.norm(point1 - point2) # use the numpy function, improve the efficiency
 
-def initial_selection(seed, data, k):
+def initial_selection(data, k):
     """
     Randomly select k points from the data as the initial centroids.
     
@@ -55,7 +55,7 @@ def initial_selection(seed, data, k):
         pandas.DataFrame: The initial centroids.
     """
     
-    np.random.seed(seed)  
+    np.random.seed(SEED)  
     indices = np.random.choice(data.shape[0], size=k, replace=False)  
     return data[indices, :]
 
@@ -102,7 +102,7 @@ def compute_cluster_representatives(data, cluster_IDs, k):
     return new_centers
     
 
-def kmeans(seed, data, k, max_iter = 100):
+def kmeans(data, k, max_iter = 100):
     """
     Perform the k-means clustering algorithm.
     
@@ -116,7 +116,7 @@ def kmeans(seed, data, k, max_iter = 100):
         centers (pandas.DataFrame): The centroids.
     """
     
-    centers = initial_selection(seed, data, k) # randomly select k points from the data as the initial centroids
+    centers = initial_selection(data, k) # randomly select k points from the data as the initial centroids
     for i in range(max_iter):
         cluster_IDs = assign_cluster_IDs(data, centers) # assign each point to the nearest centroid
         new_centers = compute_cluster_representatives(data, cluster_IDs, k) # compute the new centroids of the clusters
@@ -199,7 +199,7 @@ def calculate_silhouette(data, cluster_IDs):
         if a_i == 0 and b_i == 0: # if a(i) and b(i) are both 0, the silhouette value is 0
             silhouette.append(0) 
         else:
-            silhouette.append((b_i - a_i) / max(a_i, b_i))
+            silhouette.append((b_i - a_i) / max(a_i, b_i)) 
     return np.mean(silhouette) # return the mean silhouette value
 
 
@@ -216,7 +216,7 @@ def plot_silhouette(range_k, silhouette_scores):
     """
     
     plt.figure(figsize=(10, 6))
-    plt.plot(range_k, silhouette_scores, marker='o')
+    plt.plot(range(1, len(range_k) + 1), silhouette_scores, marker='o')
     plt.xlabel('Number of Clusters, k')
     plt.ylabel('Silhouette Score')
     plt.title('Silhouette Score vs. Number of Clusters')
@@ -226,13 +226,11 @@ def plot_silhouette(range_k, silhouette_scores):
 
 def main():
     data = load_dataset()
-    seed = 99
-    range_k = range(1, 10) # begin with 2 clusters because 1 cluster is meaningless
+    range_k = range(1, 10) # actually, k should be larger than 1
     silhouette_scores = []
 
     for k in range_k:
-        print("Current calculating k = ", k, "...")
-        cluster_IDs, centers = kmeans(seed, data, k, max_iter = 100)
+        cluster_IDs, centers = kmeans(data, k, max_iter = 100)
         silhouette_score = calculate_silhouette(data, cluster_IDs)
         silhouette_scores.append(silhouette_score)
 
