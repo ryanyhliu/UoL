@@ -75,28 +75,25 @@ def ComputeDistance(point1, point2, axis=0):
         print("Value Error in ComputeDistance: Invalid input. The points must have the same shape.")
     except Exception as e:
         print(f"Error in ComputeDistance: {e}")
-        
 
 def initialSelection(data, k):
-    """
-    Randomly select k points from the data as the initial centroids.
-    
-    Args:
-        data (pandas.DataFrame): The dataset.
-        k (int): The number of clusters.
-    
-    Returns:
-        pandas.DataFrame: The initial centroids.
-    """
-    
-    try:
-        np.random.seed(SEED)  
-        indices = np.random.choice(data.shape[0], size=k, replace=False)   # randomly select k points from the data. replace: not allow the same point to be selected
-        return data[indices, :] # row indices and all columns
-    except ValueError as e:
-        print(f"ValueError in initialSelection: {e}")
-    except Exception as e:
-        print(f"Error in initialSelection: {e}")
+    n = data.shape[0]
+    first_idx = np.random.choice(n)
+    centroids = [data[first_idx]]
+
+    distances = np.linalg.norm(data - data[first_idx], axis=1)
+
+    for _ in range(1, k):
+        probabilities = distances ** 2
+        probabilities /= probabilities.sum()
+        next_centroid_idx = np.random.choice(n, p=probabilities)
+        centroids.append(data[next_centroid_idx])
+
+        new_distances = np.linalg.norm(data - data[next_centroid_idx], axis=1)
+        distances = np.minimum(distances, new_distances)
+
+    return np.array(centroids)  # Return centroids as a numpy array.
+
 
 
 def assignClusterIds(data, centers):
@@ -144,9 +141,12 @@ def computeClusterRepresentatives(data, cluster_IDs, k):
         new_centers = [] # store the new centroids
         for i in range(k): # for each cluster k
             cluster_points = data[cluster_IDs == i] # all the points in the cluster i
-            if len(cluster_points) > 0:
+            if len(cluster_points) == 0:
+                new_centers.append(data[np.random.choice(data.shape[0])])
+            else:
                 cluster_means = np.mean(cluster_points, axis = 0) # calculate the mean of the points in the cluster, assign to the new center
                 new_centers.append(cluster_means)
+                
         
         if len(new_centers) == 0:
             raise ValueError("ValueError in computeClusterRepresentatives: No points in the clusters.")
@@ -308,13 +308,24 @@ def plot_silhouttee(range_k, silhouette_scores):
 
 def main():
     data = load_dataset()
-    range_k = range(2, 10) # actually, k should be larger than 1
+    if data is None:
+        print("Failed to load data. Exiting.")
+        return
+
+    range_k = range(2, 10)  # It's good that k starts from 2 as k-means doesn't work with k=1
     silhouette_scores = []
 
     for k in range_k:
-        cluster_IDs, centers = kmeansplusplus(data, k, max_iter = 100)
+        cluster_IDs, centers = kmeansplusplus(data, k, max_iter=100)
+        if cluster_IDs is None or centers is None:
+            print(f"Failed to perform k-means++ for k={k}. Skipping.")
+            continue
+
         silhouette_score = calculate_silhouette(data, cluster_IDs)
-        silhouette_scores.append(silhouette_score)
+        if silhouette_score is not None:
+            silhouette_scores.append(silhouette_score)
+        else:
+            print(f"Failed to calculate silhouette score for k={k}.")
 
     plot_silhouttee(range_k, silhouette_scores)
 

@@ -365,10 +365,10 @@ def bisecting_kmeans(data, num_clusters, max_iter):
             split_cluster_IDs, _ = kmeans(largest_cluster, 2, max_iter)
 
             # get the two new clusters, and calculate their SSQ
-            cluster1 = largest_cluster[split_cluster_IDs == 0]
-            cluster2 = largest_cluster[split_cluster_IDs == 1]
+            cluster0 = largest_cluster[split_cluster_IDs == 0]
+            cluster1 = largest_cluster[split_cluster_IDs == 1]
+            clusters.append((cluster0, computeSumfSquare(cluster0)))
             clusters.append((cluster1, computeSumfSquare(cluster1)))
-            clusters.append((cluster2, computeSumfSquare(cluster2)))
 
         return [cluster for cluster, _ in clusters] # return the clusters without SSQ
 
