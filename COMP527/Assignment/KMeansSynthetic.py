@@ -25,9 +25,7 @@ def generate_data():
     return random_data
 
 
-
-
-def compute_distance(point1, point2):
+def compute_distance(point1, point2, axis = 0):
     """
     Compute the Euclidean distance between two points.
 
@@ -39,8 +37,7 @@ def compute_distance(point1, point2):
         float: The Euclidean distance between the two points.
     """
     
-    # return np.sqrt(np.sum((point1 - point2) ** 2))
-    return np.linalg.norm(point1 - point2) # use the numpy function, improve the efficiency
+    return np.sqrt(np.sum((point1 - point2) ** 2, axis = axis))
 
 def initial_selection(data, k):
     """
@@ -55,8 +52,8 @@ def initial_selection(data, k):
     """
     
     np.random.seed(SEED)  
-    indices = np.random.choice(data.shape[0], size=k, replace=False)   # randomly select k points from the data
-    return data[indices, :]
+    indices = np.random.choice(data.shape[0], size=k, replace=False)   # randomly select k points from the data. replace: not allow the same point to be selected
+    return data[indices, :] # row indices and all columns
 
 def assign_cluster_IDs(data, centers):
     """
@@ -70,9 +67,14 @@ def assign_cluster_IDs(data, centers):
         cluster_IDs (list): The cluster ID of each point.
     """
     
-    differences = data[:, np.newaxis] - centers # calculate the difference between each point and each center. np.newaxis is used to add a new axis
-    squared_distances = np.sum(differences ** 2, axis = 2) # calculate the squared distance between each point and each center
-    distances = np.sqrt(squared_distances) # calculate the Euclidean distance
+    distances = [] # store the distances between each point and each center
+    
+    for center in centers:
+        distance = compute_distance(data, center, axis = 1) # calculate the distance between each point and the center
+        distances.append(distance)
+    
+    distances = np.array(distances) # convert the list to a numpy array
+    distances = distances.T # transpose the array, so that the shape is (n, k)
     
     cluster_IDs = np.argmin(distances, axis = 1) # get the index of the minimum distance, assign to the cluster ID
     
@@ -223,17 +225,14 @@ def plot_silhouette(range_k, silhouette_scores):
     plt.grid(True)
     plt.show()
 
-
-
 def main():
-    # use the generate_data function to generate synthetic data
+    # data = load_dataset()
     data = generate_data()
-
-    range_k = range(1, 10)
+    range_k = range(1, 10) # actually, k should be larger than 1
     silhouette_scores = []
 
     for k in range_k:
-        cluster_IDs, centers = kmeans(data, k, max_iter=100)
+        cluster_IDs, centers = kmeans(data, k, max_iter = 100)
         silhouette_score = calculate_silhouette(data, cluster_IDs)
         silhouette_scores.append(silhouette_score)
 
@@ -241,6 +240,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-
