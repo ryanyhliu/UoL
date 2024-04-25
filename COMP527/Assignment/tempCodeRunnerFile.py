@@ -1,0 +1,1 @@
+np.linalg.norm(data - data[first_center_index], axis=1)

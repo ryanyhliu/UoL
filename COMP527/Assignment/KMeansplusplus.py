@@ -77,22 +77,34 @@ def ComputeDistance(point1, point2, axis=0):
         print(f"Error in ComputeDistance: {e}")
 
 def initialSelection(data, k):
-    n = data.shape[0]
-    first_idx = np.random.choice(n)
-    centroids = [data[first_idx]]
+    """
+    Randomly select k points from the data as the initial centroids using the k-means++ algorithm, 
+    which is a variation of the k-means algorithm.
+    
+    Args:
+        data (pandas.DataFrame): The dataset.
+        k (int): The number of clusters.
+        
+    Returns:
+        centers (pandas.DataFrame): The initial centroids.
+    """
+    
+    n = data.shape[0] # get the number of points
+    first_center_index = np.random.choice(n) # randomly select the first centroid
+    centers = [data[first_center_index]] # store the centroids
 
-    distances = np.linalg.norm(data - data[first_idx], axis=1)
+    distances = ComputeDistance(data, data[first_center_index], axis=1) # calculate the distance between each point and the first centroid
 
     for _ in range(1, k):
-        probabilities = distances ** 2
-        probabilities /= probabilities.sum()
-        next_centroid_idx = np.random.choice(n, p=probabilities)
-        centroids.append(data[next_centroid_idx])
+        probabilities = distances ** 2 # calculate the probability of each point being selected as the next centroid
+        probabilities /= probabilities.sum() # normalize the probabilities, so that they sum up to 1
+        next_center_index = np.random.choice(n, p=probabilities) # randomly select the next centroid based on the probabilities
+        centers.append(data[next_center_index])
 
-        new_distances = np.linalg.norm(data - data[next_centroid_idx], axis=1)
-        distances = np.minimum(distances, new_distances)
+        new_distances = ComputeDistance(data, data[next_center_index], axis=1) # calculate the distance between each point and the new centroid
+        distances = np.minimum(distances, new_distances) # get the minimum distance between the previous distance and the new distance
 
-    return np.array(centroids)  # Return centroids as a numpy array.
+    return np.array(centers)  # Return centroids as a numpy array.
 
 
 
