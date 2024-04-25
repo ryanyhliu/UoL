@@ -24,7 +24,7 @@ def load_dataset(filename='dataset'):
     return data.values # return Numpy
 
 
-def compute_distance(point1, point2):
+def compute_distance(point1, point2, axis = 0):
     """
     Compute the Euclidean distance between two points.
 
@@ -36,8 +36,7 @@ def compute_distance(point1, point2):
         float: The Euclidean distance between the two points.
     """
     
-    # return np.sqrt(np.sum((point1 - point2) ** 2))
-    return np.linalg.norm(point1 - point2) # use the numpy function, improve the efficiency
+    return np.sqrt(np.sum((point1 - point2) ** 2, axis = axis))
 
 def initial_selection(data, k):
     """
@@ -82,7 +81,8 @@ def initial_selection(data, k):
         cumulative_probilities = probilities.cumsum() # cumsum() is used to calculate the cumulative sum
         
         r = np.random.rand()
-        next_index_centroid = np.where(cumulative_probilities >= r)[0][0] # select the point with the probability larger than r
+        indices = np.where(cumulative_probilities >= r) # get the indices of the points whose cumulative probability is greater than r
+        next_index_centroid = indices[0][0] # get the index of the next centroid
         centroids.append(data[next_index_centroid])
     
     return np.array(centroids)
@@ -99,9 +99,14 @@ def assign_cluster_IDs(data, centers):
         cluster_IDs (list): The cluster ID of each point.
     """
     
-    differences = data[:, np.newaxis] - centers # calculate the difference between each point and each center. np.newaxis is used to add a new axis
-    squared_distances = np.sum(differences ** 2, axis = 2) # calculate the squared distance between each point and each center
-    distances = np.sqrt(squared_distances) # calculate the Euclidean distance
+    distances = [] # store the distances between each point and each center
+    
+    for center in centers:
+        distance = compute_distance(data, center, axis = 1) # calculate the distance between each point and the center
+        distances.append(distance)
+    
+    distances = np.array(distances) # convert the list to a numpy array
+    distances = distances.T # transpose the array, so that the shape is (n, k)
     
     cluster_IDs = np.argmin(distances, axis = 1) # get the index of the minimum distance, assign to the cluster ID
     
