@@ -6,7 +6,6 @@ import os
 
 SEED = 47
 
-
 def load_dataset(filename='dataset'):
     """
     Load a dataset from a file, with comprehensive error handling.
@@ -30,46 +29,52 @@ def load_dataset(filename='dataset'):
         
         # Check for proper data format and integrity
         if data.empty:
-            raise ValueError("The file is empty or contains only headers.")
+            raise ValueError("ValueError in load_dataset: The file is empty or contains only headers.")
         
         if data.shape[1] < 2:  # Assuming we expect at least 2 columns
-            raise ValueError("The file does not contain enough columns.")
+            raise ValueError("ValueError in load_dataset: The file does not contain enough columns.")
         
         if data.duplicated(0).any():
-            raise ValueError("Duplicate entries found in the index column.")
+            raise ValueError("ValueError in load_dataset: Duplicate entries found in the index column.")
         
         data.set_index(0, inplace=True)  # set the first column as the index
         return data.values  # return as a numpy array
 
     except FileNotFoundError:
-        print(f"Error: The file '{filename}' does not exist.")
+        print(f"FileNotFoundError in load_dataset: The file '{filename}' does not exist.")
     except PermissionError as e:
-        print(f"Error: {e}")
+        print(f"PermissionError in load_dataset: {e}")
     except pd.errors.EmptyDataError:
-        print("Error: The file is empty or corrupted.")
+        print("EmptyDataError in load_dataset: The file is empty or corrupted.")
     except pd.errors.ParserError:
-        print("Error: The file is corrupted and cannot be parsed.")
+        print("ParserError in load_dataset: The file is corrupted and cannot be parsed.")
     except ValueError as e:
-        print(f"Error: {e}")
+        print(f"ValueError in load_dataset: {e}")
     except Exception as e:
-        print(f"An unexpected error occurred: {e}")
-
-    return None  # Return None if any exception occurs
+        print(f"Error in load_dataset: {e}")
 
 
-def ComputeDistance(point1, point2, axis = 0):
+def ComputeDistance(point1, point2, axis=0):
     """
     Compute the Euclidean distance between two points.
 
     Args:
         point1 (numpy.ndarray): The first point.
         point2 (numpy.ndarray): The second point.
-    
+        axis (int): The axis along which to compute the distance. Defaults to 0.
+
     Returns:
         float: The Euclidean distance between the two points.
     """
-    
-    return np.sqrt(np.sum((point1 - point2) ** 2, axis = axis))
+
+    try:
+        distance = np.sqrt(np.sum((point1 - point2) ** 2, axis=axis)) # calculate the Euclidean distance
+        return distance
+    except ValueError:
+        print("Value Error in ComputeDistance: Invalid input. The points must have the same shape.")
+    except Exception as e:
+        print(f"Error in ComputeDistance: {e}")
+        
 
 def initialSelection(data, k):
     """
@@ -83,9 +88,15 @@ def initialSelection(data, k):
         pandas.DataFrame: The initial centroids.
     """
     
-    np.random.seed(SEED)  
-    indices = np.random.choice(data.shape[0], size=k, replace=False)   # randomly select k points from the data. replace: not allow the same point to be selected
-    return data[indices, :] # row indices and all columns
+    try:
+        np.random.seed(SEED)  
+        indices = np.random.choice(data.shape[0], size=k, replace=False)   # randomly select k points from the data. replace: not allow the same point to be selected
+        return data[indices, :] # row indices and all columns
+    except ValueError as e:
+        print(f"ValueError in initialSelection: {e}")
+    except Exception as e:
+        print(f"Error in initialSelection: {e}")
+
 
 def assignClusterIds(data, centers):
     """
@@ -99,18 +110,22 @@ def assignClusterIds(data, centers):
         cluster_IDs (list): The cluster ID of each point.
     """
     
-    distances = [] # store the distances between each point and each center
+    try:
+        distances = [] # store the distances between each point and each center
+        
+        for center in centers:
+            distance = ComputeDistance(data, center, axis = 1) # calculate the distance between each point and the center
+            distances.append(distance)
+        
+        distances = np.array(distances) # convert the list to a numpy array
+        distances = distances.T # transpose the array, so that the shape is (n, k)
+        
+        cluster_IDs = np.argmin(distances, axis = 1) # get the index of the minimum distance, assign to the cluster ID
+        
+        return cluster_IDs
     
-    for center in centers:
-        distance = ComputeDistance(data, center, axis = 1) # calculate the distance between each point and the center
-        distances.append(distance)
-    
-    distances = np.array(distances) # convert the list to a numpy array
-    distances = distances.T # transpose the array, so that the shape is (n, k)
-    
-    cluster_IDs = np.argmin(distances, axis = 1) # get the index of the minimum distance, assign to the cluster ID
-    
-    return cluster_IDs
+    except Exception as e:
+        print(f"Error in assignClusterIds: {e}")
 
 def computeClusterRepresentatives(data, cluster_IDs, k):
     """
@@ -124,15 +139,24 @@ def computeClusterRepresentatives(data, cluster_IDs, k):
     Returns:
         new_centers (pandas.DataFrame): The new centroids.
     """
+    try:
+        new_centers = [] # store the new centroids
+        for i in range(k): # for each cluster k
+            cluster_points = data[cluster_IDs == i] # all the points in the cluster i
+            if len(cluster_points) > 0:
+                cluster_means = np.mean(cluster_points, axis = 0) # calculate the mean of the points in the cluster, assign to the new center
+                new_centers.append(cluster_means)
+        
+        if len(new_centers) == 0:
+            raise ValueError("ValueError in computeClusterRepresentatives: No points in the clusters.")
+        
+        new_centers = np.array(new_centers) # convert the list to a numpy array
+        return new_centers
     
-    new_centers = [] # store the new centroids
-    for i in range(k): # for each cluster k
-        cluster_points = data[cluster_IDs == i] # all the points in the cluster i
-        cluster_means = np.mean(cluster_points, axis = 0) # calculate the mean of the points in the cluster, assign to the new center
-        new_centers.append(cluster_means)
-    
-    new_centers = np.array(new_centers) # convert the list to a numpy array
-    return new_centers
+    except ValueError as e:
+        print(f"ValueError in computeClusterRepresentatives: {e}")
+    except Exception as e:
+        print(f"Error in computeClusterRepresentatives: {e}")
     
 
 def kmeans(data, k, max_iter = 100):
@@ -149,12 +173,23 @@ def kmeans(data, k, max_iter = 100):
         centers (pandas.DataFrame): The centroids.
     """
     
-    centers = initialSelection(data, k) # randomly select k points from the data as the initial centroids
-    for i in range(max_iter):
-        cluster_IDs = assignClusterIds(data, centers) # assign each point to the nearest centroid
-        new_centers = computeClusterRepresentatives(data, cluster_IDs, k) # compute the new centroids of the clusters
-        centers = new_centers # update the centroids
-    return cluster_IDs, centers
+    try:
+        centers = initialSelection(data, k)  # randomly select k points from the data as the initial centroids
+        for i in range(max_iter):
+            cluster_IDs = assignClusterIds(data, centers)  # assign each point to the nearest centroid
+            new_centers = computeClusterRepresentatives(data, cluster_IDs, k)  # compute the new centroids of the clusters
+            if new_centers is None:
+                print("Error: Failed to compute new centroids.")
+                return None, None
+            if np.array_equal(centers, new_centers):
+                print("Convergence reached. Stopping iterations.")
+                break
+            centers = new_centers  # update the centroids
+        else:
+            print("Maximum number of iterations reached. Stopping iterations.")
+        return cluster_IDs, centers
+    except Exception as e:
+        print(f"Error in KMeans: {e}")
 
 # implement the silhouette method
 def compute_a(data, cluster_IDs, i):
@@ -170,18 +205,20 @@ def compute_a(data, cluster_IDs, i):
         mean_distance (float): The mean distance between the point i and all other points in the same cluster.
     """
     
-    same_cluster_indices = np.where(cluster_IDs == cluster_IDs[i])[0]  # get the indices of the points in the same cluster
-    if len(same_cluster_indices) <= 1:
-        return 0
-    else: 
-        distances = []
-        for point in same_cluster_indices: # calculate the distance between the point i and each point in the same cluster
-            if point != i:
-                distance = ComputeDistance(data[i], data[point])
-                distances.append(distance)
-        mean_distance = np.mean(distances)
-        return mean_distance
-
+    try:
+        same_cluster_indices = np.where(cluster_IDs == cluster_IDs[i])[0]  # get the indices of the points in the same cluster
+        if len(same_cluster_indices) <= 1:
+            return 0
+        else: 
+            distances = []
+            for point in same_cluster_indices: # calculate the distance between the point i and each point in the same cluster
+                if point != i:
+                    distance = ComputeDistance(data[i], data[point])
+                    distances.append(distance)
+            mean_distance = np.mean(distances)
+            return mean_distance
+    except Exception as e:
+        print(f"Error in compute_a: {e}")
 
 def compute_b(data, cluster_IDs, i):
     """
@@ -204,8 +241,13 @@ def compute_b(data, cluster_IDs, i):
             
             distances = []
             for point in other_cluster_indices: # calculate the distance between the point i and each point in the other clusters
-                distance = ComputeDistance(data[i], data[point])
-                distances.append(distance)
+                try:
+                    distance = ComputeDistance(data[i], data[point])
+                    distances.append(distance)
+                except ValueError as e:
+                    print(f"ValueError in compute_b: {e}")
+                except Exception as e:
+                    print(f"Error in compute_b: {e}")
             cluster_distance = np.mean(distances)
             
             if cluster_distance < min_distance:
@@ -228,12 +270,16 @@ def calculate_silhouette(data, cluster_IDs):
     
     silhouette = [] # store the silhouette value of each point
     for i in range(len(data)):
-        a_i = compute_a(data, cluster_IDs, i)
-        b_i = compute_b(data, cluster_IDs, i)
-        if a_i == 0 and b_i == 0: # if a(i) and b(i) are both 0, the silhouette value is 0
-            silhouette.append(0) 
-        else:
-            silhouette.append((b_i - a_i) / max(a_i, b_i)) 
+        try:
+            a_i = compute_a(data, cluster_IDs, i)
+            b_i = compute_b(data, cluster_IDs, i)
+            if a_i == 0 and b_i == 0: # if a(i) and b(i) are both 0, the silhouette value is 0
+                silhouette.append(0) 
+            else:
+                silhouette.append((b_i - a_i) / max(a_i, b_i)) 
+        except Exception as e:
+            print(f"Error in calculate_silhouette: {e}")
+
     return np.mean(silhouette) # return the mean silhouette value
 
 
@@ -249,13 +295,16 @@ def plot_silhouttee(range_k, silhouette_scores):
         None
     """
     
-    plt.figure(figsize=(10, 6))
-    plt.plot(range_k, silhouette_scores, marker='o')
-    plt.xlabel('Number of Clusters, k')
-    plt.ylabel('Silhouette Score')
-    plt.title('Silhouette Score vs. Number of Clusters')
-    plt.grid(True)
-    plt.show()
+    try:
+        plt.figure(figsize=(10, 6))
+        plt.plot(range_k, silhouette_scores, marker='o')
+        plt.xlabel('Number of Clusters, k')
+        plt.ylabel('Silhouette Score')
+        plt.title('Silhouette Score vs. Number of Clusters')
+        plt.grid(True)
+        plt.show()
+    except Exception as e:
+        print(f"Error in plot_silhouttee: {e}")
     
     
 def computeSumfSquare(cluster):
