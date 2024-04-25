@@ -226,6 +226,17 @@ def plot_silhouette(range_k, silhouette_scores):
     
     
 def computeSumOfSquares(cluster):
+    """
+    Compute the sum of squares of the cluster, 
+    which is the sum of the squared distances between each point and the center of the cluster.
+    
+    Args:
+        cluster (pandas.DataFrame): The cluster.
+        
+    Returns:
+        float: The sum of squares of the cluster.
+    """
+    
     if len(cluster) == 0: # critical point judge
         return 0
     
@@ -236,7 +247,19 @@ def computeSumOfSquares(cluster):
     return sum_of_squares
 
     
-def bisecting_kmeans(data, num_clusters, max_iter=100):
+def bisecting_kmeans(data, num_clusters, max_iter):
+    """
+    Perform the bisecting k-means clustering algorithm.
+    
+    Args:
+        data (pandas.DataFrame): The dataset.
+        num_clusters (int): The number of clusters.
+        max_iter (int): The maximum number of iterations.
+        
+    Returns:
+        list: The clusters.
+    """
+    
     initial_sum_of_squares = computeSumOfSquares(data)
     clusters = [(data, initial_sum_of_squares)]  # store the whole dataset and its SSQ
     
@@ -270,9 +293,10 @@ def main():
     silhouette_scores = []
 
     for k in range_k:
-        clusters = bisecting_kmeans(data, k)
+        clusters = bisecting_kmeans(data, k, max_iter = 100)
         # create a list to store the cluster ID of each point
         cluster_IDs = np.zeros(len(data), dtype=int)
+        
         cluster_index = 0
         for cluster in clusters: 
             for point in cluster: # assign the cluster ID to each point
