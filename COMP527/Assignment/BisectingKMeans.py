@@ -6,25 +6,58 @@ import os
 
 SEED = 47
 
+
 def load_dataset(filename='dataset'):
     """
-    Load a dataset from a file.
+    Load a dataset from a file, with comprehensive error handling.
 
     Args:
         filename (str): The name of the file to load the dataset from. Defaults to 'dataset'.
 
     Returns:
-        data (pandas.DataFrame): The dataset.
+        data (numpy.ndarray): The dataset as a numpy array, or None if loading fails.
     """
-    
-    script_dir = os.path.dirname(__file__) # get the directory of the script
-    filepath = os.path.join(script_dir, filename) # get the path of the file
-    data = pd.read_csv(filepath, sep = ' ', header = None) # split the data by space, no header
-    data.set_index(0, inplace = True) # set the first column as the index
-    return data.values # return Numpy
+    try:
+        script_dir = os.path.dirname(os.path.realpath(__file__))  # get the directory of the script
+        filepath = os.path.join(script_dir, filename)  # construct the file path
+        
+        # Check if the file is accessible
+        if not os.access(filepath, os.R_OK):
+            raise PermissionError("The file is not accessible due to permission restrictions.")
+        
+        # Attempt to read the file
+        data = pd.read_csv(filepath, sep=' ', header=None)  # split data by space, no header
+        
+        # Check for proper data format and integrity
+        if data.empty:
+            raise ValueError("The file is empty or contains only headers.")
+        
+        if data.shape[1] < 2:  # Assuming we expect at least 2 columns
+            raise ValueError("The file does not contain enough columns.")
+        
+        if data.duplicated(0).any():
+            raise ValueError("Duplicate entries found in the index column.")
+        
+        data.set_index(0, inplace=True)  # set the first column as the index
+        return data.values  # return as a numpy array
+
+    except FileNotFoundError:
+        print(f"Error: The file '{filename}' does not exist.")
+    except PermissionError as e:
+        print(f"Error: {e}")
+    except pd.errors.EmptyDataError:
+        print("Error: The file is empty or corrupted.")
+    except pd.errors.ParserError:
+        print("Error: The file is corrupted and cannot be parsed.")
+    except ValueError as e:
+        print(f"Error: {e}")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+
+    return None  # Return None if any exception occurs
 
 
-def compute_distance(point1, point2, axis = 0):
+def ComputeDistance(point1, point2, axis = 0):
     """
     Compute the Euclidean distance between two points.
 
@@ -38,7 +71,7 @@ def compute_distance(point1, point2, axis = 0):
     
     return np.sqrt(np.sum((point1 - point2) ** 2, axis = axis))
 
-def initial_selection(data, k):
+def initialSelection(data, k):
     """
     Randomly select k points from the data as the initial centroids.
     
@@ -54,7 +87,7 @@ def initial_selection(data, k):
     indices = np.random.choice(data.shape[0], size=k, replace=False)   # randomly select k points from the data. replace: not allow the same point to be selected
     return data[indices, :] # row indices and all columns
 
-def assign_cluster_IDs(data, centers):
+def assignClusterIds(data, centers):
     """
     Assign each point to the nearest centroid.
     
@@ -69,7 +102,7 @@ def assign_cluster_IDs(data, centers):
     distances = [] # store the distances between each point and each center
     
     for center in centers:
-        distance = compute_distance(data, center, axis = 1) # calculate the distance between each point and the center
+        distance = ComputeDistance(data, center, axis = 1) # calculate the distance between each point and the center
         distances.append(distance)
     
     distances = np.array(distances) # convert the list to a numpy array
@@ -79,7 +112,7 @@ def assign_cluster_IDs(data, centers):
     
     return cluster_IDs
 
-def compute_cluster_representatives(data, cluster_IDs, k):
+def computeClusterRepresentatives(data, cluster_IDs, k):
     """
     Compute the new centroids of the clusters.
     
@@ -116,10 +149,10 @@ def kmeans(data, k, max_iter = 100):
         centers (pandas.DataFrame): The centroids.
     """
     
-    centers = initial_selection(data, k) # randomly select k points from the data as the initial centroids
+    centers = initialSelection(data, k) # randomly select k points from the data as the initial centroids
     for i in range(max_iter):
-        cluster_IDs = assign_cluster_IDs(data, centers) # assign each point to the nearest centroid
-        new_centers = compute_cluster_representatives(data, cluster_IDs, k) # compute the new centroids of the clusters
+        cluster_IDs = assignClusterIds(data, centers) # assign each point to the nearest centroid
+        new_centers = computeClusterRepresentatives(data, cluster_IDs, k) # compute the new centroids of the clusters
         centers = new_centers # update the centroids
     return cluster_IDs, centers
 
@@ -144,7 +177,7 @@ def compute_a(data, cluster_IDs, i):
         distances = []
         for point in same_cluster_indices: # calculate the distance between the point i and each point in the same cluster
             if point != i:
-                distance = compute_distance(data[i], data[point])
+                distance = ComputeDistance(data[i], data[point])
                 distances.append(distance)
         mean_distance = np.mean(distances)
         return mean_distance
@@ -171,7 +204,7 @@ def compute_b(data, cluster_IDs, i):
             
             distances = []
             for point in other_cluster_indices: # calculate the distance between the point i and each point in the other clusters
-                distance = compute_distance(data[i], data[point])
+                distance = ComputeDistance(data[i], data[point])
                 distances.append(distance)
             cluster_distance = np.mean(distances)
             
@@ -204,7 +237,7 @@ def calculate_silhouette(data, cluster_IDs):
     return np.mean(silhouette) # return the mean silhouette value
 
 
-def plot_silhouette(range_k, silhouette_scores):
+def plot_silhouttee(range_k, silhouette_scores):
     """
     Plot the silhouette score against the number of clusters.
     
@@ -225,7 +258,7 @@ def plot_silhouette(range_k, silhouette_scores):
     plt.show()
     
     
-def computeSumOfSquares(cluster):
+def computeSumfSquare(cluster):
     """
     Compute the sum of squares of the cluster, 
     which is the sum of the squared distances between each point and the center of the cluster.
@@ -243,7 +276,7 @@ def computeSumOfSquares(cluster):
     center = np.mean(cluster, axis=0) # calculate the center of the cluster
     sum_of_squares = 0
     for point in cluster:
-        sum_of_squares += compute_distance(point, center) ** 2
+        sum_of_squares += ComputeDistance(point, center) ** 2
     return sum_of_squares
 
     
@@ -260,7 +293,7 @@ def bisecting_kmeans(data, num_clusters, max_iter):
         list: The clusters.
     """
     
-    initial_sum_of_squares = computeSumOfSquares(data)
+    initial_sum_of_squares = computeSumfSquare(data)
     clusters = [(data, initial_sum_of_squares)]  # store the whole dataset and its SSQ
     
     while len(clusters) < num_clusters:
@@ -281,8 +314,8 @@ def bisecting_kmeans(data, num_clusters, max_iter):
         # get the two new clusters, and calculate their SSQ
         cluster1 = largest_cluster[split_cluster_IDs == 0]
         cluster2 = largest_cluster[split_cluster_IDs == 1]
-        clusters.append((cluster1, computeSumOfSquares(cluster1)))
-        clusters.append((cluster2, computeSumOfSquares(cluster2)))
+        clusters.append((cluster1, computeSumfSquare(cluster1)))
+        clusters.append((cluster2, computeSumfSquare(cluster2)))
 
     return [cluster for cluster, _ in clusters] # return the clusters without SSQ
 
@@ -308,7 +341,7 @@ def main():
         silhouette_score = calculate_silhouette(data, cluster_IDs)
         silhouette_scores.append(silhouette_score)
 
-    plot_silhouette(range_k, silhouette_scores)
+    plot_silhouttee(range_k, silhouette_scores)
 
 if __name__ == '__main__':
     main()
