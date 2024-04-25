@@ -302,7 +302,8 @@ def plot_silhouttee(range_k, silhouette_scores):
         plt.ylabel('Silhouette Score')
         plt.title('Silhouette Score vs. Number of Clusters')
         plt.grid(True)
-        plt.show()
+        # plt.show()
+        plt.savefig('BisectingKMeans.png')
     except Exception as e:
         print(f"Error in plot_silhouttee: {e}")
     
@@ -319,14 +320,17 @@ def computeSumfSquare(cluster):
         float: The sum of squares of the cluster.
     """
     
-    if len(cluster) == 0: # critical point judge
-        return 0
-    
-    center = np.mean(cluster, axis=0) # calculate the center of the cluster
-    sum_of_squares = 0
-    for point in cluster:
-        sum_of_squares += ComputeDistance(point, center) ** 2
-    return sum_of_squares
+    try:
+        if len(cluster) == 0: # critical point judge
+            return 0
+        
+        center = np.mean(cluster, axis=0) # calculate the center of the cluster
+        sum_of_squares = 0
+        for point in cluster:
+            sum_of_squares += ComputeDistance(point, center) ** 2
+        return sum_of_squares
+    except Exception as e:
+        print(f"Error in computeSumfSquare: {e}")
 
     
 def bisecting_kmeans(data, num_clusters, max_iter):
@@ -341,56 +345,65 @@ def bisecting_kmeans(data, num_clusters, max_iter):
     Returns:
         list: The clusters.
     """
-    
-    initial_sum_of_squares = computeSumfSquare(data)
-    clusters = [(data, initial_sum_of_squares)]  # store the whole dataset and its SSQ
-    
-    while len(clusters) < num_clusters:
-        # find the cluster with the largest SSQ
-        sum_of_squares = []
-        for cluster, ssq in clusters:
-            sum_of_squares.append(ssq)
-        sum_of_squares = np.array(sum_of_squares)
-        
-        # get and remove the largest cluster
-        largest_cluster_index = np.argmax(sum_of_squares)
-        largest_cluster = clusters.pop(largest_cluster_index)[0] # for split
-        
+    try:
+        initial_sum_of_squares = computeSumfSquare(data)
+        clusters = [(data, initial_sum_of_squares)]  # store the whole dataset and its SSQ
 
-        # split the largest cluster into two clusters
-        split_cluster_IDs, _ = kmeans(largest_cluster, 2, max_iter)
+        while len(clusters) < num_clusters:
+            # find the cluster with the largest SSQ
+            sum_of_squares = []
+            for cluster, ssq in clusters:
+                sum_of_squares.append(ssq)
+            sum_of_squares = np.array(sum_of_squares)
 
-        # get the two new clusters, and calculate their SSQ
-        cluster1 = largest_cluster[split_cluster_IDs == 0]
-        cluster2 = largest_cluster[split_cluster_IDs == 1]
-        clusters.append((cluster1, computeSumfSquare(cluster1)))
-        clusters.append((cluster2, computeSumfSquare(cluster2)))
+            # get and remove the largest cluster
+            largest_cluster_index = np.argmax(sum_of_squares)
+            largest_cluster = clusters.pop(largest_cluster_index)[0] # for split
 
-    return [cluster for cluster, _ in clusters] # return the clusters without SSQ
+            # split the largest cluster into two clusters
+            split_cluster_IDs, _ = kmeans(largest_cluster, 2, max_iter)
+
+            # get the two new clusters, and calculate their SSQ
+            cluster1 = largest_cluster[split_cluster_IDs == 0]
+            cluster2 = largest_cluster[split_cluster_IDs == 1]
+            clusters.append((cluster1, computeSumfSquare(cluster1)))
+            clusters.append((cluster2, computeSumfSquare(cluster2)))
+
+        return [cluster for cluster, _ in clusters] # return the clusters without SSQ
+
+    except Exception as e:
+        print(f"Error in bisecting_kmeans: {e}")
+        return []
 
 
 def main():
-    data = load_dataset()
-    range_k = range(1, 10) # actually, k should be larger than 1
-    silhouette_scores = []
+    try:
+        data = load_dataset()
+        range_k = range(2, 10) # actually, k should be larger than 1
+        silhouette_scores = []
 
-    for k in range_k:
-        clusters = bisecting_kmeans(data, k, max_iter = 100)
-        # create a list to store the cluster ID of each point
-        cluster_IDs = np.zeros(len(data), dtype=int)
-        # assign the cluster ID to each point
-        cluster_index = 0
-        for cluster in clusters: 
-            for point in cluster: # assign the cluster ID to each point
-                matches = np.all(data == point, axis=1) # find the point in the dataset
-                point_index = np.where(matches)[0][0] # get the index of the point
-                cluster_IDs[point_index] = cluster_index
-            cluster_index += 1
-            
-        silhouette_score = calculate_silhouette(data, cluster_IDs)
-        silhouette_scores.append(silhouette_score)
+        for k in range_k:
+            clusters = bisecting_kmeans(data, k, max_iter = 100)
+            # create a list to store the cluster ID of each point
+            cluster_IDs = np.zeros(len(data), dtype=int)
+            # assign the cluster ID to each point
+            cluster_index = 0
+            for cluster in clusters: 
+                for point in cluster: # assign the cluster ID to each point
+                    try:
+                        matches = np.all(data == point, axis=1) # find the point in the dataset
+                        point_index = np.where(matches)[0][0] # get the index of the point
+                        cluster_IDs[point_index] = cluster_index
+                    except Exception as e:
+                        print(f"Error assigning cluster ID to point: {e}")
+                cluster_index += 1
+                
+            silhouette_score = calculate_silhouette(data, cluster_IDs)
+            silhouette_scores.append(silhouette_score)
 
-    plot_silhouttee(range_k, silhouette_scores)
+        plot_silhouttee(range_k, silhouette_scores)
+    except Exception as e:
+        print(f"Error in main: {e}")
 
 if __name__ == '__main__':
     main()

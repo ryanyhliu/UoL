@@ -277,7 +277,8 @@ def plot_silhouttee(range_k, silhouette_scores):
         plt.ylabel('Silhouette Score')
         plt.title('Silhouette Score vs. Number of Clusters')
         plt.grid(True)
-        plt.show()
+        # plt.show()
+        plt.savefig('KMeansSynthetic.png')
     except Exception as e:
         print(f"Error in plot_silhouttee: {e}")
         
