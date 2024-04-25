@@ -303,7 +303,8 @@ def plot_silhouttee(range_k, silhouette_scores):
         plt.title('Silhouette Score vs. Number of Clusters')
         plt.grid(True)
         # plt.show()
-        plt.savefig('BisectingKMeans.png')
+        current_dir = os.path.dirname(os.path.realpath(__file__))  # get the directory of the script
+        plt.savefig(os.path.join(current_dir, 'BisectingKMeans.png'))  # save the plot as a PNG file
     except Exception as e:
         print(f"Error in plot_silhouttee: {e}")
     
