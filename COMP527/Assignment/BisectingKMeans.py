@@ -296,7 +296,7 @@ def main():
         clusters = bisecting_kmeans(data, k, max_iter = 100)
         # create a list to store the cluster ID of each point
         cluster_IDs = np.zeros(len(data), dtype=int)
-        
+        # assign the cluster ID to each point
         cluster_index = 0
         for cluster in clusters: 
             for point in cluster: # assign the cluster ID to each point
