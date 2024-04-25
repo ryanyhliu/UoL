@@ -285,7 +285,7 @@ def main():
     # data = load_dataset()
     try:
         data = generate_data()
-        range_k = range(1, 10) # actually, k should be larger than 1
+        range_k = range(2, 10) # actually, k should be larger than 1
         silhouette_scores = []
 
         for k in range_k:
