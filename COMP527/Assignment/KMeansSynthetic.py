@@ -256,7 +256,11 @@ def calculate_silhouette(data, cluster_IDs):
         except Exception as e:
             print(f"Error in calculate_silhouette: {e}")
 
-    return np.mean(silhouette) # return the mean silhouette value
+    silhouette_value = np.mean(silhouette) # calculate the mean silhouette value
+    if np.isnan(silhouette_value):
+        silhouette_value = 0
+
+    return np.mean(silhouette_value) # return the mean silhouette value
 
 
 def plot_silhouttee(range_k, silhouette_scores):
@@ -276,7 +280,7 @@ def plot_silhouttee(range_k, silhouette_scores):
         plt.plot(range_k, silhouette_scores, marker='o')
         plt.xlabel('Number of Clusters, k')
         plt.ylabel('Silhouette Score')
-        plt.title('Silhouette Score vs. Number of Clusters')
+        plt.title('KMeansSynthetic')
         plt.grid(True)
         # plt.show()
         current_dir = os.path.dirname(os.path.realpath(__file__))  # get the directory of the script
@@ -288,7 +292,7 @@ def main():
     # data = load_dataset()
     try:
         data = generate_data()
-        range_k = range(2, 10) # actually, k should be larger than 1
+        range_k = range(1, 10) # actually, k should be larger than 1
         silhouette_scores = []
 
         for k in range_k:
